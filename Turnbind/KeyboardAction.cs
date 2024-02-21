@@ -1,12 +1,24 @@
 ﻿namespace Turnbind
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
+    using Stateless;
+    using Stateless.Graph;
+
+    using System.Windows;
 
     internal class KeyboardAction
     {
+        enum State
+        {
+            OffHook,
+            Ringing,
+            Connected,
+            OnHold,
+            PhoneDestroyed
+        }
+
+        public KeyboardAction()
+        {
+            var phoneCall = new StateMachine<State, Trigger>(State.OffHook);
+        }
     }
 }

@@ -6,11 +6,11 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="SharpHook.Reactive" Version="5.2.3" />
-    <PackageReference Include="Stateless" Version="5.15.0" />
     <PackageReference Include="System.Reactive" Version="6.0.0" />
   </ItemGroup>
 

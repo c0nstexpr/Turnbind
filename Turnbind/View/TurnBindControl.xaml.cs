@@ -1,73 +1,100 @@
-﻿namespace Turnbind
+﻿using System.Collections.Specialized;
+using System.Data.Common;
+using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Threading;
+
+using CommunityToolkit.Mvvm.ComponentModel;
+
+using Turnbind.Model;
+using Turnbind.ViewModel;
+
+namespace Turnbind.View;
+
+[INotifyPropertyChanged]
+public partial class TurnBindControl : UserControl, IDisposable
 {
-    using System;
-    using System.Linq;
-    using System.Reactive.Disposables;
-    using System.Reactive.Linq;
-    using System.Windows;
-    using System.Windows.Controls;
-    using System.Windows.Input;
+    internal readonly TurnBindViewModel ViewModel = new();
 
-    using Turnbind.Action;
-    using Turnbind.Model;
-    using Turnbind.ViewModel;
-
-    public partial class TurnBindControl : UserControl
+    public TurnBindControl()
     {
-        internal InputAction InputAction = new();
+        DataContext = ViewModel;
 
-        TurnBindViewModel _viewModel => (TurnBindViewModel)DataContext;
+        InitializeComponent();
 
-        public TurnBindControl()
-        {
-            InitializeComponent();
+        foreach (var item in Enum.GetValues<TurnDirection>())
+            TurnDicectionComboBox.Items.Add(item);
+    }
 
-            {
-                var items = TurnDicectionComboBox.Items;
+    readonly SerialDisposable m_bindingKeysDisposable = new();
 
-                foreach(var item in Enum.GetValues<TurnDirection>())
-                    items.Add(item);              
-            }
+    void BindingKeysTextBoxGotFocus(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel is null) return;
 
-            DataContext = new TurnBindViewModel();
+        ViewModel.ClearKeys();
 
-            CompositeDisposable disposables = [];
+        m_bindingKeysDisposable.Disposable = Synchronization.ObserveOn(
+            ViewModel.InputAction.Input.Skip(1),
+            new DispatcherSynchronizationContext(Dispatcher)
+        )
+            .Where(_ => BindingKeysTextBox.IsFocused)
+            .Subscribe(
+                s =>
+                {
+                    var (k, p) = s;
 
-            disposables.Add(
-                InputAction.Input.Where(_ => BindingKeysLabel.IsFocused).Subscribe(
-                    s =>
+                    switch (k)
                     {
-                        var (k, p) = s;
+                        case InputKey.Enter or InputKey.NumEnter:
+                            BindingKeysTextBox.MoveFocus(new(FocusNavigationDirection.Next));
+                            return;
 
-                        switch (k)
-                        {
-                            case InputKey.Enter:
-                                BindingKeysLabel.MoveFocus(new(FocusNavigationDirection.Next));
-                                return;
+                        case InputKey.Escape:
+                            BindingKeysTextBox.MoveFocus(new(FocusNavigationDirection.Previous));
+                            return;
 
-                            case InputKey.Escape:
-                                BindingKeysLabel.MoveFocus(new(FocusNavigationDirection.Previous));
-                                return;
+                        case InputKey.Backspace:
+                            ViewModel.ClearKeys();
+                            return;
 
-                            case InputKey.Backspace:
-                                _viewModel.ClearKeys();
-                                return;
-
-                            default:
-                                _viewModel.OnKey(k, p);
-                                return;
-                        }
+                        default:
+                            ViewModel.OnKey(k, p);
+                            return;
                     }
-                )
+                }
             );
+    }
 
-            disposables.Add(InputAction);
+    void BindingKeysTextBoxLostFocus(object sender, RoutedEventArgs e) => m_bindingKeysDisposable.Disposable = null;
 
-            Unloaded += (_, _) => disposables.Dispose();
-        }
+    void ModifyButtonClick(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel?.Modify() == true) return;
 
-        void BindingKeysLabelGotFocus(object sender, RoutedEventArgs e) => _viewModel.ClearKeys();
+        MessageBox.Show("Bind with same keys already exists.\n Select it if you need to modify.");
+    }
 
-        void ModifyButtonClick(object sender, RoutedEventArgs e) => _viewModel.Modify();
+    void RemoveButtonClick(object sender, RoutedEventArgs e) => ViewModel?.Remove();
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    bool m_disposed = false;
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposing || m_disposed) return;
+
+        ViewModel.Dispose();
+        m_bindingKeysDisposable.Dispose();
+        m_disposed = true;
     }
 }

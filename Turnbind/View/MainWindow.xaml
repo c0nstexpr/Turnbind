@@ -1,18 +1,16 @@
-﻿<Window x:Class="Turnbind.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<Window x:Class="Turnbind.View.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:local="clr-namespace:Turnbind"
-        mc:Ignorable="d" Title="MainWindow" Height="450" Width="800"
-        d:DataContext="{d:DesignInstance Type=local:MainWindow}">
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModel="clr-namespace:Turnbind.ViewModel" xmlns:view="clr-namespace:Turnbind.View" mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="500"
+        d:DataContext="{d:DesignInstance Type=viewModel:MainWindowViewModel}">
     <DockPanel>
-        <StackPanel DockPanel.Dock="Left">
-            <DockPanel HorizontalAlignment="Left">
-                <Label Content="process name:" VerticalAlignment="Center" />
-                <TextBox Width="200" Height="20" Margin="10" BorderThickness="1" Text="{Binding ProcessName}" />
-            </DockPanel>
+        <DockPanel DockPanel.Dock="Top" HorizontalAlignment="Center">
+            <Label Content="Process Name:" VerticalAlignment="Center" />
+            <TextBox VerticalContentAlignment="Center" Width="200" Height="25" Margin="10" BorderThickness="1" Text="{Binding ProcessName}" />
+        </DockPanel>
 
-        </StackPanel>
-
-
+        <view:TurnBindControl x:Name="TurnBindControl"/>
     </DockPanel>
 </Window>

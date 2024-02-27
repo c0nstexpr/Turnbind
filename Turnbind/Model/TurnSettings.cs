@@ -1,35 +1,34 @@
-﻿namespace Turnbind.Model
+﻿using System.IO;
+using System.Text.Json;
+
+namespace Turnbind.Model;
+public class TurnSettings
 {
-    using System.IO;
-    using System.Text.Json;
+    public HashSet<Binding> Binds { get; } = [];
 
-    public class TurnSettings
+    public const string JsonPath = "turn_settings.json";
+
+    public TurnSettings() => Load();
+
+    public void Load(string jsonPath = JsonPath)
     {
-        public List<TurnBindKeys> Binds { get; } = [];
+        if (!File.Exists(jsonPath)) return;
 
-        public const string JsonPath = "turn_settings.json";
-
-        public TurnSettings() => Load();
-
-        public void Load(string jsonPath = JsonPath)
+        Binding[] binds;
+        using (var json = File.OpenRead(jsonPath))
         {
-            if (!File.Exists(jsonPath)) return;
-
-            TurnBindKeys[] binds;
-            using (var json = File.OpenRead(jsonPath))
-            {
-                binds = JsonSerializer.Deserialize<TurnBindKeys[]>(json) ?? [];
-            }
-
-            Binds.Clear();
-            Binds.Capacity = binds.Length;
-            Binds.AddRange(binds);
+            binds = JsonSerializer.Deserialize<Binding[]>(json) ?? [];
         }
 
-        public void Save(string jsonPath = JsonPath)
-        {
-            using var json = File.Create(jsonPath);
-            JsonSerializer.Serialize(json, Binds);
-        }
+        Binds.Clear();
+
+        foreach (var bind in binds)
+            Binds.Add(bind);
+    }
+
+    public void Save(string jsonPath = JsonPath)
+    {
+        using var json = File.Create(jsonPath);
+        JsonSerializer.Serialize(json, Binds);
     }
 }

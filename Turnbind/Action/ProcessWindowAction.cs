@@ -1,132 +1,132 @@
-﻿namespace Turnbind
+﻿using Serilog;
+
+using System.Diagnostics;
+using System.Reactive.Subjects;
+using System.Runtime.InteropServices;
+
+namespace Turnbind;
+
+internal partial class ProcessWindowAction : IDisposable
 {
-    using Serilog;
+    static readonly ILogger m_logger = Util.GetLogger<ProcessWindowAction>();
 
-    using System.Diagnostics;
-    using System.Reactive;
-    using System.Reactive.Subjects;
-    using System.Runtime.InteropServices;
+    public string? ProcessName { get; set; }
 
-    internal partial class ProcessWindowAction : IDisposable
+    public Process? Process
     {
-        static readonly ILogger _logger = Util.GetLogger<ProcessWindowAction>();
-
-        public string? ProcessName { get; set; }
-
-        public Process? Process
+        get
         {
-            get
+            if (m_process is not null) return m_process;
+
+            if (ProcessName is null) return null;
+
+            var candidates = Process.GetProcessesByName(ProcessName);
+
+            if (candidates.Length == 0)
             {
-                if (_process is not null) return _process;
-
-                if (ProcessName is null) return null;
-
-                var candidates = Process.GetProcessesByName(ProcessName);
-
-                if (candidates.Length == 0)
-                {
-                    _logger.Warning("No processes found for {ProcessName}", ProcessName);
-                    return null;
-                }
-
-                if (candidates.Length > 1)
-                {
-                    _logger.Warning("Multiple processes found for {ProcessName}", ProcessName);
-                    return null;
-                }
-
-                _process = candidates[0];
-
-                return _process;
+                m_logger.Warning("No processes found for {ProcessName}", ProcessName);
+                return null;
             }
 
-            private set => _process = value;
+            if (candidates.Length > 1)
+            {
+                m_logger.Warning("Multiple processes found for {ProcessName}", ProcessName);
+                return null;
+            }
+
+            m_process = candidates[0];
+
+            return m_process;
         }
 
-        public IntPtr? WindowHandle => Process?.MainWindowHandle;
+        private set => m_process = value;
+    }
 
+    public IntPtr? WindowHandle => Process?.MainWindowHandle;
 
-        readonly Subject<bool> _focused = new();
+    readonly Subject<bool> _focused = new();
 
-        public IObservable<bool> Focused => _focused;
+    public IObservable<bool> Focused => _focused;
 
-        readonly IntPtr _focusedHook;
+    readonly IntPtr m_focusedHook;
+    readonly WinEventDelegate _focusedCallback;
+    readonly WinEventDelegate _destroyedCallback;
+    readonly IntPtr m_destroyedHook;
+    Process? m_process = null;
 
-        readonly Subject<Unit> _destroyed = new();
+    delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
 
-        public IObservable<Unit> Destroyed => _destroyed;
+    [LibraryImport("user32.dll")]
+    private static partial IntPtr SetWinEventHook(
+        uint eventMin,
+        uint eventMax,
+        IntPtr hmodWinEventProc,
+        WinEventDelegate lpfnWinEventProc,
+        uint idProcess,
+        uint idThread,
+        uint dwFlags
+    );
 
-        readonly IntPtr _destroyedHook;
-        Process? _process = null;
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool UnhookWinEvent(IntPtr hWinEventHook);
 
-        delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
+    public ProcessWindowAction()
+    {
+        const uint EVENT_SYSTEM_FOREGROUND = 0x0003;
+        const uint EVENT_OBJECT_DESTROY = 0x8001;
+        const uint WINEVENT_OUTOFCONTEXT = 0x0000;
 
-        [LibraryImport("user32.dll")]
-        private static partial IntPtr SetWinEventHook(
-            uint eventMin,
-            uint eventMax,
-            IntPtr hmodWinEventProc,
-            WinEventDelegate lpfnWinEventProc,
-            uint idProcess,
-            uint idThread,
-            uint dwFlags
+        _focusedCallback = (_, _, win, _, _, _, _) =>
+        {
+            if(WindowHandle is null) return;
+
+            if (win == WindowHandle)
+            {
+                m_logger.Information("Window focused");
+                _focused.OnNext(true);
+            }
+            else
+            {
+                m_logger.Information("Window lost focuse");
+                _focused.OnNext(false);
+            }
+        };
+
+        _destroyedCallback = (_, _, win, _, _, _, _) =>
+        {
+            if (WindowHandle != win) return;
+
+            m_logger.Information("Window destroyed");
+            _focused.OnNext(false);
+
+            Process = null;
+        };
+
+        m_focusedHook = SetWinEventHook(
+            EVENT_SYSTEM_FOREGROUND,
+            EVENT_SYSTEM_FOREGROUND,
+            IntPtr.Zero,
+            _focusedCallback,
+            0,
+            0,
+            WINEVENT_OUTOFCONTEXT
         );
 
-        [LibraryImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static partial bool UnhookWinEvent(IntPtr hWinEventHook);
+        m_destroyedHook = SetWinEventHook(
+            EVENT_OBJECT_DESTROY,
+            EVENT_OBJECT_DESTROY,
+            IntPtr.Zero,
+            _destroyedCallback,
+            0,
+            0,
+            WINEVENT_OUTOFCONTEXT
+        );
+    }
 
-        public ProcessWindowAction()
-        {
-            const uint EVENT_SYSTEM_FOREGROUND = 0x0003;
-            const uint EVENT_OBJECT_DESTROY = 0x8001;
-            const uint WINEVENT_OUTOFCONTEXT = 0x0000;
-
-            _focusedHook = SetWinEventHook(
-                EVENT_SYSTEM_FOREGROUND,
-                EVENT_SYSTEM_FOREGROUND,
-                IntPtr.Zero,
-                (_, _, win, _, _, _, _) =>
-                {
-                    if (win == WindowHandle)
-                    {
-                        _logger.Information("Window focused");
-                        _focused.OnNext(true);
-                    }
-                    else
-                    {
-                        _logger.Information("Window lost focuse");
-                        _focused.OnNext(false);
-                    }
-                },
-                0,
-                0,
-                WINEVENT_OUTOFCONTEXT
-            );
-
-            _destroyedHook = SetWinEventHook(
-                EVENT_OBJECT_DESTROY,
-                EVENT_OBJECT_DESTROY,
-                IntPtr.Zero,
-                (_, _, win, _, _, _, _) =>
-                {
-                    if (WindowHandle != win) return;
-
-                    _logger.Information("Window destroyed");
-                    _destroyed.OnNext(Unit.Default);
-
-                    Process = null;
-                },
-                0,
-                0,
-                WINEVENT_OUTOFCONTEXT
-            );
-        }
-
-        public void Dispose()
-        {
-            UnhookWinEvent(_focusedHook);
-            UnhookWinEvent(_destroyedHook);
-        }
+    public void Dispose()
+    {
+        UnhookWinEvent(m_focusedHook);
+        UnhookWinEvent(m_destroyedHook);
     }
 }

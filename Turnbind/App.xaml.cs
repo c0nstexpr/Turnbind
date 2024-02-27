@@ -1,7 +1,7 @@
-﻿namespace Turnbind
-{
-    using System.Windows;
+﻿using System.Windows;
 
+namespace Turnbind
+{
     public partial class App : Application
     {
     }

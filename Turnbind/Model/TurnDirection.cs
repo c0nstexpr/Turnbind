@@ -1,8 +1,7 @@
-﻿namespace Turnbind.Model
+﻿namespace Turnbind.Model;
+
+public enum TurnDirection
 {
-    public enum TurnDirection
-    {
-        Left,
-        Right
-    }
+    Left,
+    Right
 }

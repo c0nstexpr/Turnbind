@@ -3,11 +3,9 @@ using SharpHook.Native;
 using SharpHook.Reactive;
 
 using System.Diagnostics;
-using System.Net.Sockets;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Threading;
 
 using Turnbind.Model;
 
@@ -21,6 +19,8 @@ public class InputAction : IDisposable
 
     readonly CompositeDisposable m_disposables = [];
 
+    readonly Dictionary<InputKey, bool> m_pressedKeys = Enum.GetValues<InputKey>().ToDictionary(k => k, _ => false);
+
     readonly Subject<KeyState> m_input = new();
 
     public IObservable<KeyState> Input => m_input;
@@ -31,7 +31,7 @@ public class InputAction : IDisposable
         m_disposables.Add(Hook.MousePressed.Subscribe(OnMousePress));
         m_disposables.Add(Hook.KeyReleased.Subscribe(OnKeyRelease));
         m_disposables.Add(Hook.MouseReleased.Subscribe(OnMouseRelease));
-        m_disposables.Add(Hook.MouseWheel.Subscribe(OnMouseWheel));
+        // m_disposables.Add(Hook.MouseWheel.Subscribe(OnMouseWheel));
         m_disposables.Add(Hook.RunAsync().Subscribe());
     }
 
@@ -71,25 +71,43 @@ public class InputAction : IDisposable
             .Select(s => s.Pressed);
     }
 
-    void OnKeyRelease(KeyboardHookEventArgs args) => m_input.OnNext(new(args.Data.KeyCode.ToInputKey(), false));
+    void OnKeyRelease(KeyboardHookEventArgs args)
+    {
+        var input = args.Data.KeyCode.ToInputKey();
+        m_input.OnNext(new(input, false));
+        m_pressedKeys[input] = false;
+    }
 
-    void OnKeyPress(KeyboardHookEventArgs args) => m_input.OnNext(new(args.Data.KeyCode.ToInputKey(), true));
+    void OnKeyPress(KeyboardHookEventArgs args)
+    {
+        var input = args.Data.KeyCode.ToInputKey();
+
+        if (m_pressedKeys[input] == true) return;
+
+        m_input.OnNext(new(input, true));
+        m_pressedKeys[input] = true;
+    }
 
     void OnMousePress(MouseHookEventArgs args) => m_input.OnNext(new(args.Data.Button.ToInputKey(), true));
 
     void OnMouseRelease(MouseHookEventArgs args) => m_input.OnNext(new(args.Data.Button.ToInputKey(), false));
 
-    void OnMouseWheel(MouseWheelHookEventArgs args)
-    {
-        var data = args.Data;
+    // void OnMouseWheel(MouseWheelHookEventArgs args)
+    // {
+    //     var data = args.Data;
 
-        if (data.Direction != MouseWheelScrollDirection.Vertical) return;
+    //     if (data.Direction != MouseWheelScrollDirection.Vertical) return;
 
-        var isUp = args.Data.Rotation > 0;
+    //     var isUp = args.Data.Rotation > 0;
 
-        m_input.OnNext(new(InputKey.MouseWheelUp, isUp));
-        m_input.OnNext(new(InputKey.MouseWheelDown, !isUp));
-    }
+    //     if (m_pressedKeys[InputKey.MouseWheelUp] != isUp)
+    //     { 
+    //         m_input.OnNext(new(InputKey.MouseWheelUp, isUp));
+    //         m_pressedKeys[InputKey.MouseWheelUp] = isUp;
+    //         m_input.OnNext(new(InputKey.MouseWheelDown, !isUp));
+    //         m_pressedKeys[InputKey.MouseWheelDown] = !isUp;
+    //     }
+    // }
 
     public void Dispose()
     {

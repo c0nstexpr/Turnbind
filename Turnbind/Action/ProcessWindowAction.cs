@@ -44,13 +44,15 @@ internal partial class ProcessWindowAction : IDisposable
 
     public IntPtr? WindowHandle => Process?.MainWindowHandle;
 
-    readonly Subject<bool> _focused = new();
+    readonly BehaviorSubject<bool> m_focused = new(false);
 
-    public IObservable<bool> Focused => _focused;
+    public IObservable<bool> Focused => m_focused;
+
+    public bool IsFocused => m_focused.Value;
 
     readonly IntPtr m_focusedHook;
-    readonly WinEventDelegate _focusedCallback;
-    readonly WinEventDelegate _destroyedCallback;
+    readonly WinEventDelegate m_focusedCallback;
+    readonly WinEventDelegate m_destroyedCallback;
     readonly IntPtr m_destroyedHook;
     Process? m_process = null;
 
@@ -77,28 +79,28 @@ internal partial class ProcessWindowAction : IDisposable
         const uint EVENT_OBJECT_DESTROY = 0x8001;
         const uint WINEVENT_OUTOFCONTEXT = 0x0000;
 
-        _focusedCallback = (_, _, win, _, _, _, _) =>
+        m_focusedCallback = (_, _, win, _, _, _, _) =>
         {
             if(WindowHandle is null) return;
 
             if (win == WindowHandle)
             {
                 m_logger.Information("Window focused");
-                _focused.OnNext(true);
+                m_focused.OnNext(true);
             }
             else
             {
                 m_logger.Information("Window lost focuse");
-                _focused.OnNext(false);
+                m_focused.OnNext(false);
             }
         };
 
-        _destroyedCallback = (_, _, win, _, _, _, _) =>
+        m_destroyedCallback = (_, _, win, _, _, _, _) =>
         {
             if (WindowHandle != win) return;
 
             m_logger.Information("Window destroyed");
-            _focused.OnNext(false);
+            m_focused.OnNext(false);
 
             Process = null;
         };
@@ -107,7 +109,7 @@ internal partial class ProcessWindowAction : IDisposable
             EVENT_SYSTEM_FOREGROUND,
             EVENT_SYSTEM_FOREGROUND,
             IntPtr.Zero,
-            _focusedCallback,
+            m_focusedCallback,
             0,
             0,
             WINEVENT_OUTOFCONTEXT
@@ -117,7 +119,7 @@ internal partial class ProcessWindowAction : IDisposable
             EVENT_OBJECT_DESTROY,
             EVENT_OBJECT_DESTROY,
             IntPtr.Zero,
-            _destroyedCallback,
+            m_destroyedCallback,
             0,
             0,
             WINEVENT_OUTOFCONTEXT

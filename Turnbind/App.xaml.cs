@@ -1,8 +1,7 @@
 ﻿using System.Windows;
 
-namespace Turnbind
+namespace Turnbind;
+
+public partial class App : Application
 {
-    public partial class App : Application
-    {
-    }
 }

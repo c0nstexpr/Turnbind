@@ -15,13 +15,51 @@ internal class MainWindowViewModel : ObservableObject, IDisposable
 {
     readonly Dictionary<Binding, SerialDisposable> m_bindDisposables = [];
 
+    IDisposable m_keyWatchDisposable = Disposable.Empty;
+
+    private InputAction? m_inputAction;
+
     readonly TurnAction m_turnAction = new();
 
     readonly ProcessWindowAction m_windowAction = new();
 
+    readonly IDisposable m_windowFocusedDisposable;
+
+    public MainWindowViewModel() => m_windowFocusedDisposable = m_windowAction.Focused
+        .Subscribe(focused => OnPropertyChanged(nameof(IsWindowFocused)));
+
     public string? ProcessName { get => m_windowAction.ProcessName; set => m_windowAction.ProcessName = value; }
 
-    public InputAction? InputAction { get; set; }
+    public string CurrentKeyStr => string.Join(" + ", m_inputKeys);
+
+    public string IsWindowFocused => m_windowAction.IsFocused ? "Yes" : "No";
+
+    readonly List<InputKey> m_inputKeys = new(Enum.GetValues<InputKey>().Length);
+
+    public InputAction? InputAction
+    {
+        get => m_inputAction;
+        
+        set
+        {
+            m_inputAction = value;
+
+            if (m_inputAction == null) return;
+
+            m_keyWatchDisposable.Dispose();
+            m_keyWatchDisposable = m_inputAction.Input.Subscribe(OnInput);
+        }
+    }
+
+    void OnInput(InputAction.KeyState state)
+    {
+        if(state.Pressed)
+            m_inputKeys.Add(state.Key);
+        else
+            m_inputKeys.Remove(state.Key);
+
+        OnPropertyChanged(nameof(CurrentKeyStr));
+    }
 
     public void AddBind(BindingViewModel bind)
     {
@@ -54,7 +92,7 @@ internal class MainWindowViewModel : ObservableObject, IDisposable
                 {
                     disposable.Dispose();
 
-                    if (active) disposable = turnObservable.Subscribe();
+                    if (active && m_windowAction.IsFocused) disposable = turnObservable.Subscribe();
                 }
             ) ?? Disposable.Empty,
             disposable
@@ -65,5 +103,7 @@ internal class MainWindowViewModel : ObservableObject, IDisposable
     {
         m_windowAction.Dispose();
         m_bindDisposables.Values.ForEach(d => d.Dispose());
+        m_keyWatchDisposable.Dispose();
+        m_windowFocusedDisposable.Dispose();
     }
 }

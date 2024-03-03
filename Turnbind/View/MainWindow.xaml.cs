@@ -3,7 +3,6 @@ using System.Windows;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 
-using Turnbind.Model;
 using Turnbind.ViewModel;
 
 namespace Turnbind.View;

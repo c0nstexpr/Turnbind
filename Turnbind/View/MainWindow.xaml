@@ -9,6 +9,16 @@
         <DockPanel DockPanel.Dock="Top" HorizontalAlignment="Center">
             <Label Content="Process Name:" VerticalAlignment="Center" />
             <TextBox VerticalContentAlignment="Center" Width="200" Height="25" Margin="10" BorderThickness="1" Text="{Binding ProcessName}" />
+        </DockPanel> 
+        
+        <DockPanel DockPanel.Dock="Top" HorizontalAlignment="Center">
+            <Label Content="Window State:" VerticalAlignment="Center" />
+            <Label VerticalContentAlignment="Center" Width="200" Height="25" Margin="10" BorderThickness="1" Content="{Binding IsWindowFocused}" />
+        </DockPanel> 
+        
+        <DockPanel DockPanel.Dock="Top" HorizontalAlignment="Center">
+            <Label Content="Current Keys:" VerticalAlignment="Center" />
+            <Label VerticalContentAlignment="Center" Width="200" Height="25" Margin="10" BorderThickness="1" Content="{Binding CurrentKeyStr, Mode=OneWay}" />
         </DockPanel>
 
         <view:TurnBindControl x:Name="TurnBindControl"/>

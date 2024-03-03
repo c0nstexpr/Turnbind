@@ -49,7 +49,7 @@
                 SelectedIndex="{Binding FocusedBindingIndex}">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Width="50" Header="Dir" DisplayMemberBinding="{Binding Path=ID}" />
+                    <GridViewColumn Width="50" Header="Dir" DisplayMemberBinding="{Binding Path=Dir}" />
                     <GridViewColumn Width="200" Header="Pix/Sec" DisplayMemberBinding="{Binding Path=PixelPerSec}" />
                     <GridViewColumn Width="200" Header="Keys" DisplayMemberBinding="{Binding Path=KeysString}" />
                 </GridView>

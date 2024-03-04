@@ -6,161 +6,44 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Reactive.Linq;
 
-using Turnbind.Action;
 using Turnbind.Model;
 
 namespace Turnbind.ViewModel;
 
-partial class TurnBindViewModel : ObservableObject, IDisposable
+partial class TurnBindViewModel : ObservableObject
 {
-    public readonly InputAction InputAction = new();
+    readonly BindingEditViewModel m_editViewModel = new();
 
-    #region Bind settings
+    readonly BindingListView m_listView = new();
 
-    [ObservableProperty]
-    TurnDirection m_turnDirection;
+    ObservableCollection<BindingViewModel> m_binds => m_listView.Binds;
 
-    [ObservableProperty]
-    double m_pixelPerSec;
+    Settings m_settings = new();
 
-    readonly List<InputKey> m_newBindingKeys = [];
-
-    string? m_bindingKeys;
-
-    public string? BindingKeys
-    {
-        get => m_bindingKeys;
-        private set => SetProperty(ref m_bindingKeys, value);
-    }
-
-    #endregion
-
-    #region Bind list
-
-    public ObservableCollection<BindingViewModel> Binds { get; } = [];
-
-    int m_focusedBindingIndex = -1;
-
-    public int FocusedBindingIndex
-    {
-        get => m_focusedBindingIndex;
-
-        set
-        {
-            SetProperty(ref m_focusedBindingIndex, value);
-            OnPropertyChanged(nameof(m_focusedBinding));
-            OnPropertyChanged(nameof(ModifyButtonContent));
-            OnPropertyChanged(nameof(RemoveButtonEnabled));
-
-            if (m_focusedBinding is null) return;
-
-            TurnDirection = m_focusedBinding.Dir;
-            PixelPerSec = m_focusedBinding.PixelPerSec;
-            BindingKeys = m_focusedBinding.Keys.ToKeyString();
-        }
-    }
-
-    BindingViewModel? m_focusedBinding => FocusedBindingIndex >= 0 && FocusedBindingIndex < Binds.Count ?
-        Binds[FocusedBindingIndex] : null;
-
-    #endregion
-
-    TurnSettings m_settings = new();
-
-    public TurnSettings Settings
+    public Settings Settings
     {
         get => m_settings;
 
         set
         {
             SetProperty(ref m_settings, value);
-
-            m_onTurnBindKeysListChangedCalled = true;
-
-            Binds.Clear();
-
-            foreach (var bind in m_binds)
-                Binds.Add(
-                    new()
-                    {
-                        Dir = bind.Dir,
-                        PixelPerSec = bind.PixelPerSec,
-                        Keys = bind.Keys
-                    }
-                );
-
-            m_onTurnBindKeysListChangedCalled = false;
+            SetBinds();
         }
     }
 
-    HashSet<Binding> m_binds => Settings.Binds;
+    public TurnBindViewModel() => SetBinds();
 
-    public string ModifyButtonContent => m_focusedBinding is null ? "Add" : "Modify";
-
-    public bool RemoveButtonEnabled => m_focusedBinding is not null;
-
-    public TurnBindViewModel()
-    {
-        Binds = new(
-            m_binds.Select(
-                b => new BindingViewModel()
-                {
-                    Dir = b.Dir,
-                    PixelPerSec = b.PixelPerSec,
-                    Keys = b.Keys
-                }
-            )
-        );
-        Binds.CollectionChanged += OnTurnBindKeysListChanged;
-    }
-
-    bool m_onTurnBindKeysListChangedCalled = false;
-
-    void OnTurnBindKeysListChanged(object? sender, NotifyCollectionChangedEventArgs args)
-    {
-        if (m_onTurnBindKeysListChangedCalled) return;
-
-        m_onTurnBindKeysListChangedCalled = true;
-
-        switch (args.Action)
-        {
-            case NotifyCollectionChangedAction.Add:
-                m_binds.Add(GetElement(args.NewItems!));
-                break;
-            case NotifyCollectionChangedAction.Remove:
-                m_binds.Remove(GetElement(args.OldItems!));
-                break;
-            default:
-                break;
-        }
-
-        m_onTurnBindKeysListChangedCalled = false;
-    }
-
-    static Binding GetElement(IList items) => items.Cast<BindingViewModel>().First().Binding;
-
-    public void OnKey(InputKey k, bool p)
-    {
-        if (!p) return;
-
-        m_newBindingKeys.Add(k);
-        BindingKeys = m_newBindingKeys.ToKeyString();
-    }
-
-    public void ClearKeys()
-    {
-        m_newBindingKeys.Clear();
-        BindingKeys = null;
-    }
+    void SetBinds() => m_listView.SetBinds(m_settings.Profile);
 
     public bool Modify()
     {
-        Binding dummyBind = new() { Keys = m_newBindingKeys };
-        if (m_binds.Contains(dummyBind))
-            return false;
+        TurnSetting dummyBind = new() { Keys = m_editViewModel.Binding.Keys };
 
         if (m_focusedBinding == null)
         {
+            if (m_binds.Contains(dummyBind))
+                return false;
+
             BindingViewModel newBind = new()
             {
                 Dir = TurnDirection,
@@ -193,5 +76,12 @@ partial class TurnBindViewModel : ObservableObject, IDisposable
         Settings.Save();
     }
 
-    public void Dispose() => InputAction.Dispose();
+
+    [ObservableProperty]
+    string m_modifyButtonContent = "Add";
+
+    [ObservableProperty]
+    bool m_removeButtonEnabled;
+
+    static TurnSetting GetElement(IList items) => items.Cast<BindingViewModel>().First().Binding;
 }

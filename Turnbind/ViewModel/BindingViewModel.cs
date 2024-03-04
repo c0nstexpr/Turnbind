@@ -9,9 +9,10 @@ partial class BindingViewModel : ObservableObject
     [ObservableProperty]
     TurnDirection m_dir;
 
-    public IEnumerable<InputKey> Keys
+    public List<InputKey> Keys
     {
         get => m_keys;
+
         set
         {
             SetProperty(ref m_keys, value);
@@ -24,12 +25,12 @@ partial class BindingViewModel : ObservableObject
     [ObservableProperty]
     double m_pixelPerSec;
 
-    IEnumerable<InputKey> m_keys = [];
+    List<InputKey> m_keys = [];
 
-    public Binding Binding => new()
+    public TurnSetting Binding => new()
     {
         Dir = Dir,
-        Keys = m_keys?.ToList() ?? [],
+        Keys = m_keys?.ToArray() ?? [],
         PixelPerSec = PixelPerSec
     };
 }

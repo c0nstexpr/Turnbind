@@ -2,58 +2,86 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:viewModel="clr-namespace:Turnbind.ViewModel"
-        mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="500"
+        mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="800"
         d:DataContext="{d:DesignInstance Type=viewModel:TurnBindViewModel}">
-    <DockPanel Margin="10" MinWidth="200">
-        <DockPanel DockPanel.Dock="Bottom" HorizontalAlignment="Center" Margin="5">
-            <StackPanel DockPanel.Dock="Right" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Button Margin="10" MinHeight="30" MinWidth="100" Content="{Binding ModifyButtonContent, Mode=OneWay}"
-                        d:Content="Modify" Click="ModifyButtonClick" />
-                <Button Margin="10" MinHeight="30" Content="Remove" Click="RemoveButtonClick"
+    <StackPanel Orientation="Horizontal" Margin="10" MinWidth="200">
+        <DockPanel>
+            <Label DockPanel.Dock="Top" HorizontalAlignment="Center" Content="Profiles"/>
+
+            <StackPanel DockPanel.Dock="Bottom" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Button Margin="10" MinHeight="30" MinWidth="100" Content="Add" Click="ProfileAddButtonClick" />
+                <Button Margin="10" MinHeight="30" Content="Remove" Click="ProfileRemoveButtonClick"
                         IsEnabled="{Binding RemoveButtonEnabled}" />
             </StackPanel>
 
-            <Grid VerticalAlignment="Center" Margin="10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="100" />
-                    <ColumnDefinition MinWidth="150" />
-                </Grid.ColumnDefinitions>
-
-                <Grid.RowDefinitions>
-                    <RowDefinition MinHeight="10" />
-                    <RowDefinition MinHeight="10" />
-                    <RowDefinition MinHeight="10" />
-                    <RowDefinition MinHeight="10" />
-                </Grid.RowDefinitions>
-
-                <Label Margin="5" Content="Direction:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" />
-
-                <ComboBox Margin="5" x:Name="TurnDicectionComboBox" HorizontalContentAlignment="Center"
-                        SelectedValue="{Binding TurnDirection}" Grid.Row="0" Grid.Column="1" />
-
-                <Label Margin="5" Content="Binding keys:" VerticalAlignment=" Center" Grid.Row="1" Grid.Column="0" />
-
-                <TextBox Margin="5" x:Name="BindingKeysTextBox" IsReadOnly="True" BorderThickness=" 1"
-                        VerticalContentAlignment="Center" BorderBrush=" Gray" Text="{Binding BindingKeys, Mode=OneWay}"
-                        GotFocus="BindingKeysTextBoxGotFocus" LostFocus="BindingKeysTextBoxLostFocus" Grid.Row="1"
-                        Grid.Column="1" />
-
-                <Label Margin="5" Content="Pixel/Second:" VerticalAlignment="Center" Grid.Row="2" Grid.Column="0" />
-
-                <TextBox Margin="5" BorderThickness="1" VerticalContentAlignment="Center" BorderBrush="Gray"
-                        Text="{Binding PixelPerSec}" Grid.Row="2" Grid.Column="1" />
-            </Grid>
+            <ListView Margin="5" DockPanel.Dock="Top" ItemsSource="{Binding ProfilesNames, Mode=OneTime}"
+                      MinWidth="200"
+                    SelectedIndex="{Binding SelectedProfileIndex}">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Width="50" Header="Name">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding ProfileName}"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
         </DockPanel>
 
-        <ListView Margin="5" DockPanel.Dock="Top" ItemsSource="{Binding Binds, Mode=OneTime}"
-                SelectedIndex="{Binding FocusedBindingIndex}">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Width="50" Header="Dir" DisplayMemberBinding="{Binding Path=Dir}" />
-                    <GridViewColumn Width="200" Header="Pix/Sec" DisplayMemberBinding="{Binding Path=PixelPerSec}" />
-                    <GridViewColumn Width="200" Header="Keys" DisplayMemberBinding="{Binding Path=KeysString}" />
-                </GridView>
-            </ListView.View>
-        </ListView>
-    </DockPanel>
+        <DockPanel>
+            <DockPanel DockPanel.Dock="Bottom" HorizontalAlignment="Center" Margin="5">
+                <StackPanel DockPanel.Dock="Right" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Button Margin="10" MinHeight="30" MinWidth="100" Content="{Binding ModifyButtonContent, Mode=OneWay}"
+                            d:Content="Modify" Click="ModifyButtonClick" />
+                    <Button Margin="10" MinHeight="30" Content="Remove" Click="RemoveButtonClick"
+                            IsEnabled="{Binding RemoveButtonEnabled}" />
+                </StackPanel>
+
+                <Grid VerticalAlignment="Center" Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="100" />
+                        <ColumnDefinition MinWidth="150" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition MinHeight="10" />
+                        <RowDefinition MinHeight="10" />
+                        <RowDefinition MinHeight="10" />
+                        <RowDefinition MinHeight="10" />
+                    </Grid.RowDefinitions>
+
+                    <Label Margin="5" Content="Direction:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" />
+
+                    <ComboBox Margin="5" x:Name="TurnDicectionComboBox" HorizontalContentAlignment="Center"
+                            SelectedValue="{Binding TurnDirection}" Grid.Row="0" Grid.Column="1" />
+
+                    <Label Margin="5" Content="Binding keys:" VerticalAlignment=" Center" Grid.Row="1" Grid.Column="0" />
+
+                    <TextBox Margin="5" x:Name="BindingKeysTextBox" IsReadOnly="True" BorderThickness=" 1"
+                            VerticalContentAlignment="Center" BorderBrush=" Gray" Text="{Binding BindingKeys, Mode=OneWay}"
+                            GotFocus="BindingKeysTextBoxGotFocus" LostFocus="BindingKeysTextBoxLostFocus" Grid.Row="1"
+                            Grid.Column="1" />
+
+                    <Label Margin="5" Content="Pixel/Second:" VerticalAlignment="Center" Grid.Row="2" Grid.Column="0" />
+
+                    <TextBox Margin="5" BorderThickness="1" VerticalContentAlignment="Center" BorderBrush="Gray"
+                            Text="{Binding PixelPerSec}" Grid.Row="2" Grid.Column="1" />
+                </Grid>
+            </DockPanel>
+
+            <ListView Margin="5" DockPanel.Dock="Top" ItemsSource="{Binding Binds, Mode=OneTime}"
+                    SelectedIndex="{Binding FocusedBindingIndex}">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Width="100" Header="Dir" DisplayMemberBinding="{Binding Path=Dir}" />
+                        <GridViewColumn Width="100" Header="Pix/Sec" DisplayMemberBinding="{Binding Path=PixelPerSec}" />
+                        <GridViewColumn Width="200" Header="Keys" DisplayMemberBinding="{Binding Path=KeysString}" />
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </DockPanel>
+    </StackPanel>
 </UserControl>

@@ -42,29 +42,27 @@ public class InputAction : IDisposable
         var dic = keys.Select((k, index) => new KeyValuePair<InputKey, int>(k, index))
             .ToDictionary();
 
-        var nextKey = 0;
+        var nextKeyI = 0;
         var count = keys.Count;
 
         Debug.Assert(count > 0);
         Debug.Assert(keys.Distinct().Count() == count);
 
-        return m_input.Where(state => nextKey == count && state.Pressed).Select(
+        return m_input.Where(state => nextKeyI == count && state.Pressed).Select(
             state =>
             {
                 var (k, p) = state;
 
-                if (p && k == keys[nextKey])
+                if (!dic.TryGetValue(k, out var i)) return new KeyValidation(false, false);
+
+                if (p)
                 {
-                    ++nextKey;
-                    return new KeyValidation(nextKey == count, true);
+                    nextKeyI++;
+                    return new KeyValidation(nextKeyI == count, true);
                 }
 
-                if (dic.TryGetValue(k, out var i) && i < nextKey)
-                    nextKey = i;
-
-                var valid = nextKey == count - 1;
-
-                return new(valid, false);
+                nextKeyI = i;
+                return new(true, false);
             }
         )
             .Where(s => s.Valid)

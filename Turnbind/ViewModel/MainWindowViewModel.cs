@@ -13,9 +13,7 @@ namespace Turnbind.ViewModel;
 
 internal class MainWindowViewModel : ObservableObject, IDisposable
 {
-    readonly Dictionary<Binding, SerialDisposable> m_bindDisposables = [];
-
-    IDisposable m_keyWatchDisposable = Disposable.Empty;
+    readonly Dictionary<TurnSetting, SerialDisposable> m_bindDisposables = [];
 
     private InputAction? m_inputAction;
 
@@ -30,10 +28,12 @@ internal class MainWindowViewModel : ObservableObject, IDisposable
 
     public string? ProcessName { get => m_windowAction.ProcessName; set => m_windowAction.ProcessName = value; }
 
-    public string CurrentKeyStr => string.Join(" + ", m_inputKeys);
 
     public string IsWindowFocused => m_windowAction.IsFocused ? "Yes" : "No";
 
+
+    IDisposable m_keyWatchDisposable = Disposable.Empty;   
+    
     readonly List<InputKey> m_inputKeys = new(Enum.GetValues<InputKey>().Length);
 
     public InputAction? InputAction
@@ -50,6 +50,8 @@ internal class MainWindowViewModel : ObservableObject, IDisposable
             m_keyWatchDisposable = m_inputAction.Input.Subscribe(OnInput);
         }
     }
+
+    public string CurrentKeyStr => string.Join(" + ", m_inputKeys);
 
     void OnInput(InputAction.KeyState state)
     {
@@ -80,7 +82,7 @@ internal class MainWindowViewModel : ObservableObject, IDisposable
         m_bindDisposables.Remove(b);
     }
 
-    IDisposable SubscribeBind(Binding bind)
+    IDisposable SubscribeBind(TurnSetting bind)
     {
         var turnObservable = m_turnAction.Turn(bind.Dir, bind.PixelPerSec);
         var disposable = Disposable.Empty;

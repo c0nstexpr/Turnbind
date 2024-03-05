@@ -13,99 +13,99 @@ namespace Turnbind.ViewModel;
 
 internal class MainWindowViewModel : ObservableObject, IDisposable
 {
-    readonly Dictionary<TurnSetting, SerialDisposable> m_bindDisposables = [];
+    //readonly Dictionary<TurnSetting, SerialDisposable> m_bindDisposables = [];
 
-    private InputAction? m_inputAction;
+    //private InputAction? m_inputAction;
 
-    readonly TurnAction m_turnAction = new();
+    //readonly TurnAction m_turnAction = new();
 
-    readonly ProcessWindowAction m_windowAction = new();
+    //readonly ProcessWindowAction m_windowAction = new();
 
-    readonly IDisposable m_windowFocusedDisposable;
+    //readonly IDisposable m_windowFocusedDisposable;
 
-    public MainWindowViewModel() => m_windowFocusedDisposable = m_windowAction.Focused
-        .Subscribe(focused => OnPropertyChanged(nameof(IsWindowFocused)));
+    //public MainWindowViewModel() => m_windowFocusedDisposable = m_windowAction.Focused
+    //    .Subscribe(focused => OnPropertyChanged(nameof(IsWindowFocused)));
 
-    public string? ProcessName { get => m_windowAction.ProcessName; set => m_windowAction.ProcessName = value; }
-
-
-    public string IsWindowFocused => m_windowAction.IsFocused ? "Yes" : "No";
+    //public string? ProcessName { get => m_windowAction.ProcessName; set => m_windowAction.ProcessName = value; }
 
 
-    IDisposable m_keyWatchDisposable = Disposable.Empty;   
+    //public string IsWindowFocused => m_windowAction.IsFocused ? "Yes" : "No";
+
+
+    //IDisposable m_keyWatchDisposable = Disposable.Empty;   
     
-    readonly List<InputKey> m_inputKeys = new(Enum.GetValues<InputKey>().Length);
+    //readonly List<InputKey> m_inputKeys = new(Enum.GetValues<InputKey>().Length);
 
-    public InputAction? InputAction
-    {
-        get => m_inputAction;
+    //public InputAction? InputAction
+    //{
+    //    get => m_inputAction;
         
-        set
-        {
-            m_inputAction = value;
+    //    set
+    //    {
+    //        m_inputAction = value;
 
-            if (m_inputAction == null) return;
+    //        if (m_inputAction == null) return;
 
-            m_keyWatchDisposable.Dispose();
-            m_keyWatchDisposable = m_inputAction.Input.Subscribe(OnInput);
-        }
-    }
+    //        m_keyWatchDisposable.Dispose();
+    //        m_keyWatchDisposable = m_inputAction.Input.Subscribe(OnInput);
+    //    }
+    //}
 
-    public string CurrentKeyStr => string.Join(" + ", m_inputKeys);
+    //public string CurrentKeyStr => string.Join(" + ", m_inputKeys);
 
-    void OnInput(InputAction.KeyState state)
-    {
-        if(state.Pressed)
-            m_inputKeys.Add(state.Key);
-        else
-            m_inputKeys.Remove(state.Key);
+    //void OnInput(InputAction.KeyState state)
+    //{
+    //    if(state.Pressed)
+    //        m_inputKeys.Add(state.Key);
+    //    else
+    //        m_inputKeys.Remove(state.Key);
 
-        OnPropertyChanged(nameof(CurrentKeyStr));
-    }
+    //    OnPropertyChanged(nameof(CurrentKeyStr));
+    //}
 
-    public void AddBind(BindingViewModel bind)
-    {
-        var b = bind.Binding;
-        if (!m_bindDisposables.TryGetValue(b, out var disposable))
-            disposable = new();
+    //public void AddBind(BindingViewModel bind)
+    //{
+    //    var b = bind.Binding;
+    //    if (!m_bindDisposables.TryGetValue(b, out var disposable))
+    //        disposable = new();
 
-        disposable.Disposable = SubscribeBind(b);
-    }
+    //    disposable.Disposable = SubscribeBind(b);
+    //}
 
-    public void RemoveBind(BindingViewModel bind)
-    {
-        var b = bind.Binding;
-        if (!m_bindDisposables.TryGetValue(b, out var disposable))
-            return;
+    //public void RemoveBind(BindingViewModel bind)
+    //{
+    //    var b = bind.Binding;
+    //    if (!m_bindDisposables.TryGetValue(b, out var disposable))
+    //        return;
 
-        disposable.Dispose();
-        m_bindDisposables.Remove(b);
-    }
+    //    disposable.Dispose();
+    //    m_bindDisposables.Remove(b);
+    //}
 
-    IDisposable SubscribeBind(TurnSetting bind)
-    {
-        var turnObservable = m_turnAction.Turn(bind.Dir, bind.PixelPerSec);
-        var disposable = Disposable.Empty;
+    //IDisposable SubscribeBind(TurnSetting bind)
+    //{
+    //    var turnObservable = m_turnAction.Turn(bind.Dir, bind.PixelPerSec);
+    //    var disposable = Disposable.Empty;
 
-        return new CompositeDisposable()
-        {
-            InputAction?.SubscribeKeys(bind.Keys).Subscribe(
-                active =>
-                {
-                    disposable.Dispose();
+    //    return new CompositeDisposable()
+    //    {
+    //        InputAction?.SubscribeKeys(bind.Keys).Subscribe(
+    //            active =>
+    //            {
+    //                disposable.Dispose();
 
-                    if (active && m_windowAction.IsFocused) disposable = turnObservable.Subscribe();
-                }
-            ) ?? Disposable.Empty,
-            disposable
-        };
-    }
+    //                if (active && m_windowAction.IsFocused) disposable = turnObservable.Subscribe();
+    //            }
+    //        ) ?? Disposable.Empty,
+    //        disposable
+    //    };
+    //}
 
     public void Dispose()
     {
-        m_windowAction.Dispose();
-        m_bindDisposables.Values.ForEach(d => d.Dispose());
-        m_keyWatchDisposable.Dispose();
-        m_windowFocusedDisposable.Dispose();
+        //m_windowAction.Dispose();
+        //m_bindDisposables.Values.ForEach(d => d.Dispose());
+        //m_keyWatchDisposable.Dispose();
+        //m_windowFocusedDisposable.Dispose();
     }
 }

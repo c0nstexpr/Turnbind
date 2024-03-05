@@ -1,5 +1,7 @@
 ﻿using SharpHook.Native;
 
+using Turnbind.Helper;
+
 namespace Turnbind.Model;
 
 public enum InputKey

@@ -26,8 +26,6 @@ public partial class TurnBindControl : UserControl, IDisposable
 
         InitializeComponent();
 
-        foreach (var item in Enum.GetValues<TurnDirection>())
-            TurnDicectionComboBox.Items.Add(item);
     }
 
     readonly SerialDisposable m_bindingKeysDisposable = new();
@@ -36,50 +34,50 @@ public partial class TurnBindControl : UserControl, IDisposable
     {
         if (ViewModel is null) return;
 
-        ViewModel.ClearKeys();
+        //ViewModel.ClearKeys();
 
-        m_bindingKeysDisposable.Disposable = Synchronization.ObserveOn(
-            ViewModel.InputAction.Input.Skip(1),
-            new DispatcherSynchronizationContext(Dispatcher)
-        )
-            .Where(_ => BindingKeysTextBox.IsFocused)
-            .Subscribe(
-                s =>
-                {
-                    var (k, p) = s;
+        //m_bindingKeysDisposable.Disposable = Synchronization.ObserveOn(
+        //    ViewModel.InputAction.Input.Skip(1),
+        //    new DispatcherSynchronizationContext(Dispatcher)
+        //)
+        //    .Where(_ => BindingKeysTextBox.IsFocused)
+        //    .Subscribe(
+        //        s =>
+        //        {
+        //            var (k, p) = s;
 
-                    switch (k)
-                    {
-                        case InputKey.Enter or InputKey.NumEnter:
-                            BindingKeysTextBox.MoveFocus(new(FocusNavigationDirection.Next));
-                            return;
+        //            switch (k)
+        //            {
+        //                case InputKey.Enter or InputKey.NumEnter:
+        //                    BindingKeysTextBox.MoveFocus(new(FocusNavigationDirection.Next));
+        //                    return;
 
-                        case InputKey.Escape:
-                            BindingKeysTextBox.MoveFocus(new(FocusNavigationDirection.Previous));
-                            return;
+        //                case InputKey.Escape:
+        //                    BindingKeysTextBox.MoveFocus(new(FocusNavigationDirection.Previous));
+        //                    return;
 
-                        case InputKey.Backspace:
-                            ViewModel.ClearKeys();
-                            return;
+        //                case InputKey.Backspace:
+        //                    ViewModel.ClearKeys();
+        //                    return;
 
-                        default:
-                            ViewModel.OnKey(k, p);
-                            return;
-                    }
-                }
-            );
+        //                default:
+        //                    ViewModel.OnKey(k, p);
+        //                    return;
+        //            }
+        //        }
+        //    );
     }
 
-    void BindingKeysTextBoxLostFocus(object sender, RoutedEventArgs e) => m_bindingKeysDisposable.Disposable = null;
+    //void BindingKeysTextBoxLostFocus(object sender, RoutedEventArgs e) => m_bindingKeysDisposable.Disposable = null;
 
-    void ModifyButtonClick(object sender, RoutedEventArgs e)
-    {
-        if (ViewModel?.Modify() == true) return;
+    //void ModifyButtonClick(object sender, RoutedEventArgs e)
+    //{
+    //    if (ViewModel?.Modify() == true) return;
 
-        MessageBox.Show("Bind with same keys already exists.\n Select it if you need to modify.");
-    }
+    //    MessageBox.Show("Bind with same keys already exists.\n Select it if you need to modify.");
+    //}
 
-    void RemoveButtonClick(object sender, RoutedEventArgs e) => ViewModel?.Remove();
+    //void RemoveButtonClick(object sender, RoutedEventArgs e) => ViewModel?.Remove();
 
     public void Dispose()
     {
@@ -93,8 +91,33 @@ public partial class TurnBindControl : UserControl, IDisposable
     {
         if (!disposing || m_disposed) return;
 
-        ViewModel.Dispose();
+        //ViewModel.Dispose();
         m_bindingKeysDisposable.Dispose();
         m_disposed = true;
+    }
+
+    public void ProfileAddButtonClick(object sender, RoutedEventArgs e)
+    {
+
+    }
+
+    public void ProfileRemoveButtonClick(object sender, RoutedEventArgs e)
+    {
+
+    }
+
+    public void ModifyButtonClick(object sender, RoutedEventArgs e)
+    {
+
+    }
+
+    public void RemoveButtonClick(object sender, RoutedEventArgs e)
+    {
+
+    }
+
+    public void BindingKeysTextBoxLostFocus(object sender, RoutedEventArgs e)
+    {
+
     }
 }

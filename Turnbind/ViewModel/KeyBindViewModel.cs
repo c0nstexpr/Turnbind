@@ -1,15 +1,15 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 
 using Turnbind.Model;
+using Turnbind.View;
 
 namespace Turnbind.ViewModel;
 
-partial class BindingViewModel : ObservableObject
+partial class KeyBindViewModel : ObservableObject
 {
-    [ObservableProperty]
-    TurnDirection m_dir;
+    InputKeys m_keys = [];
 
-    public List<InputKey> Keys
+    public InputKeys Keys
     {
         get => m_keys;
 
@@ -23,14 +23,5 @@ partial class BindingViewModel : ObservableObject
     public string KeysString => m_keys.ToKeyString();
 
     [ObservableProperty]
-    double m_pixelPerSec;
-
-    List<InputKey> m_keys = [];
-
-    public TurnSetting Binding => new()
-    {
-        Dir = Dir,
-        Keys = m_keys?.ToArray() ?? [],
-        PixelPerSec = PixelPerSec
-    };
+    TurnSettingViewModel m_turnSetting = new();
 }

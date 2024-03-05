@@ -34,7 +34,7 @@ internal class BindingListView : ObservableObject
                 {
                     Dir = bind.Dir,
                     PixelPerSec = bind.PixelPerSec,
-                    Keys = bind.Keys
+                    //Keys = bind.Keys
                 }
             );
     }

@@ -1,5 +1,5 @@
 ﻿namespace Turnbind.Model;
 
-public class KeyBinds : Dictionary<KeyList, TurnSetting>
+public class KeyBinds : Dictionary<InputKeys, TurnSetting>
 {
 }

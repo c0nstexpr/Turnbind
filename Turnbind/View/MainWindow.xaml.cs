@@ -18,38 +18,38 @@ public partial class MainWindow : Window
     {
         DataContext = m_viewModel;
         InitializeComponent();
-        WithTurnBindVm();
+        //WithTurnBindVm();
 
-        Closed += (_, _) =>
-        {
-            m_viewModel.Dispose();
-            m_turnBindVM.Binds.CollectionChanged -= OnBindingsChanged;
-            TurnBindControl.Dispose();
-        };
+        //Closed += (_, _) =>
+        //{
+        //    m_viewModel.Dispose();
+        //    m_turnBindVM.Binds.CollectionChanged -= OnBindingsChanged;
+        //    TurnBindControl.Dispose();
+        //};
     }
 
     void WithTurnBindVm()
     {
-        if (m_turnBindVM is null || m_viewModel is null) return;
+        //if (m_turnBindVM is null || m_viewModel is null) return;
 
-        m_viewModel.InputAction = m_turnBindVM.InputAction;
+        //m_viewModel.InputAction = m_turnBindVM.InputAction;
 
-        foreach (var bind in m_turnBindVM.Binds)
-            m_viewModel.AddBind(bind);
+        //foreach (var bind in m_turnBindVM.Binds)
+        //    m_viewModel.AddBind(bind);
 
-        m_turnBindVM.Binds.CollectionChanged += OnBindingsChanged;
+        //m_turnBindVM.Binds.CollectionChanged += OnBindingsChanged;
     }
 
     void OnBindingsChanged(object? _, NotifyCollectionChangedEventArgs args)
     {
-        switch (args.Action)
-        {
-            case NotifyCollectionChangedAction.Add:
-                m_viewModel?.AddBind(args.NewItems!.Cast<BindingViewModel>().First());
-                break;
-            case NotifyCollectionChangedAction.Remove:
-                m_viewModel?.RemoveBind(args.OldItems!.Cast<BindingViewModel>().First());
-                break;
-        }
+        //switch (args.Action)
+        //{
+        //    case NotifyCollectionChangedAction.Add:
+        //        m_viewModel?.AddBind(args.NewItems!.Cast<BindingViewModel>().First());
+        //        break;
+        //    case NotifyCollectionChangedAction.Remove:
+        //        m_viewModel?.RemoveBind(args.OldItems!.Cast<BindingViewModel>().First());
+        //        break;
+        //}
     }
 }

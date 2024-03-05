@@ -1,10 +1,13 @@
-﻿using SharpHook;
+﻿using Serilog;
 
+using SharpHook;
+
+using Turnbind.Helper;
 using Turnbind.Model;
 
 namespace Turnbind.Action;
 
-public class TurnAction : IDisposable
+sealed class TurnAction : IDisposable
 {
     public enum Instruction
     {
@@ -33,12 +36,16 @@ public class TurnAction : IDisposable
     async void Tick()
     {
         while (true)
-        {            
-            if(Direction != Instruction.Stop)
+        {
+            if (Direction != Instruction.Stop)
+            {
+                Log.Logger.WithSourceInfo().Information("Simulate turn {Direction}", Direction.ToString());
+
                 Simulator.Turn(
                     Direction == Instruction.Left ? TurnDirection.Left : TurnDirection.Right,
                     PixelPerSec * m_timer.Period.TotalSeconds
                 );
+            }
 
             if (!await m_timer.WaitForNextTickAsync()) break;
         }

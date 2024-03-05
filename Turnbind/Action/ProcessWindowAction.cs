@@ -1,15 +1,15 @@
-﻿using Serilog;
-
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 
+using Serilog;
+
+using Turnbind.Helper;
+
 namespace Turnbind;
 
-internal partial class ProcessWindowAction : IDisposable
+partial class ProcessWindowAction : IDisposable
 {
-    static readonly ILogger m_logger = Util.GetLogger<ProcessWindowAction>();
-
     public string? ProcessName { get; set; }
 
     public Process? Process
@@ -24,13 +24,13 @@ internal partial class ProcessWindowAction : IDisposable
 
             if (candidates.Length == 0)
             {
-                m_logger.Warning("No processes found for {ProcessName}", ProcessName);
+                Log.Logger.WithSourceInfo().Warning("No processes found for {ProcessName}", ProcessName);
                 return null;
             }
 
             if (candidates.Length > 1)
             {
-                m_logger.Warning("Multiple processes found for {ProcessName}", ProcessName);
+                Log.Logger.WithSourceInfo().Warning("Multiple processes found for {ProcessName}", ProcessName);
                 return null;
             }
 
@@ -85,12 +85,12 @@ internal partial class ProcessWindowAction : IDisposable
 
             if (win == WindowHandle)
             {
-                m_logger.Information("Window focused");
+                Log.Logger.WithSourceInfo().Information("Window focused");
                 m_focused.OnNext(true);
             }
             else
             {
-                m_logger.Information("Window lost focuse");
+                Log.Logger.WithSourceInfo().Information("Window lost focuse");
                 m_focused.OnNext(false);
             }
         };
@@ -99,7 +99,7 @@ internal partial class ProcessWindowAction : IDisposable
         {
             if (WindowHandle != win) return;
 
-            m_logger.Information("Window destroyed");
+            Log.Logger.WithSourceInfo().Information("Window destroyed");
             m_focused.OnNext(false);
 
             Process = null;

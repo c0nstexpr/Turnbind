@@ -11,10 +11,6 @@ public class Settings
 
     public const string DefaultProfileName = "default";
 
-    public string ProfileName { get; set; } = DefaultProfileName;
-
-    public KeyBinds CurrentProfile => Profile[ProfileName];
-
     public Settings() => Load();
 
     public void Load(string jsonPath = JsonPath)

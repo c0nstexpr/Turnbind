@@ -4,7 +4,7 @@ using Turnbind.Model;
 
 namespace Turnbind.Action;
 
-internal static class SimulatorExt
+static class SimulatorExt
 {
     public static void Turn(this EventSimulator simulator, TurnDirection dir, double p)
     {

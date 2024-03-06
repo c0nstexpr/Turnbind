@@ -1,6 +1,5 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 
 using Turnbind.ViewModel;
 
@@ -15,8 +14,6 @@ public partial class ProfileControl : UserControl
         DataContext = m_viewModel;
         InitializeComponent();
     }
-
-    void ProfileNameListDoubleClick(object sender, MouseButtonEventArgs e) => m_viewModel.OnProfileNameListSelected();
 
     void AddButtonClick(object sender, RoutedEventArgs e) => m_viewModel.OnAddProfileName();
 

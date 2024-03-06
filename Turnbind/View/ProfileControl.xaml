@@ -28,16 +28,13 @@
             </Grid>
         </Grid>
 
-        <ListView ItemsSource="{Binding ProfilesNames, Mode=OneWay}" SelectedItem="{Binding SelectedProfileName}">
-            <ListView.ItemContainerStyle>
-                <Style TargetType="ListViewItem">
-                    <EventSetter Event="MouseDoubleClick" Handler="ProfileNameListDoubleClick" />
-                </Style>
-            </ListView.ItemContainerStyle>
-
+        <ListView ItemsSource="{Binding ProfilesNames, Mode=OneWay}">
             <ListView.ItemTemplate>
-                <DataTemplate DataType="{x:Type system:String}">
-                    <TextBlock Margin="10" Text="{Binding}" />
+                <DataTemplate>
+                    <CheckBox Command="{Binding RunCommand}"
+                            CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"
+                            Content="{Binding}">
+                    </CheckBox>
                 </DataTemplate>
             </ListView.ItemTemplate>
 

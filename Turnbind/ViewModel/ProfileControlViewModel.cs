@@ -1,7 +1,9 @@
 ﻿using System.Collections.ObjectModel;
-using ReactiveMarbles.ObservableEvents;
 
+using CommunityToolkit.Mvvm.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
+
+using ObservableCollections;
 
 using Turnbind.Model;
 
@@ -9,9 +11,7 @@ namespace Turnbind.ViewModel;
 
 partial class ProfileControlViewModel : ObservableObject
 {
-    readonly HashSet<string> m_profilesNames = [];
-
-    public readonly ObservableCollection<string> ProfilesNames = [];
+    public readonly ObservableHashSet<ProfileNameItemViewModel> ProfilesNames = new();
 
     [ObservableProperty]
     string m_activeProfileName = Settings.DefaultProfileName;
@@ -56,7 +56,14 @@ partial class ProfileControlViewModel : ObservableObject
     {
         if (TextBoxProfileName is null || !m_profilesNames.Add(TextBoxProfileName)) return;
 
-        ProfilesNames.Add(TextBoxProfileName);
+        ProfilesNames.Add(
+            new() 
+            {
+                ProfileName = TextBoxProfileName,
+                Enable = false
+            }
+        );
+
         TextBoxProfileName = null;
     }
 

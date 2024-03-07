@@ -7,7 +7,7 @@ using Turnbind.Model;
 namespace Turnbind.ViewModel;
 internal class BindingListView : ObservableObject
 {
-    public ObservableCollection<BindingViewModel> Binds { get; } = [];
+    public ObservableCollection<KeyBindViewModel> Binds { get; } = [];
 
     int m_focusedBindingIndex = -1;
 
@@ -32,13 +32,13 @@ internal class BindingListView : ObservableObject
             Binds.Add(
                 new()
                 {
-                    Dir = bind.Dir,
-                    PixelPerSec = bind.PixelPerSec,
+                    //Dir = bind.Dir,
+                    //PixelPerSec = bind.PixelPerSec,
                     //Keys = bind.Keys
                 }
             );
     }
 
-    BindingViewModel? m_focusedBinding => FocusedBindingIndex >= 0 && FocusedBindingIndex < Binds.Count ?
+    KeyBindViewModel? m_focusedBinding => FocusedBindingIndex >= 0 && FocusedBindingIndex < Binds.Count ?
         Binds[FocusedBindingIndex] : null;
 }

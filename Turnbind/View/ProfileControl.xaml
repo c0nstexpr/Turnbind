@@ -31,17 +31,17 @@
         <ListView ItemsSource="{Binding ProfilesNames, Mode=OneWay}">
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <CheckBox Command="{Binding RunCommand}"
-                            CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"
-                            Content="{Binding}">
+                    <CheckBox Command="{Binding RunCommand}" CommandParameter="{Binding}"
+                            Content="{Binding ProfileName}"
+                            d:DataContext="{d:DesignInstance viewModel:ProfileNameItemViewModel}">
                     </CheckBox>
                 </DataTemplate>
             </ListView.ItemTemplate>
 
             <d:ListView.ItemsSource>
-                <x:Array Type="{x:Type system:String}">
-                    <system:String>default</system:String>
-                    <system:String>custom</system:String>
+                <x:Array Type="{x:Type viewModel:ProfileNameItemViewModel}">
+                    <viewModel:ProfileNameItemViewModel ProfileName="default" />
+                    <viewModel:ProfileNameItemViewModel ProfileName="custom" />
                 </x:Array>
             </d:ListView.ItemsSource>
         </ListView>

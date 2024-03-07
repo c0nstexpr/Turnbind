@@ -29,14 +29,14 @@ partial class TurnBindEditViewModel : ObservableObject
     {
         if (!p) return;
 
-        KeyBind.Keys.Add(k);
-        OnPropertyChanged(nameof(KeyString));
+        //KeyBind.Keys.Add(k);
+        //OnPropertyChanged(nameof(KeyString));
     }
 
     public void ClearKeys()
     {
-        KeyBind.Keys.Clear();
-        OnPropertyChanged(nameof(KeyString));
+        //KeyBind.Keys.Clear();
+        //OnPropertyChanged(nameof(KeyString));
     }
 
     readonly Subject<Unit> m_add = new();
@@ -45,7 +45,7 @@ partial class TurnBindEditViewModel : ObservableObject
 
     readonly Subject<Unit> m_remove = new();
 
-    public void OnAdd() => m_add.OnNext(
+    public void OnAdd() => m_add.OnNext(Unit.Default);
 
     public void OnModify() => throw new NotImplementedException();
 

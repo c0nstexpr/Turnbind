@@ -1,7 +1,7 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Diagnostics;
 
-using CommunityToolkit.Mvvm.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 using ObservableCollections;
 
@@ -11,67 +11,30 @@ namespace Turnbind.ViewModel;
 
 partial class ProfileControlViewModel : ObservableObject
 {
-    public readonly ObservableHashSet<ProfileNameItemViewModel> ProfilesNames = new();
+    public readonly ObservableHashSet<ProfileNameItemViewModel> ProfilesNames = [];
 
     [ObservableProperty]
-    string m_activeProfileName = Settings.DefaultProfileName;
-
-    [ObservableProperty]
-    bool m_addButtonEnable = false;
-
-    [ObservableProperty]
-    bool m_removeButtonEnable = false;
-
     string? m_textBoxProfileName;
 
-    public string? TextBoxProfileName
+    [ObservableProperty]
+    ProfileNameItemViewModel? m_selectedProfileName;
+
+    [RelayCommand]
+    public void AddProfileName()
     {
-        get => m_textBoxProfileName;
+        if (TextBoxProfileName is null) return;
 
-        set
-        {
-            SetProperty(ref m_textBoxProfileName, value);
-
-            AddButtonEnable = value is { } && m_profilesNames.Contains(value);
-        }
+        if (ProfilesNames.Add(new() { ProfileName = TextBoxProfileName }))
+            TextBoxProfileName = null;
     }
 
-    string? m_selectedProfileName;
+    bool CanRemoveProfileName() => SelectedProfileName is { };
 
-    public string? SelectedProfileName
+    [RelayCommand(CanExecute = nameof(CanRemoveProfileName))]
+    public void RemoveProfileName()
     {
-        get => m_selectedProfileName;
-
-        set
-        {
-            SetProperty(ref m_selectedProfileName, value);
-
-            RemoveButtonEnable = value is { } && m_profilesNames.Contains(value);
-        }
-    }
-
-    public void OnProfileNameListSelected() => ActiveProfileName = SelectedProfileName!;
-
-    public void OnAddProfileName()
-    {
-        if (TextBoxProfileName is null || !m_profilesNames.Add(TextBoxProfileName)) return;
-
-        ProfilesNames.Add(
-            new() 
-            {
-                ProfileName = TextBoxProfileName,
-                Enable = false
-            }
-        );
-
-        TextBoxProfileName = null;
-    }
-
-    public void OnRemoveProfileName()
-    {
-        if (SelectedProfileName is null || !m_profilesNames.Remove(SelectedProfileName)) return;
-
-        ProfilesNames.Remove(SelectedProfileName);
-        SelectedProfileName = null;
+        Debug.Assert(SelectedProfileName is { });
+        if (ProfilesNames.Remove(SelectedProfileName))
+            SelectedProfileName = null;
     }
 }

@@ -4,8 +4,7 @@ namespace Turnbind.ViewModel;
 
 partial class ProfileNameItemViewModel : ObservableObject, IEquatable<ProfileNameItemViewModel>
 {
-    [ObservableProperty]
-    string m_profileName = string.Empty;
+    public string ProfileName { init; get; } = string.Empty;
 
     [ObservableProperty]
     bool m_enable = false;

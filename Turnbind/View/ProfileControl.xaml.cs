@@ -1,5 +1,4 @@
-﻿using System.Windows;
-using System.Windows.Controls;
+﻿using System.Windows.Controls;
 
 using Turnbind.ViewModel;
 
@@ -14,8 +13,4 @@ public partial class ProfileControl : UserControl
         DataContext = m_viewModel;
         InitializeComponent();
     }
-
-    void AddButtonClick(object sender, RoutedEventArgs e) => m_viewModel.OnAddProfileName();
-
-    void RemoveButtonClick(object sender, RoutedEventArgs e) => m_viewModel.OnRemoveProfileName();
 }

@@ -2,8 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:viewModel="clr-namespace:Turnbind.ViewModel"
-        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" xmlns:system="clr-namespace:System;assembly=netstandard"
-        mc:Ignorable="d" d:DesignHeight="400" d:DesignWidth="400"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" mc:Ignorable="d" d:DesignHeight="400" d:DesignWidth="400"
         d:DataContext="{d:DesignInstance viewModel:ProfileControlViewModel}">
     <DockPanel>
         <Grid DockPanel.Dock="Bottom" Margin="5">
@@ -20,19 +19,18 @@
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
 
-                <ui:Button Margin="10" Content="Add" Click="AddButtonClick" HorizontalAlignment="Stretch"
-                        Appearance="Primary" IsEnabled="{Binding AddButtonEnable, Mode=OneWay}" />
+                <ui:Button Margin="10" Content="Add" Command="{Binding AddProfileNameCommand}"
+                        HorizontalAlignment="Stretch" Appearance="Primary" />
 
-                <ui:Button Grid.Column="1" Click="RemoveButtonClick" HorizontalAlignment="Stretch" Margin="10"
-                        Content="Remove" IsEnabled="{Binding RemoveButtonEnable, Mode=OneWay}" />
+                <ui:Button Margin="10" Grid.Column="1" Content="Remove" Command="{Binding RemoveProfileNameCommand}"
+                        HorizontalAlignment="Stretch" />
             </Grid>
         </Grid>
 
         <ListView ItemsSource="{Binding ProfilesNames, Mode=OneWay}">
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <CheckBox Command="{Binding RunCommand}" CommandParameter="{Binding}"
-                            Content="{Binding ProfileName}"
+                    <CheckBox IsChecked="{Binding Enable}" Content="{Binding ProfileName}"
                             d:DataContext="{d:DesignInstance viewModel:ProfileNameItemViewModel}">
                     </CheckBox>
                 </DataTemplate>

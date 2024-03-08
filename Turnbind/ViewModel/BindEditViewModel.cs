@@ -2,10 +2,12 @@
 using System.Reactive.Subjects;
 
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+
 using Turnbind.Model;
 
 namespace Turnbind.ViewModel;
-partial class TurnBindEditViewModel : ObservableObject
+partial class BindEditViewModel : ObservableObject
 {
     KeyBindViewModel m_keyBind = new();
 
@@ -15,15 +17,6 @@ partial class TurnBindEditViewModel : ObservableObject
 
         set => SetProperty(ref m_keyBind, value);
     }
-
-    [ObservableProperty]
-    bool m_addButtonEnabled;
-
-    [ObservableProperty]
-    bool m_modifyButtonEnabled;
-
-    [ObservableProperty]
-    bool m_removeButtonEnabled;
 
     public void OnInputKey(InputKey k, bool p)
     {
@@ -45,13 +38,19 @@ partial class TurnBindEditViewModel : ObservableObject
 
     readonly Subject<Unit> m_remove = new();
 
+    public IObservable<Unit> Add => m_add;
+
+    public IObservable<Unit> Modify => m_modify;
+
+    public IObservable<Unit> Remove => m_remove;
+
+
+    [RelayCommand(CanExecute =)]
     public void OnAdd() => m_add.OnNext(Unit.Default);
 
     public void OnModify() => throw new NotImplementedException();
 
     public void OnRemove() => throw new NotImplementedException();
-
-
 
     public void OnBindingKeysFocus() => throw new NotImplementedException();
 

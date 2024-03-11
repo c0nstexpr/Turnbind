@@ -93,13 +93,13 @@ public enum InputKey
     Slash,
     RightShift,
 
-    LeftCtrl,
-    LeftAlt,
+    LCtrl,
+    LAlt,
     Space,
-    RightAlt,
+    RAlt,
     Function,
     ContextMenu,
-    RightCtrl,
+    RCtrl,
 
     Insert,
     Home,
@@ -107,6 +107,7 @@ public enum InputKey
     Delete,
     End,
     PageDown,
+    ScrollLock,
 
     Up,
     Left,
@@ -235,13 +236,13 @@ public static class InputKeyExt
         [InputKey.Slash] = KeyCode.VcSlash,
         [InputKey.RightShift] = KeyCode.VcRightShift,
 
-        [InputKey.LeftCtrl] = KeyCode.VcLeftControl,
-        [InputKey.LeftAlt] = KeyCode.VcLeftAlt,
+        [InputKey.LCtrl] = KeyCode.VcLeftControl,
+        [InputKey.LAlt] = KeyCode.VcLeftAlt,
         [InputKey.Space] = KeyCode.VcSpace,
-        [InputKey.RightAlt] = KeyCode.VcRightAlt,
+        [InputKey.RAlt] = KeyCode.VcRightAlt,
         [InputKey.Function] = KeyCode.VcFunction,
         [InputKey.ContextMenu] = KeyCode.VcContextMenu,
-        [InputKey.RightCtrl] = KeyCode.VcRightControl,
+        [InputKey.RCtrl] = KeyCode.VcRightControl,
 
         [InputKey.Insert] = KeyCode.VcInsert,
         [InputKey.Home] = KeyCode.VcHome,
@@ -249,6 +250,7 @@ public static class InputKeyExt
         [InputKey.Delete] = KeyCode.VcDelete,
         [InputKey.End] = KeyCode.VcEnd,
         [InputKey.PageDown] = KeyCode.VcPageDown,
+        [InputKey.ScrollLock] = KeyCode.VcScrollLock,
 
         [InputKey.Up] = KeyCode.VcUp,
         [InputKey.Left] = KeyCode.VcLeft,

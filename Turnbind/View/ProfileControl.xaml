@@ -13,26 +13,24 @@
 
             <ui:TextBox Margin="10" PlaceholderText="Profile name..." Text="{Binding TextBoxProfileName}" />
 
-            <Grid Grid.Row="1">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition />
-                    <ColumnDefinition />
-                </Grid.ColumnDefinitions>
-
-                <ui:Button Margin="10" Content="Add" Command="{Binding AddProfileNameCommand}"
-                        HorizontalAlignment="Stretch" Appearance="Primary" />
-
-                <ui:Button Margin="10" Grid.Column="1" Content="Remove" Command="{Binding RemoveProfileNameCommand}"
-                        HorizontalAlignment="Stretch" />
-            </Grid>
+            <ui:Button Margin="10" Content="Add" Grid.Row="1" Command="{Binding AddProfileNameCommand}"
+                    HorizontalAlignment="Stretch" Appearance="Primary" />
         </Grid>
 
         <ListView ItemsSource="{Binding ProfilesNames, Mode=OneWay}">
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <CheckBox IsChecked="{Binding Enable}" Content="{Binding ProfileName}"
-                            d:DataContext="{d:DesignInstance viewModel:ProfileNameItemViewModel}">
-                    </CheckBox>
+                    <DockPanel>
+                        <ui:Button Margin="5" Appearance="Info" DockPanel.Dock="Right" Content="Edit"
+                                Command="{Binding EditProfileCommand,Mode=OneWay}" CommandParameter="{Binding}" />
+
+                        <ui:Button Margin="5" Appearance="Danger" DockPanel.Dock="Right" Content="Remove"
+                                Foreground="White" Command="{Binding RemoveProfileCommand,Mode=OneWay}"
+                                CommandParameter="{Binding}" />
+
+                        <CheckBox IsChecked="{Binding Enable}" Content="{Binding ProfileName,Mode=OneWay}" />
+                    </DockPanel>
+
                 </DataTemplate>
             </ListView.ItemTemplate>
 
@@ -43,6 +41,5 @@
                 </x:Array>
             </d:ListView.ItemsSource>
         </ListView>
-
     </DockPanel>
 </UserControl>

@@ -8,6 +8,8 @@ using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Formatting.Compact;
 using Serilog.Exceptions;
+using Turnbind.Action;
+using Turnbind.Model;
 
 namespace Turnbind;
 
@@ -15,6 +17,13 @@ public partial class App : Application
 {
     static readonly IHost m_host = Host.CreateDefaultBuilder()
         .ConfigureAppConfiguration(c => c.SetBasePath(AppContext.BaseDirectory))
+        .ConfigureServices(
+            (_, services) =>
+            {
+                services.AddSingleton<InputAction>();
+                services.AddSingleton<Settings>();
+            }
+        )
         .UseSerilog(
             (context, services, loggerConfiguration) => loggerConfiguration
                 .Enrich.FromLogContext()
@@ -28,16 +37,17 @@ public partial class App : Application
         )
         .Build();
 
-    public static T GetRequiredService<T>() where T : class => m_host.Services.GetRequiredService<T>();
+    public static T? GetService<T>() where T : class => m_host.Services.GetService<T>();
 
     void OnStartup(object sender, StartupEventArgs e) => m_host.Start();
 
-    void OnExit(object sender, ExitEventArgs e)
-    {
-        m_host.StopAsync().Wait();
-        m_host.Dispose();
-    }
+    void OnExit(object sender, ExitEventArgs e) => m_host.StopAsync()
+        .ContinueWith(_ => m_host.Dispose())
+        .Wait();
 
-    void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e) =>
+    void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    {
         Log.Logger.Error(e.Exception, "Unhandled exception");
+        MessageBox.Show(e.Exception.ToString(), "Unhandled exception", MessageBoxButton.OK, MessageBoxImage.Error);
+    }
 }

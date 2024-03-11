@@ -10,7 +10,7 @@ namespace Turnbind.View;
 [INotifyPropertyChanged]
 public partial class MainWindow : Window
 {
-    TurnBindViewModel m_turnBindVM => TurnBindControl.ViewModel;
+    TurnBindViewModel m_turnBindVM => TurnBindControl.m_viewModel;
 
     readonly MainWindowViewModel m_viewModel = new();
 

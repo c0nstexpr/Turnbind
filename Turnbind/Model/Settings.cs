@@ -5,7 +5,7 @@ namespace Turnbind.Model;
 
 public class Settings
 {
-    public readonly Dictionary<string, KeyBinds> Profile = [];
+    public readonly Dictionary<string, KeyBinds> Profiles = [];
 
     public const string JsonPath = "turn_settings.json";
 
@@ -17,7 +17,7 @@ public class Settings
     {
         if (!File.Exists(jsonPath)) return;
 
-        Profile.Clear();
+        Profiles.Clear();
 
         Dictionary<string, KeyBinds> binds;
 
@@ -27,12 +27,12 @@ public class Settings
         }
 
         foreach (var (name, keyBinds) in binds)
-            Profile[name] = keyBinds;
+            Profiles[name] = keyBinds;
     }
 
     public void Save(string jsonPath = JsonPath)
     {
         using var json = File.Create(jsonPath);
-        JsonSerializer.Serialize(json, Profile);
+        JsonSerializer.Serialize(json, Profiles);
     }
 }

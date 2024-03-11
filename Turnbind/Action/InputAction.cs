@@ -1,5 +1,4 @@
 ﻿using SharpHook;
-using SharpHook.Native;
 using SharpHook.Reactive;
 
 using System.Diagnostics;

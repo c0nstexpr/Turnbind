@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Immutable;
 using System.Text.Json.Serialization;
 
 using LanguageExt;
@@ -9,6 +10,12 @@ namespace Turnbind.Model;
 public class InputKeys(IEnumerable<InputKey> keys) : IReadOnlyList<InputKey>, IEquatable<InputKeys>
 {
     readonly InputKey[] m_keys = keys.ToArray();
+
+    readonly ImmutableHashSet<InputKey> m_set = ImmutableHashSet.CreateRange(keys);
+
+    public InputKeys() : this([])
+    {
+    }
 
     public int Count => m_keys.Length;
 
@@ -31,4 +38,6 @@ public class InputKeys(IEnumerable<InputKey> keys) : IReadOnlyList<InputKey>, IE
     IEnumerator IEnumerable.GetEnumerator() => m_keys.GetEnumerator();
 
     public override bool Equals(object? obj) => Equals(obj as InputKeys);
+
+    public bool Contains(InputKey key) => m_set.Contains(key);
 }

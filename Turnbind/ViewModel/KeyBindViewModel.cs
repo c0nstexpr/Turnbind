@@ -7,7 +7,7 @@ namespace Turnbind.ViewModel;
 
 partial class KeyBindViewModel : ObservableObject
 {
-    InputKeys m_keys = new([]);
+    InputKeys m_keys = new();
 
     public InputKeys Keys
     {

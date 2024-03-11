@@ -21,6 +21,6 @@
             <Label VerticalContentAlignment="Center" Width="200" Height="25" Margin="10" BorderThickness="1" Content="{Binding CurrentKeyStr, Mode=OneWay}" />
         </DockPanel>
 
-        <view:TurnBindControl x:Name="TurnBindControl"/>
+        <view:KeyBindsControl x:Name="TurnBindControl"/>
     </DockPanel>
 </Window>

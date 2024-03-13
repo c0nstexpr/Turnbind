@@ -1,7 +1,6 @@
 ﻿using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Reactive.Disposables;
-using System.Reactive.Linq;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -40,7 +39,6 @@ partial class KeyBindsViewModel(Settings settings) : ObservableObject, IDisposab
                 Disposable.Create(() => profilesNames.CollectionChanged -= OnProfilesNamesChanged);
         }
     }
-
 
     void OnProfilesNamesChanged(in NotifyCollectionChangedEventArgs<ProfileNameItemViewModel> e)
     {

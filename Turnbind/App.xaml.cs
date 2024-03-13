@@ -17,13 +17,6 @@ public partial class App : Application
 {
     static readonly IHost m_host = Host.CreateDefaultBuilder()
         .ConfigureAppConfiguration(c => c.SetBasePath(AppContext.BaseDirectory))
-        .ConfigureServices(
-            (_, services) =>
-            {
-                services.AddSingleton<InputAction>();
-                services.AddSingleton<Settings>();
-            }
-        )
         .UseSerilog(
             (context, services, loggerConfiguration) => loggerConfiguration
                 .Enrich.FromLogContext()
@@ -34,6 +27,15 @@ public partial class App : Application
                     $"logs.json",
                     rollOnFileSizeLimit: true
                 )
+        )
+        .ConfigureServices(
+            (_, services) =>
+            {
+                services.AddSingleton<InputAction>();
+                services.AddSingleton<ProcessWindowAction>();
+                services.AddSingleton<TurnAction>();
+                services.AddSingleton<Settings>();
+            }
         )
         .Build();
 

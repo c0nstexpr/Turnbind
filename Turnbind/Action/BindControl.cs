@@ -1,11 +1,10 @@
 ﻿using System.Reactive.Disposables;
-using System.Reactive.Subjects;
 
 using Turnbind.Model;
 
 namespace Turnbind.Action;
 
-class BindSubscription : IDisposable
+class BindControl : IDisposable
 {
     public InputKeys Keys { get; }
 
@@ -15,9 +14,7 @@ class BindSubscription : IDisposable
 
     IDisposable? m_disposble;
 
-    Subject<bool> m_active = new();
-
-    public BindSubscription(InputKeys keys, TurnSetting setting)
+    public BindControl(InputKeys keys, TurnSetting setting)
     {
         Keys = keys;
         Setting = setting;

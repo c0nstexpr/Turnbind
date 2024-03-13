@@ -9,6 +9,8 @@ namespace Turnbind.Action;
 
 sealed class TurnAction : IDisposable
 {
+    readonly ILogger m_log = Log.ForContext<TurnAction>();
+
     public enum Instruction
     {
         Stop,
@@ -18,11 +20,11 @@ sealed class TurnAction : IDisposable
 
     public readonly EventSimulator Simulator = new();
 
-    public double Interval
+    public TimeSpan Interval
     {
-        get => 1 / m_timer.Period.TotalSeconds;
+        get => m_timer.Period;
 
-        set => m_timer.Period = TimeSpan.FromSeconds(1) / value;
+        set => m_timer.Period = value;
     }
 
     public double PixelPerSec { get; set; }
@@ -39,13 +41,14 @@ sealed class TurnAction : IDisposable
         {
             if (Direction != Instruction.Stop)
             {
-                Log.Logger.WithSourceInfo().Information("Simulate turn {Direction}", Direction.ToString());
+                m_log.Information("Simulate turn {Direction}", Direction.ToString());
 
                 Simulator.Turn(
                     Direction == Instruction.Left ? TurnDirection.Left : TurnDirection.Right,
                     PixelPerSec * m_timer.Period.TotalSeconds
                 );
             }
+            else m_log.Information("Stop simulate turning");
 
             if (!await m_timer.WaitForNextTickAsync()) break;
         }

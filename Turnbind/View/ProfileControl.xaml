@@ -22,13 +22,13 @@
                 <DataTemplate>
                     <DockPanel>
                         <ui:Button Margin="5" Appearance="Info" DockPanel.Dock="Right" Content="Edit"
-                                Command="{Binding EditProfileCommand,Mode=OneWay}" CommandParameter="{Binding}" />
+                                Command="{Binding EditProfileCommand,Mode=OneWay}" />
 
                         <ui:Button Margin="5" Appearance="Danger" DockPanel.Dock="Right" Content="Remove"
-                                Foreground="White" Command="{Binding RemoveProfileCommand,Mode=OneWay}"
-                                CommandParameter="{Binding}" />
+                                Foreground="White" Command="{Binding RemoveProfileCommand,Mode=OneWay}" />
 
-                        <CheckBox IsChecked="{Binding Enable}" Content="{Binding ProfileName,Mode=OneWay}" />
+                        <CheckBox IsChecked="{Binding Enable}" Content="{Binding ProfileName,Mode=OneWay}"
+                                Command="{Binding EnableProfileCommand,Mode=OneWay}" />
                     </DockPanel>
 
                 </DataTemplate>
@@ -36,8 +36,8 @@
 
             <d:ListView.ItemsSource>
                 <x:Array Type="{x:Type viewModel:ProfileNameItemViewModel}">
-                    <viewModel:ProfileNameItemViewModel ProfileName="default" />
-                    <viewModel:ProfileNameItemViewModel ProfileName="custom" />
+                    <viewModel:ProfileNameItemViewModel Name="default" />
+                    <viewModel:ProfileNameItemViewModel Name="custom" />
                 </x:Array>
             </d:ListView.ItemsSource>
         </ListView>

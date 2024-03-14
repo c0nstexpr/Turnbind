@@ -26,7 +26,7 @@ class BindControl : IDisposable
         };
     }
 
-    public void Enable(ProcessWindowAction windowAction, InputAction inputAction, TurnAction turnAction)
+    public void Enable()
     {
         Disable();
 
@@ -50,6 +50,8 @@ class BindControl : IDisposable
 
             void OnActive(bool active)
             {
+                var turnAction = App.GetService<TurnAction>();
+
                 if (!active)
                 {
                     turnAction.Direction = TurnAction.Instruction.Stop;
@@ -60,13 +62,13 @@ class BindControl : IDisposable
                 turnAction.PixelPerSec = Setting.PixelPerSec;
             }
 
-            focusedDisposable = inputAction.SubscribeKeys(Keys).Subscribe(OnActive);
+            focusedDisposable = App.GetService<InputAction>().SubscribeKeys(Keys).Subscribe(OnActive);
         }
 
         m_disposble = new CompositeDisposable()
         {
             Disposable.Create(() => OnFocuse(false)),
-            windowAction.Focused.Subscribe(OnFocuse)
+            App.GetService<ProcessWindowAction>().Focused.Subscribe(OnFocuse)
         };
     }
 

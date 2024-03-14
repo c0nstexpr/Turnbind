@@ -39,7 +39,7 @@ public partial class App : Application
         )
         .Build();
 
-    public static T? GetService<T>() where T : class => m_host.Services.GetService<T>();
+    public static T GetService<T>() where T : class => m_host.Services.GetService<T>()!;
 
     void OnStartup(object sender, StartupEventArgs e) => m_host.Start();
 

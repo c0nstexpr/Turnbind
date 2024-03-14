@@ -1,22 +1,27 @@
-﻿using System.Diagnostics;
-using System.Reactive;
+﻿using System.Reactive;
 using System.Reactive.Subjects;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using Turnbind.Action;
+
 namespace Turnbind.ViewModel;
 
-partial class ProfileNameItemViewModel : ObservableObject, IEquatable<ProfileNameItemViewModel>
+partial class ProfileNameItemViewModel : ObservableObject, IEquatable<ProfileNameItemViewModel>, IDisposable
 {
-    public string ProfileName { init; get; } = string.Empty;
+    public string Name { init; get; } = string.Empty;
+
+    public readonly ProfileControl Control;
+
+    public ProfileNameItemViewModel() => Control = new(Name);
 
     [ObservableProperty]
     bool m_enable = false;
 
-    public bool Equals(ProfileNameItemViewModel? other) => ProfileName == other?.ProfileName;
+    public bool Equals(ProfileNameItemViewModel? other) => Name == other?.Name;
 
-    public override int GetHashCode() => ProfileName.GetHashCode();
+    public override int GetHashCode() => Name.GetHashCode();
 
     public override bool Equals(object? obj) => Equals(obj as ProfileNameItemViewModel);
 
@@ -29,8 +34,26 @@ partial class ProfileNameItemViewModel : ObservableObject, IEquatable<ProfileNam
     public IObservable<Unit> RemoveProfile => m_editProfile;
 
     [RelayCommand]
-    void OnRemoveProfile(ProfileNameItemViewModel item) => m_removeProfile.OnNext(Unit.Default);
+    void OnEnableProfile()
+    {
+        if (Enable) Control.Enable();
+        else Control.Disable();
+    }
 
     [RelayCommand]
-    void OnEditProfile(ProfileNameItemViewModel item) => m_editProfile.OnNext(Unit.Default);
+    void OnRemoveProfile()
+    {
+        m_removeProfile.OnNext(Unit.Default);
+        Dispose();
+    }
+
+    [RelayCommand]
+    void OnEditProfile() => m_editProfile.OnNext(Unit.Default);
+
+    public void Dispose()
+    {
+        Control.Dispose();
+        m_editProfile.Dispose();
+        m_removeProfile.Dispose();
+    }
 }

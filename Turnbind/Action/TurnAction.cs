@@ -2,7 +2,6 @@
 
 using SharpHook;
 
-using Turnbind.Helper;
 using Turnbind.Model;
 
 namespace Turnbind.Action;
@@ -11,12 +10,6 @@ sealed class TurnAction : IDisposable
 {
     readonly ILogger m_log = Log.ForContext<TurnAction>();
 
-    public enum Instruction
-    {
-        Stop,
-        Left,
-        Right
-    }
 
     public readonly EventSimulator Simulator = new();
 
@@ -29,7 +22,7 @@ sealed class TurnAction : IDisposable
 
     public double PixelPerSec { get; set; }
 
-    public Instruction Direction { get; set; }
+    public TurnInstruction Direction { get; set; }
 
     readonly PeriodicTimer m_timer = new(TimeSpan.FromSeconds(1) / 288);
 
@@ -39,12 +32,12 @@ sealed class TurnAction : IDisposable
     {
         while (true)
         {
-            if (Direction != Instruction.Stop)
+            if (Direction != TurnInstruction.Stop)
             {
                 m_log.Information("Simulate turn {Direction}", Direction.ToString());
 
                 Simulator.Turn(
-                    Direction == Instruction.Left ? TurnDirection.Left : TurnDirection.Right,
+                    Direction == TurnInstruction.Left ? TurnDirection.Left : TurnDirection.Right,
                     PixelPerSec * m_timer.Period.TotalSeconds
                 );
             }

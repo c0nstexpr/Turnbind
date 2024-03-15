@@ -4,14 +4,14 @@ using Turnbind.ViewModel;
 
 namespace Turnbind.View;
 
-public partial class KeyBindListControl : UserControl
+partial class KeyBindListControl : UserControl
 {
-    internal readonly KeyBindListViewModel m_viewModel = new();
+    internal readonly KeyBindListViewModel m_viewModel;
 
     public KeyBindListControl()
     {
-        DataContext = m_viewModel;
         InitializeComponent();
-        m_viewModel.KeyBindEdit = KeyBindEdit.m_viewModel;
+        m_viewModel = new() { KeyBindEdit = KeyBindEdit.m_viewModel };
+        DataContext = m_viewModel;
     }
 }

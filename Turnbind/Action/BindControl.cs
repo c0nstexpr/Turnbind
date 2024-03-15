@@ -6,25 +6,29 @@ namespace Turnbind.Action;
 
 class BindControl : IDisposable
 {
-    public InputKeys Keys { get; }
+    public required InputKeys Keys { get; init; }
 
-    public TurnSetting Setting { get; }
+    TurnSetting m_setting = new();
 
-    readonly TurnAction.Instruction m_dir;
+    public required TurnSetting Setting
+    {
+        get => m_setting;
+        
+        set
+        {
+            m_setting = value;
+            m_dir = value.Dir switch
+            {
+                TurnDirection.Left => TurnInstruction.Left,
+                TurnDirection.Right => TurnInstruction.Right,
+                _ => TurnInstruction.Stop
+            };
+        }
+    }
+
+    TurnInstruction m_dir;
 
     IDisposable? m_disposble;
-
-    public BindControl(InputKeys keys, TurnSetting setting)
-    {
-        Keys = keys;
-        Setting = setting;
-        m_dir = Setting.Dir switch
-        {
-            TurnDirection.Left => TurnAction.Instruction.Left,
-            TurnDirection.Right => TurnAction.Instruction.Right,
-            _ => throw new ArgumentOutOfRangeException()
-        };
-    }
 
     public void Enable()
     {
@@ -54,7 +58,7 @@ class BindControl : IDisposable
 
                 if (!active)
                 {
-                    turnAction.Direction = TurnAction.Instruction.Stop;
+                    turnAction.Direction = TurnInstruction.Stop;
                     return;
                 }
 

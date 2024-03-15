@@ -4,42 +4,44 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:viewModel="clr-namespace:Turnbind.ViewModel"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" mc:Ignorable="d" d:DesignHeight="400" d:DesignWidth="400"
         d:DataContext="{d:DesignInstance viewModel:ProfileControlViewModel}">
-    <DockPanel>
-        <Grid DockPanel.Dock="Bottom" Margin="5">
-            <Grid.RowDefinitions>
-                <RowDefinition />
-                <RowDefinition />
-            </Grid.RowDefinitions>
+    <Border BorderBrush="Gray" BorderThickness="1">
+        <DockPanel>
+            <Grid Margin="5" DockPanel.Dock="Bottom">
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
 
-            <ui:TextBox Margin="10" PlaceholderText="Profile name..." Text="{Binding TextBoxProfileName}" />
+                <ui:TextBox BorderBrush="Gray" BorderThickness="1" Margin="10" PlaceholderText="Profile name..." Text="{Binding TextBoxProfileName}" />
 
-            <ui:Button Margin="10" Content="Add" Grid.Row="1" Command="{Binding AddProfileNameCommand}"
-                    HorizontalAlignment="Stretch" Appearance="Primary" />
-        </Grid>
+                <ui:Button BorderBrush="Gray" BorderThickness="1" Margin="10" Content="Add" Grid.Row="1" Command="{Binding AddProfileNameCommand}"
+                        HorizontalAlignment="Stretch" Appearance="Primary" />
+            </Grid>
 
-        <ListView ItemsSource="{Binding ProfilesNames, Mode=OneWay}">
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <DockPanel>
-                        <ui:Button Margin="5" Appearance="Info" DockPanel.Dock="Right" Content="Edit"
-                                Command="{Binding EditProfileCommand,Mode=OneWay}" />
+            <ListView ItemsSource="{Binding ProfilesNames, Mode=OneWay}" Margin="5">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <DockPanel>
+                            <ui:Button BorderBrush="Gray" BorderThickness="1" Margin="5" Appearance="Info" DockPanel.Dock="Right" Content="Edit"
+                                    Command="{Binding EditProfileCommand,Mode=OneWay}" />
 
-                        <ui:Button Margin="5" Appearance="Danger" DockPanel.Dock="Right" Content="Remove"
-                                Foreground="White" Command="{Binding RemoveProfileCommand,Mode=OneWay}" />
+                            <ui:Button BorderBrush="Gray" BorderThickness="1" Margin="5" Appearance="Danger" DockPanel.Dock="Right" Content="Remove"
+                                    Foreground="White" Command="{Binding RemoveProfileCommand,Mode=OneWay}" />
 
-                        <CheckBox IsChecked="{Binding Enable}" Content="{Binding ProfileName,Mode=OneWay}"
-                                Command="{Binding EnableProfileCommand,Mode=OneWay}" />
-                    </DockPanel>
+                            <CheckBox IsChecked="{Binding Enable}" Content="{Binding ProfileName,Mode=OneWay}"
+                                    Command="{Binding EnableProfileCommand,Mode=OneWay}" />
+                        </DockPanel>
 
-                </DataTemplate>
-            </ListView.ItemTemplate>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
 
-            <d:ListView.ItemsSource>
-                <x:Array Type="{x:Type viewModel:ProfileNameItemViewModel}">
-                    <viewModel:ProfileNameItemViewModel Name="default" />
-                    <viewModel:ProfileNameItemViewModel Name="custom" />
-                </x:Array>
-            </d:ListView.ItemsSource>
-        </ListView>
-    </DockPanel>
+                <d:ListView.ItemsSource>
+                    <x:Array Type="{x:Type viewModel:ProfileNameItemViewModel}">
+                        <viewModel:ProfileNameItemViewModel Name="default" />
+                        <viewModel:ProfileNameItemViewModel Name="custom" />
+                    </x:Array>
+                </d:ListView.ItemsSource>
+            </ListView>
+        </DockPanel>
+    </Border >
 </UserControl>

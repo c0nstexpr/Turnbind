@@ -4,17 +4,11 @@ using System.Reactive.Subjects;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-using Turnbind.Action;
-
 namespace Turnbind.ViewModel;
 
 partial class ProfileNameItemViewModel : ObservableObject, IEquatable<ProfileNameItemViewModel>, IDisposable
 {
     public string Name { init; get; } = string.Empty;
-
-    public readonly ProfileControl Control;
-
-    public ProfileNameItemViewModel() => Control = new(Name);
 
     [ObservableProperty]
     bool m_enable = false;
@@ -33,27 +27,23 @@ partial class ProfileNameItemViewModel : ObservableObject, IEquatable<ProfileNam
 
     public IObservable<Unit> RemoveProfile => m_editProfile;
 
-    [RelayCommand]
-    void OnEnableProfile()
-    {
-        if (Enable) Control.Enable();
-        else Control.Disable();
-    }
+    readonly Subject<Unit> m_enableProfile = new();
+
+    public IObservable<Unit> EnableProfile => m_enableProfile;
 
     [RelayCommand]
-    void OnRemoveProfile()
-    {
-        m_removeProfile.OnNext(Unit.Default);
-        Dispose();
-    }
+    void OnEnableProfile() => m_enableProfile.OnNext(default);
 
     [RelayCommand]
-    void OnEditProfile() => m_editProfile.OnNext(Unit.Default);
+    void OnRemoveProfile() => m_removeProfile.OnNext(default);
+
+    [RelayCommand]
+    void OnEditProfile() => m_editProfile.OnNext(default);
 
     public void Dispose()
     {
-        Control.Dispose();
         m_editProfile.Dispose();
         m_removeProfile.Dispose();
+        m_enableProfile.Dispose();
     }
 }

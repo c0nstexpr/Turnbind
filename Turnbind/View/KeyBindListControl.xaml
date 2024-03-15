@@ -6,20 +6,24 @@
         xmlns:view="clr-namespace:Turnbind.View" mc:Ignorable="d" d:DesignHeight="600" d:DesignWidth="400"
         d:DataContext="{d:DesignInstance viewModel:KeyBindListViewModel}">
     <DockPanel Grid.Column="1">
-        <view:KeyBindEditControl x:Name="KeyBindEdit" DockPanel.Dock="Bottom" />
+        <Border BorderBrush="Gray" BorderThickness="1" DockPanel.Dock="Bottom" Margin="0,5,0,0">
+            <view:KeyBindEditControl x:Name="KeyBindEdit" />
+        </Border>
 
-        <ListView Margin="5" DockPanel.Dock="Top" ItemsSource="{Binding KeyBinds, Mode=OneWay}"
-                SelectedValue="{Binding Selected}">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Width="100" Header="Dir"
-                            DisplayMemberBinding="{Binding Path=TurnSetting.Dir,Mode=OneWay}" />
-                    <GridViewColumn Width="100" Header="Pix/Sec"
-                            DisplayMemberBinding="{Binding Path=TurnSetting.PixelPerSec,Mode=OneWay}" />
-                    <GridViewColumn Width="200" Header="Keys"
-                            DisplayMemberBinding="{Binding Path=KeysString,Mode=OneWay}" />
-                </GridView>
-            </ListView.View>
-        </ListView>
+        <Border BorderBrush="Gray" BorderThickness="1" DockPanel.Dock="Top" Margin="0,0,0,5">
+            <ListView ItemsSource="{Binding KeyBinds, Mode=OneWay}" BorderThickness="10" BorderBrush="Black"
+                    SelectedValue="{Binding Selected}">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Width="100" Header="Dir"
+                                DisplayMemberBinding="{Binding Path=TurnSetting.Dir,Mode=OneWay}" />
+                        <GridViewColumn Width="100" Header="Pix/Sec"
+                                DisplayMemberBinding="{Binding Path=TurnSetting.PixelPerSec,Mode=OneWay}" />
+                        <GridViewColumn Width="200" Header="Keys"
+                                DisplayMemberBinding="{Binding Path=KeysString,Mode=OneWay}" />
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Border>
     </DockPanel>
 </UserControl>

@@ -10,8 +10,8 @@
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
 
-        <view:ProfileControl x:Name="Profile" />
+        <view:ProfileControl x:Name="Profile" Margin="5" />
 
-        <view:KeyBindListControl Grid.Column="1" x:Name="KeyBindList" />
+        <view:KeyBindListControl x:Name="KeyBindList" Grid.Column="1" Margin="5" />
     </Grid>
 </UserControl>

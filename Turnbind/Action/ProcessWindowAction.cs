@@ -12,12 +12,10 @@ partial class ProcessWindowAction : IDisposable
 {
     public string? ProcessName { get; set; }
 
-    public Process? Process
+    public IntPtr? WindowHandle
     {
         get
         {
-            if (m_process is not null) return m_process;
-
             if (ProcessName is null) return null;
 
             var candidates = Process.GetProcessesByName(ProcessName);
@@ -34,15 +32,9 @@ partial class ProcessWindowAction : IDisposable
                 return null;
             }
 
-            m_process = candidates[0];
-
-            return m_process;
+            return candidates[0].MainWindowHandle;
         }
-
-        private set => m_process = value;
     }
-
-    public IntPtr? WindowHandle => Process?.MainWindowHandle;
 
     readonly BehaviorSubject<bool> m_focused = new(false);
 
@@ -54,7 +46,6 @@ partial class ProcessWindowAction : IDisposable
     readonly WinEventDelegate m_focusedCallback;
     readonly WinEventDelegate m_destroyedCallback;
     readonly IntPtr m_destroyedHook;
-    Process? m_process = null;
 
     delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
 
@@ -81,9 +72,10 @@ partial class ProcessWindowAction : IDisposable
 
         m_focusedCallback = (_, _, win, _, _, _, _) =>
         {
-            if(WindowHandle is null) return;
+            var handle = WindowHandle;
+            if (handle is null) return;
 
-            if (win == WindowHandle)
+            if (win == handle)
             {
                 Log.Logger.WithSourceInfo().Information("Window focused");
                 m_focused.OnNext(true);
@@ -95,14 +87,12 @@ partial class ProcessWindowAction : IDisposable
             }
         };
 
-        m_destroyedCallback = (_, _, win, _, _, _, _) =>
+        m_destroyedCallback = (_, _, _, _, _, _, _) =>
         {
-            if (WindowHandle != win) return;
+            if (WindowHandle is { }) return;
 
             Log.Logger.WithSourceInfo().Information("Window destroyed");
             m_focused.OnNext(false);
-
-            Process = null;
         };
 
         m_focusedHook = SetWinEventHook(

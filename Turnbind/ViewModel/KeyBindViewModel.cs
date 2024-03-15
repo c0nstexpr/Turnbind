@@ -7,6 +7,8 @@ namespace Turnbind.ViewModel;
 
 partial class KeyBindViewModel : ObservableObject
 {
+    public static readonly TurnDirection[] DirectionValues = Enum.GetValues<TurnDirection>();
+
     InputKeys m_keys = new();
 
     public InputKeys Keys

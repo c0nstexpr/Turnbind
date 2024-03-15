@@ -1,16 +1,42 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.Reactive.Disposables;
+
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using Turnbind.Model;
 
 namespace Turnbind.ViewModel;
 
-partial class KeyBindEditViewModel : ObservableObject
+partial class KeyBindEditViewModel : ObservableObject, IDisposable
 {
     public readonly RelayCommand DefaultCommand = new(() => { }, () => false);
 
-    [ObservableProperty]
+    IDisposable m_keyBindDisposable = Disposable.Empty;
+
     KeyBindViewModel m_keyBind = new();
+
+    public KeyBindViewModel KeyBind
+    {
+        get => m_keyBind;
+
+        set
+        {
+            SetProperty(ref m_keyBind, value);
+
+            AddCommand.NotifyCanExecuteChanged();
+            RemoveCommand.NotifyCanExecuteChanged();
+            ModifyCommand.NotifyCanExecuteChanged();
+
+            m_keyBindDisposable = value.WhenChanged(x => x.Keys).Subscribe(
+                _ =>
+                {
+                    AddCommand.NotifyCanExecuteChanged();
+                    RemoveCommand.NotifyCanExecuteChanged();
+                    ModifyCommand.NotifyCanExecuteChanged();
+                }
+            );
+        }
+    }
 
     public void OnInputKey(InputKey k)
     {
@@ -34,4 +60,6 @@ partial class KeyBindEditViewModel : ObservableObject
         m_modifyCommand = DefaultCommand;
         m_removeCommand = DefaultCommand;
     }
+
+    public void Dispose() => m_keyBindDisposable.Dispose();
 }

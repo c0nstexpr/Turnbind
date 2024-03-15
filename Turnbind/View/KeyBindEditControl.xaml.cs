@@ -6,7 +6,7 @@ using Turnbind.ViewModel;
 
 namespace Turnbind.View;
 
-public partial class KeyBindEditControl : UserControl
+partial class KeyBindEditControl : UserControl
 {
     internal readonly KeyBindEditViewModel m_viewModel = new();
 

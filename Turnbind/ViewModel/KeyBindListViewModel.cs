@@ -8,17 +8,17 @@ namespace Turnbind.ViewModel;
 
 partial class KeyBindListViewModel : ObservableObject
 {
-    KeyBindEditViewModel? m_keyBindEdit;
+#pragma warning disable CS8618 
+    readonly KeyBindEditViewModel m_keyBindEdit;
+#pragma warning restore CS8618
 
-    public KeyBindEditViewModel? KeyBindEdit
+    public required KeyBindEditViewModel KeyBindEdit
     {
         get => m_keyBindEdit;
 
-        set
+        init
         {
             m_keyBindEdit = value;
-
-            if (value is null) return;
 
             value.AddCommand = new(Add, CanAdd);
             value.RemoveCommand = new(Remove, CanRemove);
@@ -26,8 +26,7 @@ partial class KeyBindListViewModel : ObservableObject
         }
     }
 
-    [ObservableProperty]
-    ObservableDictionary<InputKeys, KeyBindViewModel> m_keyBinds = [];
+    public readonly ObservableDictionary<InputKeys, KeyBindViewModel> KeyBinds = [];
 
     KeyBindViewModel? m_selected;
 

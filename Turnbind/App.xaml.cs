@@ -10,12 +10,15 @@ using Serilog.Formatting.Compact;
 using Serilog.Exceptions;
 using Turnbind.Action;
 using Turnbind.Model;
+using Autofac.Extensions.DependencyInjection;
+using Turnbind.ViewModel;
 
 namespace Turnbind;
 
 public partial class App : Application
 {
     static readonly IHost m_host = Host.CreateDefaultBuilder()
+        .UseServiceProviderFactory(new AutofacServiceProviderFactory())
         .ConfigureAppConfiguration(c => c.SetBasePath(AppContext.BaseDirectory))
         .UseSerilog(
             (context, services, loggerConfiguration) => loggerConfiguration
@@ -31,15 +34,17 @@ public partial class App : Application
         .ConfigureServices(
             (_, services) =>
             {
+                // actions
                 services.AddSingleton<InputAction>();
                 services.AddSingleton<ProcessWindowAction>();
                 services.AddSingleton<TurnAction>();
                 services.AddSingleton<Settings>();
+                services.AddSingleton<MainWindowViewModel>();
             }
         )
         .Build();
 
-    public static T GetService<T>() where T : class => m_host.Services.GetService<T>()!;
+    public static T GetService<T>() where T : class => m_host.Services.GetRequiredService<T>();
 
     void OnStartup(object sender, StartupEventArgs e) => m_host.Start();
 

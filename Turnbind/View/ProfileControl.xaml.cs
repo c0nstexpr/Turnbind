@@ -4,7 +4,7 @@ using Turnbind.ViewModel;
 
 namespace Turnbind.View;
 
-public partial class ProfileControl : UserControl
+public partial class ProfileControl : UserControl, IDisposable
 {
     internal readonly ProfileControlViewModel m_viewModel = new();
 
@@ -13,4 +13,6 @@ public partial class ProfileControl : UserControl
         DataContext = m_viewModel;
         InitializeComponent();
     }
+
+    public void Dispose() => m_viewModel.Dispose();
 }

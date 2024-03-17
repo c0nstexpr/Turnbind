@@ -6,16 +6,20 @@ using LanguageExt;
 
 namespace Turnbind.Model;
 
-[method: JsonConstructor]
-public class InputKeys(IEnumerable<InputKey> keys) : IReadOnlyList<InputKey>, IEquatable<InputKeys>
+public class InputKeys : IReadOnlyList<InputKey>, IEquatable<InputKeys>
 {
-    readonly InputKey[] m_keys = keys.ToArray();
+    readonly ImmutableHashSet<InputKey> m_set;
 
-    readonly ImmutableHashSet<InputKey> m_set = ImmutableHashSet.CreateRange(keys);
+    readonly InputKey[] m_keys;
 
-    public InputKeys() : this([])
+    [JsonConstructor]
+    public InputKeys(IEnumerable<InputKey> keys)
     {
+        m_set = ImmutableHashSet.CreateRange(keys);
+        m_keys = m_set.ToArray();
     }
+
+    public InputKeys() : this([]) { }
 
     public int Count => m_keys.Length;
 

@@ -12,13 +12,19 @@ sealed partial class KeyBindsControl : UserControl, IDisposable
     {
         InitializeComponent();
 
-        m_viewModel = new(
-            Profile.m_viewModel,
-            KeyBindList.m_viewModel
-        );
+        m_viewModel = new()
+        {
+            Profile = Profile.m_viewModel,
+            KeyBindList = KeyBindList.m_viewModel
+        };
 
         DataContext = m_viewModel;
     }
 
-    public void Dispose() => m_viewModel.Dispose();
+    public void Dispose()
+    {
+        m_viewModel.Dispose();
+        Profile.Dispose();
+        KeyBindList.Dispose();
+    }
 }

@@ -6,7 +6,7 @@ using Turnbind.ViewModel;
 
 namespace Turnbind.View;
 
-partial class KeyBindEditControl : UserControl
+partial class KeyBindEditControl : UserControl, IDisposable
 {
     internal readonly KeyBindEditViewModel m_viewModel = new();
 
@@ -144,4 +144,6 @@ partial class KeyBindEditControl : UserControl
             _ => InputKey.None
         }
     );
+
+    public void Dispose() => m_viewModel.Dispose();
 }

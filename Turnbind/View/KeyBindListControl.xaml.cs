@@ -4,7 +4,7 @@ using Turnbind.ViewModel;
 
 namespace Turnbind.View;
 
-partial class KeyBindListControl : UserControl
+partial class KeyBindListControl : UserControl, IDisposable
 {
     internal readonly KeyBindListViewModel m_viewModel;
 
@@ -14,4 +14,6 @@ partial class KeyBindListControl : UserControl
         m_viewModel = new() { KeyBindEdit = KeyBindEdit.m_viewModel };
         DataContext = m_viewModel;
     }
+
+    public void Dispose() => KeyBindEdit.Dispose();
 }

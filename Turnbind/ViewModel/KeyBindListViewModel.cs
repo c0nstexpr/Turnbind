@@ -1,4 +1,8 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.Diagnostics.CodeAnalysis;
+
+using CommunityToolkit.Mvvm.ComponentModel;
+
+using LanguageExt;
 
 using ObservableCollections;
 
@@ -8,14 +12,13 @@ namespace Turnbind.ViewModel;
 
 partial class KeyBindListViewModel : ObservableObject
 {
-#pragma warning disable CS8618 
     readonly KeyBindEditViewModel m_keyBindEdit;
-#pragma warning restore CS8618
 
     public required KeyBindEditViewModel KeyBindEdit
     {
         get => m_keyBindEdit;
 
+        [MemberNotNull(nameof(m_keyBindEdit))]
         init
         {
             m_keyBindEdit = value;
@@ -38,7 +41,7 @@ partial class KeyBindListViewModel : ObservableObject
         {
             SetProperty(ref m_selected, value);
 
-            if (value is null || KeyBindEdit is null) return;
+            if (value is null) return;
 
             var turnSetting = value.TurnSetting;
             KeyBindEdit.KeyBind = new()
@@ -55,7 +58,7 @@ partial class KeyBindListViewModel : ObservableObject
 
     void Add()
     {
-        var keyBind = KeyBindEdit!.KeyBind;
+        var keyBind = KeyBindEdit.KeyBind;
         InputKeys keys = new(keyBind.Keys);
         var turnSetting = keyBind.TurnSetting;
 
@@ -75,7 +78,11 @@ partial class KeyBindListViewModel : ObservableObject
         Selected = keyBind;
     }
 
-    bool CanAdd() => !KeyBinds.ContainsKey(KeyBindEdit!.KeyBind.Keys);
+    bool CanAdd()
+    {
+        var keys = KeyBindEdit.KeyBind.Keys;
+        return keys.Count > 0 && !KeyBinds.ContainsKey(keys);
+    }
 
     void Remove() => KeyBinds.Remove(Selected!.Keys);
 
@@ -84,7 +91,7 @@ partial class KeyBindListViewModel : ObservableObject
     void Modify()
     {
         var keyBind = KeyBinds[Selected!.Keys];
-        var turnSetting = KeyBindEdit!.KeyBind.TurnSetting;
+        var turnSetting = KeyBindEdit.KeyBind.TurnSetting;
 
         KeyBinds[Selected!.Keys] = new()
         {

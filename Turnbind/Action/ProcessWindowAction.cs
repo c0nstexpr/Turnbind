@@ -120,5 +120,6 @@ partial class ProcessWindowAction : IDisposable
     {
         UnhookWinEvent(m_focusedHook);
         UnhookWinEvent(m_destroyedHook);
+        m_focused.Dispose();
     }
 }

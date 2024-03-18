@@ -83,7 +83,7 @@ public sealed class InputAction : IDisposable
     {
         var input = args.Data.KeyCode.ToInputKey();
 
-        if (m_pressedKeys[input] == true) return;
+        if (m_pressedKeys[input]) return;
 
         m_input.OnNext(new(input, true));
         m_pressedKeys[input] = true;
@@ -112,9 +112,9 @@ public sealed class InputAction : IDisposable
 
     public void Dispose()
     {
-        m_disposables.Dispose();
-        m_input.Dispose();
         Hook.Dispose();
         m_taskPoolGlobalHook.Dispose();
+        m_disposables.Dispose();
+        m_input.Dispose();
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
@@ -8,7 +7,7 @@ using ObservableCollections;
 
 namespace Turnbind.Helper;
 
-public sealed class ObservableDictionaryListView<TKey, TValue> : INotifyCollectionChanged,
+public sealed partial class ObservableDictionaryListView<TKey, TValue> : INotifyCollectionChanged,
     IReadOnlyDictionary<TKey, TValue>,
     IDisposable where TKey : notnull
 {
@@ -126,153 +125,7 @@ public sealed class ObservableDictionaryListView<TKey, TValue> : INotifyCollecti
         );
     }
 
-    public sealed class KeyCollectionChanged : INotifyCollectionChanged, ICollection<TValue>, IDisposable
-    {
-        readonly IDisposable m_disposable;
-
-        public int Count { get; }
-        public bool IsReadOnly { get; }
-
-        public event NotifyCollectionChangedEventHandler? CollectionChanged;
-
-        internal KeyCollectionChanged(ObservableDictionaryListView<TKey, TValue> view)
-        {
-            view.CollectionChanged += OnCollectionChanged;
-            m_disposable = Disposable.Create(() => view.CollectionChanged -= OnCollectionChanged);
-        }
-
-        void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            switch (e.Action)
-            {
-                case NotifyCollectionChangedAction.Add:
-                    CollectionChanged?.Invoke(
-                        this,
-                        new(
-                            NotifyCollectionChangedAction.Add,
-                            e.NewItems?.Cast<KeyValuePair<TKey, TValue>>()
-                                .Select(x => x.Key)
-                                .ToList(),
-                            e.NewStartingIndex
-                        )
-                    );
-                    break;
-
-                case NotifyCollectionChangedAction.Remove:
-                    CollectionChanged?.Invoke(
-                        this,
-                        new(
-                            NotifyCollectionChangedAction.Remove,
-                            e.OldItems?.Cast<KeyValuePair<TKey, TValue>>()
-                                .Select(x => x.Key)
-                                .ToList(),
-                            e.OldStartingIndex
-                        )
-                    );
-                    break;
-
-                case NotifyCollectionChangedAction.Replace:
-                    CollectionChanged?.Invoke(
-                        this,
-                        new(
-                            NotifyCollectionChangedAction.Replace,
-                            e.NewItems?.Cast<KeyValuePair<TKey, TValue>>()
-                                .Select(x => x.Key)
-                                .ToList(),
-                            e.NewStartingIndex
-                        )
-                    );
-                    break;
-
-                case NotifyCollectionChangedAction.Reset:
-                    CollectionChanged?.Invoke(this, new(NotifyCollectionChangedAction.Reset));
-                    break;
-            }
-        }
-
-        IEnumerator<TValue> IEnumerable<TValue>.GetEnumerator() => throw new NotImplementedException();
-
-        public void Dispose() => m_disposable.Dispose();
-
-        public void Add(TValue item) => throw new NotImplementedException();
-
-        public void Clear() => throw new NotImplementedException();
-
-        public bool Contains(TValue item) => throw new NotImplementedException();
-
-        public void CopyTo(TValue[] array, int arrayIndex) => throw new NotImplementedException();
-
-        public bool Remove(TValue item) => throw new NotImplementedException();
-
-        public IEnumerator GetEnumerator() => throw new NotImplementedException();
-    }
-
     public KeyCollectionChanged CreateKeyView() => new(this);
-
-    public sealed class ValueCollectionChanged : INotifyCollectionChanged, IDisposable
-    {
-        readonly IDisposable m_disposable;
-
-        public event NotifyCollectionChangedEventHandler? CollectionChanged;
-
-        internal ValueCollectionChanged(ObservableDictionaryListView<TKey, TValue> view)
-        {
-            view.CollectionChanged += OnCollectionChanged;
-            m_disposable = Disposable.Create(() => view.CollectionChanged -= OnCollectionChanged);
-        }
-
-        void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-
-            switch (e.Action)
-            {
-                case NotifyCollectionChangedAction.Add:
-                    CollectionChanged?.Invoke(
-                        this,
-                        new(
-                            NotifyCollectionChangedAction.Add,
-                            e.NewItems?.Cast<KeyValuePair<TKey, TValue>>()
-                                .Select(pair => pair.Value)
-                                .ToList(),
-                            e.NewStartingIndex
-                        )
-                    );
-                    break;
-
-                case NotifyCollectionChangedAction.Remove:
-                    CollectionChanged?.Invoke(
-                        this,
-                        new(
-                            NotifyCollectionChangedAction.Add,
-                            e.OldItems?.Cast<KeyValuePair<TKey, TValue>>()
-                                .Select(pair => pair.Value)
-                                .ToList(),
-                            e.OldStartingIndex
-                        )
-                    );
-                    break;
-
-                case NotifyCollectionChangedAction.Replace:
-                    CollectionChanged?.Invoke(
-                        this,
-                        new(
-                            NotifyCollectionChangedAction.Replace,
-                            e.NewItems?.Cast<KeyValuePair<TKey, TValue>>()
-                                .Select(pair => pair.Value)
-                                .ToList(),
-                            e.NewStartingIndex
-                        )
-                    );
-                    break;
-
-                case NotifyCollectionChangedAction.Reset:
-                    CollectionChanged?.Invoke(this, new(NotifyCollectionChangedAction.Reset));
-                    break;
-            }
-        }
-
-        public void Dispose() => m_disposable.Dispose();
-    }
 
     public ValueCollectionChanged CreateValueView() => new(this);
 

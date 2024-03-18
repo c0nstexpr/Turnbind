@@ -7,19 +7,28 @@ using MoreLinq;
 
 using ObservableCollections;
 
+using Turnbind.Helper;
+
 namespace Turnbind.ViewModel;
 
 partial class ProfileControlViewModel : ObservableObject, IDisposable
 {
-    public readonly ObservableHashSet<ProfileNameItemViewModel> ProfilesNames = [];
+    readonly ObservableDictionary<string, ProfileNameItemViewModel> m_profilesNames = [];
+
+    internal IObservableCollection<KeyValuePair<string, ProfileNameItemViewModel>> m_observableProfilesNames => m_profilesNames;
 
     readonly Dictionary<string, IDisposable> m_profileDisposable = [];
+
+    readonly ObservableDictionaryListView<string, ProfileNameItemViewModel> m_profilesNamesView;
+
+    public ObservableDictionaryListView<string, ProfileNameItemViewModel>.ValueCollectionChanged ProfilesNames { get; }
 
     string? m_textBoxProfileName;
 
     public string? TextBoxProfileName
     {
         get => m_textBoxProfileName;
+
         set
         {
             SetProperty(ref m_textBoxProfileName, value);
@@ -27,36 +36,60 @@ partial class ProfileControlViewModel : ObservableObject, IDisposable
         }
     }
 
+    public ProfileControlViewModel()
+    {
+        m_profilesNamesView = new(m_profilesNames);
+        ProfilesNames = m_profilesNamesView.CreateValueView();
+    }
+
     bool CanAddProfileName() => TextBoxProfileName is { };
+
+    public ProfileNameItemViewModel? Add(string name)
+    {
+        Debug.Assert(name is { });
+        ProfileNameItemViewModel item = new() { Name = name };
+
+        if (!m_profilesNames.TryAdd(name, item))
+        {
+            item.Dispose();
+            return null;
+        }
+
+        m_profileDisposable[name] = item.RemoveProfile.Subscribe(index => Remove(name));
+
+        return item;
+    }
+
+    public void Remove(string name)
+    {
+        m_profileDisposable[name].Dispose();
+        m_profileDisposable.Remove(name);
+        m_profilesNames[name].Dispose();
+        m_profilesNames.Remove(name);
+    }
+
+    public void Clear()
+    {
+        m_profileDisposable.Values.ForEach(item => item.Dispose());
+        m_profileDisposable.Clear();
+        (m_profilesNames as IDictionary<string, ProfileNameItemViewModel>).Values
+            .ForEach(item => item.Dispose());
+        m_profilesNames.Clear();
+    }
 
     [RelayCommand(CanExecute = nameof(CanAddProfileName))]
     void AddProfileName()
     {
-        Debug.Assert(TextBoxProfileName is { });
-        ProfileNameItemViewModel item = new() { Name = TextBoxProfileName };
-
-        if (!ProfilesNames.Add(item))
-        {
-            item.Dispose();
-            return;
-        }
-
-        m_profileDisposable[item.Name] = item.RemoveProfile.Subscribe(
-            _ =>
-            {
-                ProfilesNames.Remove(item);
-                item.Dispose();
-                m_profileDisposable[item.Name].Dispose();
-                m_profileDisposable.Remove(item.Name);
-            }
-        );
-
+        Add(TextBoxProfileName!);
         TextBoxProfileName = null;
     }
 
     public void Dispose()
     {
+        m_profilesNamesView.Dispose();
+        ProfilesNames.Dispose();
         m_profileDisposable.Values.ForEach(item => item.Dispose());
-        ProfilesNames.ForEach(item => item.Dispose());
+        (m_profilesNames as IDictionary<string, ProfileNameItemViewModel>).Values
+            .ForEach(item => item.Dispose());
     }
 }

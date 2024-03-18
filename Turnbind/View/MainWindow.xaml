@@ -2,8 +2,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:viewModel="clr-namespace:Turnbind.ViewModel" xmlns:view="clr-namespace:Turnbind.View" mc:Ignorable="d"
-        Title="MainWindow" Height="1000" Width="800"
+        xmlns:viewModel="clr-namespace:Turnbind.ViewModel" xmlns:view="clr-namespace:Turnbind.View"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" mc:Ignorable="d" Title="MainWindow" Height="1000" Width="800"
         d:DataContext="{d:DesignInstance Type=viewModel:MainWindowViewModel}">
     <DockPanel Margin="5">
         <Grid DockPanel.Dock="Top" Margin="5">
@@ -18,21 +18,21 @@
                 <RowDefinition />
             </Grid.RowDefinitions>
 
-            <TextBlock Margin="5" Text="Process Name:" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <ui:TextBlock Margin="5" Text="Process Name:" HorizontalAlignment="Center" VerticalAlignment="Center" />
 
-            <TextBox Margin="5" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+            <ui:TextBox Margin="5" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center"
                     BorderBrush="Gray" Text="{Binding ProcessName}" />
 
-            <TextBlock Margin="5" Grid.Row="1" Text="Window State:" HorizontalAlignment="Center"
+            <ui:TextBlock Margin="5" Grid.Row="1" Text="Window State:" HorizontalAlignment="Center"
                     VerticalAlignment="Center" />
 
-            <TextBox Margin="5" Grid.Row="1" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
+            <ui:TextBox Margin="5" Grid.Row="1" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
                     VerticalAlignment="Center" Text="{Binding IsWindowFocused, Mode=OneWay}" />
 
-            <TextBlock Margin="5" Grid.Row="2" Text="Current Keys:" HorizontalAlignment="Center"
+            <ui:TextBlock Margin="5" Grid.Row="2" Text="Current Keys:" HorizontalAlignment="Center"
                     VerticalAlignment="Center" />
 
-            <TextBox Margin="5" Grid.Row="2" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
+            <ui:TextBox Margin="5" Grid.Row="2" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
                     VerticalAlignment="Center" Text="{Binding CurrentKeyStr, Mode=OneWay}" />
         </Grid>
 

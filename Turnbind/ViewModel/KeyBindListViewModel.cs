@@ -2,15 +2,14 @@
 
 using CommunityToolkit.Mvvm.ComponentModel;
 
-using LanguageExt;
-
 using ObservableCollections;
 
+using Turnbind.Helper;
 using Turnbind.Model;
 
 namespace Turnbind.ViewModel;
 
-partial class KeyBindListViewModel : ObservableObject
+partial class KeyBindListViewModel : ObservableObject, IDisposable
 {
     readonly KeyBindEditViewModel m_keyBindEdit;
 
@@ -29,7 +28,13 @@ partial class KeyBindListViewModel : ObservableObject
         }
     }
 
-    public readonly ObservableDictionary<InputKeys, KeyBindViewModel> KeyBinds = [];
+    readonly ObservableDictionary<InputKeys, KeyBindViewModel> m_keyBinds = [];
+
+    internal IObservableCollection<KeyValuePair<InputKeys, KeyBindViewModel>> m_observableKeyBinds => m_keyBinds;
+
+    readonly ObservableDictionaryListView<InputKeys, KeyBindViewModel> m_observableKeyBindsView;
+
+    public ObservableDictionaryListView<InputKeys, KeyBindViewModel>.ValueCollectionChanged KeyBinds { get; }
 
     KeyBindViewModel? m_selected;
 
@@ -56,44 +61,53 @@ partial class KeyBindListViewModel : ObservableObject
         }
     }
 
+    public KeyBindListViewModel()
+    {
+        m_observableKeyBindsView = new(m_keyBinds);
+        KeyBinds = m_observableKeyBindsView.CreateValueView();
+    }
+
+    public KeyBindViewModel? Add(InputKeys keys, TurnSetting turnSetting)
+    {
+        KeyBindViewModel vm = new()
+        {
+            Keys = keys,
+            TurnSetting = new()
+            {
+                Dir = turnSetting.Dir,
+                PixelPerSec = turnSetting.PixelPerSec,
+            }
+        };
+
+        return m_keyBinds.TryAdd(keys, vm) ? vm : null;
+    }
+
+    public void Remove(InputKeys keys) => m_keyBinds.Remove(keys);
+
+    public void Clear() => m_keyBinds.Clear();
+
     void Add()
     {
         var keyBind = KeyBindEdit.KeyBind;
-        InputKeys keys = new(keyBind.Keys);
-        var turnSetting = keyBind.TurnSetting;
-
-        KeyBinds.Add(
-            keys,
-            new()
-            {
-                Keys = keys,
-                TurnSetting = new()
-                {
-                    Dir = turnSetting.Dir,
-                    PixelPerSec = turnSetting.PixelPerSec,
-                }
-            }
-        );
-
-        Selected = keyBind;
+        Add(keyBind.Keys, keyBind.TurnSetting.Setting);
     }
 
     bool CanAdd()
     {
         var keys = KeyBindEdit.KeyBind.Keys;
-        return keys.Count > 0 && !KeyBinds.ContainsKey(keys);
+        return keys.Count > 0 && !m_keyBinds.ContainsKey(keys);
     }
 
-    void Remove() => KeyBinds.Remove(Selected!.Keys);
+    void Remove() => Remove(Selected!.Keys);
 
     bool CanRemove() => Selected is { };
 
     void Modify()
     {
-        var keyBind = KeyBinds[Selected!.Keys];
+        var keyBind = m_keyBinds[Selected!.Keys];
         var turnSetting = KeyBindEdit.KeyBind.TurnSetting;
 
-        KeyBinds[Selected!.Keys] = new()
+        m_keyBinds[Selected!.Keys] = new()
         {
             Keys = keyBind.Keys,
             TurnSetting = new()
@@ -102,5 +116,11 @@ partial class KeyBindListViewModel : ObservableObject
                 PixelPerSec = turnSetting.PixelPerSec,
             }
         };
+    }
+
+    public void Dispose()
+    {
+        m_observableKeyBindsView.Dispose();
+        KeyBinds.Dispose();
     }
 }

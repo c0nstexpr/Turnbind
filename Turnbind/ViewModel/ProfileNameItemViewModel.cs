@@ -6,18 +6,12 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace Turnbind.ViewModel;
 
-partial class ProfileNameItemViewModel : ObservableObject, IEquatable<ProfileNameItemViewModel>, IDisposable
+partial class ProfileNameItemViewModel : ObservableObject, IDisposable
 {
     public string Name { init; get; } = string.Empty;
 
     [ObservableProperty]
     bool m_enable = false;
-
-    public bool Equals(ProfileNameItemViewModel? other) => Name == other?.Name;
-
-    public override int GetHashCode() => Name.GetHashCode();
-
-    public override bool Equals(object? obj) => Equals(obj as ProfileNameItemViewModel);
 
     readonly Subject<Unit> m_editProfile = new();
 
@@ -25,7 +19,7 @@ partial class ProfileNameItemViewModel : ObservableObject, IEquatable<ProfileNam
 
     readonly Subject<Unit> m_removeProfile = new();
 
-    public IObservable<Unit> RemoveProfile => m_editProfile;
+    public IObservable<Unit> RemoveProfile => m_removeProfile;
 
     readonly Subject<Unit> m_enableProfile = new();
 

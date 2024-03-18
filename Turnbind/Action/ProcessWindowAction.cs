@@ -72,6 +72,8 @@ partial class ProcessWindowAction : IDisposable
 
         m_focusedCallback = (_, _, win, _, _, _, _) =>
         {
+            if (m_focused.IsDisposed) return;
+
             var handle = WindowHandle;
             if (handle is null) return;
 
@@ -87,11 +89,16 @@ partial class ProcessWindowAction : IDisposable
             }
         };
 
-        m_destroyedCallback = (_, _, _, _, _, _, _) =>
+        m_destroyedCallback = (_, _, win, _, _, _, _) =>
         {
-            if (WindowHandle is { }) return;
+            var handle = WindowHandle;
+
+            if (handle is null || win != handle) return;
 
             Log.Logger.WithSourceInfo().Information("Window destroyed");
+
+            if(m_focused.IsDisposed) return;
+
             m_focused.OnNext(false);
         };
 

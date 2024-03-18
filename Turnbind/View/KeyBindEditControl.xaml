@@ -36,21 +36,22 @@
                 <RowDefinition />
             </Grid.RowDefinitions>
 
-            <TextBlock Margin="5" Text="Direction:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" />
+            <ui:TextBlock Margin="5" Text="Direction:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" />
 
             <ComboBox BorderBrush="Gray" BorderThickness="1" Margin="5" VerticalAlignment="Center"
-                    SelectedValue="{Binding Path=TurnSetting.Dir}" Grid.Row="0" Grid.Column="1" ItemsSource="{Binding DirectionValues, Mode=OneWay}"/>
+                    SelectedValue="{Binding Path=TurnSetting.Dir}" Grid.Row="0" Grid.Column="1"
+                    ItemsSource="{Binding DirectionValues, Mode=OneWay}" />
 
-            <TextBlock Margin="5" Text="Binding keys:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" />
+            <ui:TextBlock Margin="5" Text="Binding keys:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" />
 
-            <TextBox Margin="5" x:Name="InputKeysTextBox" IsReadOnly="True" BorderThickness=" 1"
+            <ui:TextBox Margin="5" x:Name="InputKeysTextBox" IsReadOnly="True" BorderThickness=" 1"
                     VerticalContentAlignment="Center" BorderBrush=" Gray" Text="{Binding Path=KeysString,Mode=OneWay}"
                     PreviewKeyDown="InputKeysTextBoxKeyDown" PreviewMouseDown="InputKeysTextBoxMouseDown" Grid.Row="1"
                     Grid.Column="1" />
 
-            <TextBlock Margin="5" Text="Pixel/Second:" VerticalAlignment="Center" Grid.Row="2" Grid.Column="0" />
+            <ui:TextBlock Margin="5" Text="Pixel/Second:" VerticalAlignment="Center" Grid.Row="2" Grid.Column="0" />
 
-            <TextBox Margin="5" BorderThickness="1" VerticalContentAlignment="Center" BorderBrush="Gray"
+            <ui:TextBox Margin="5" BorderThickness="1" VerticalContentAlignment="Center" BorderBrush="Gray"
                     Text="{Binding Path=TurnSetting.PixelPerSec,Mode=OneWay}" Grid.Row="2" Grid.Column="1" />
         </Grid>
     </DockPanel>

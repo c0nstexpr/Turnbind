@@ -32,7 +32,7 @@ partial class KeyBindListViewModel : ObservableObject, IDisposable
 
     internal IObservableCollection<KeyValuePair<InputKeys, KeyBindViewModel>> m_observableKeyBinds => m_keyBinds;
 
-    readonly ObservableDictionaryListView<InputKeys, KeyBindViewModel> m_observableKeyBindsView;
+    readonly ObservableDictionaryListView<InputKeys, KeyBindViewModel> m_keyBindsListView;
 
     public ObservableDictionaryListView<InputKeys, KeyBindViewModel>.ValueCollectionChanged KeyBinds { get; }
 
@@ -42,29 +42,41 @@ partial class KeyBindListViewModel : ObservableObject, IDisposable
     {
         get => m_selected;
 
-        set
+        private set
         {
             SetProperty(ref m_selected, value);
 
             if (value is null) return;
 
             var turnSetting = value.TurnSetting;
+
             KeyBindEdit.KeyBind = new()
             {
                 Keys = new(value.Keys),
-                TurnSetting = new()
-                {
-                    Dir = turnSetting.Dir,
-                    PixelPerSec = turnSetting.PixelPerSec,
-                }
+                Dir = turnSetting.Dir,
+                PixelPerSec = turnSetting.PixelPerSec
             };
+        }
+    }
+
+    int? m_selectedIndex;
+
+    public int? SelectedIndex
+    {
+        get => m_selectedIndex;
+
+        set
+        {
+            SetProperty(ref m_selectedIndex, value);
+
+            if (value is { } v) Selected = KeyBinds[v];
         }
     }
 
     public KeyBindListViewModel()
     {
-        m_observableKeyBindsView = new(m_keyBinds);
-        KeyBinds = m_observableKeyBindsView.CreateValueView();
+        m_keyBindsListView = new(m_keyBinds);
+        KeyBinds = m_keyBindsListView.CreateValueView();
     }
 
     public KeyBindViewModel? Add(InputKeys keys, TurnSetting turnSetting)
@@ -72,24 +84,34 @@ partial class KeyBindListViewModel : ObservableObject, IDisposable
         KeyBindViewModel vm = new()
         {
             Keys = keys,
-            TurnSetting = new()
-            {
-                Dir = turnSetting.Dir,
-                PixelPerSec = turnSetting.PixelPerSec,
-            }
+            Dir = turnSetting.Dir,
+            PixelPerSec = turnSetting.PixelPerSec,
         };
 
-        return m_keyBinds.TryAdd(keys, vm) ? vm : null;
+        var res = m_keyBinds.TryAdd(keys, vm) ? vm : null;
+
+        KeyBindEdit.AddCommand.NotifyCanExecuteChanged();
+        KeyBindEdit.ModifyCommand.NotifyCanExecuteChanged();
+        KeyBindEdit.RemoveCommand.NotifyCanExecuteChanged();
+
+        return res;
     }
 
-    public void Remove(InputKeys keys) => m_keyBinds.Remove(keys);
+    public void Remove(InputKeys keys)
+    {
+        m_keyBinds.Remove(keys);
+
+        KeyBindEdit.AddCommand.NotifyCanExecuteChanged();
+        KeyBindEdit.ModifyCommand.NotifyCanExecuteChanged();
+        KeyBindEdit.RemoveCommand.NotifyCanExecuteChanged();
+    }
 
     public void Clear() => m_keyBinds.Clear();
 
     void Add()
     {
         var keyBind = KeyBindEdit.KeyBind;
-        Add(keyBind.Keys, keyBind.TurnSetting.Setting);
+        Add(keyBind.Keys, keyBind.TurnSetting);
     }
 
     bool CanAdd()
@@ -100,7 +122,7 @@ partial class KeyBindListViewModel : ObservableObject, IDisposable
 
     void Remove() => Remove(Selected!.Keys);
 
-    bool CanRemove() => Selected is { };
+    bool CanRemove() => Selected?.Keys.Equals(KeyBindEdit.KeyBind.Keys) == true;
 
     void Modify()
     {
@@ -110,17 +132,14 @@ partial class KeyBindListViewModel : ObservableObject, IDisposable
         m_keyBinds[Selected!.Keys] = new()
         {
             Keys = keyBind.Keys,
-            TurnSetting = new()
-            {
-                Dir = turnSetting.Dir,
-                PixelPerSec = turnSetting.PixelPerSec,
-            }
+            Dir = turnSetting.Dir,
+            PixelPerSec = turnSetting.PixelPerSec
         };
     }
 
     public void Dispose()
     {
-        m_observableKeyBindsView.Dispose();
+        m_keyBindsListView.Dispose();
         KeyBinds.Dispose();
     }
 }

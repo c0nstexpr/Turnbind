@@ -89,8 +89,12 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
                 KeyBindList.Add(keys, turnsetting);
 
             m_modifyingKeyBinds = false;
+
+            OnPropertyChanged(nameof(ProfileTitle));
         }
     }
+
+    public string ProfileTitle => $"Current Profile: {CurrentEditProfileName}";
 
     readonly Dictionary<string, IDisposable> m_profileDiposables = [];
 
@@ -167,7 +171,7 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
 
     void OnKeyBindsChanged(in NotifyCollectionChangedEventArgs<KeyValuePair<InputKeys, KeyBindViewModel>> e)
     {
-        if (m_modifyingKeyBinds) return;
+        if (m_modifyingKeyBinds || CurrentEditProfileName is null) return;
 
         switch (e.Action)
         {
@@ -210,7 +214,7 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
 
                 foreach(var (keys, turnsetting) in KeyBindList.m_observableKeyBinds)
                 {
-                    var setting = turnsetting.TurnSetting.Setting;
+                    var setting = turnsetting.TurnSetting;
                     keybinds.Add(keys, setting);
                     control.Add(keys, setting);
                 }
@@ -235,7 +239,7 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
             m_profileControls[profileName] = control;
         }
 
-        var setting = keyBind.TurnSetting.Setting;
+        var setting = keyBind.TurnSetting;
 
         keybinds.Add(
             keys,
@@ -289,7 +293,7 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
             m_profileControls[profileName] = control;
         }
 
-        var turnSetting = keyBind.TurnSetting.Setting;
+        var turnSetting = keyBind.TurnSetting;
 
         keybinds[keys] = turnSetting;
         control.Update(keys, turnSetting);

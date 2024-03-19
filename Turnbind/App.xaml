@@ -1,6 +1,6 @@
 ﻿<Application x:Class="Turnbind.App" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" StartupUri="View/MainWindow.xaml"
-        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" xmlns:model="clr-namespace:Turnbind.Model"
         DispatcherUnhandledException="OnDispatcherUnhandledException" Exit="OnExit" Startup="OnStartup">
     <Application.Resources>
         <ResourceDictionary>
@@ -8,6 +8,12 @@
                 <ui:ThemesDictionary Theme="Light" />
                 <ui:ControlsDictionary />
             </ResourceDictionary.MergedDictionaries>
+
+            <ObjectDataProvider x:Key="directionValues" MethodName="GetValues" ObjectType="{x:Type model:TurnDirection}">
+                <ObjectDataProvider.MethodParameters>
+                    <x:Type Type="model:TurnDirection" />
+                </ObjectDataProvider.MethodParameters>
+            </ObjectDataProvider>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

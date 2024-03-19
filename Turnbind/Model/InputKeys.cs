@@ -6,23 +6,24 @@ using LanguageExt;
 
 namespace Turnbind.Model;
 
-public class InputKeys : IReadOnlyList<InputKey>, IEquatable<InputKeys>
+[JsonConverter(typeof(InputKeysJsonConverter))]
+public class InputKeys : IReadOnlyList<InputKey>, IReadOnlySet<InputKey>, IEquatable<InputKeys>, IComparable<InputKeys>
 {
     readonly ImmutableHashSet<InputKey> m_set;
 
     readonly InputKey[] m_keys;
 
-    [JsonConstructor]
     public InputKeys(IEnumerable<InputKey> keys)
     {
         m_set = ImmutableHashSet.CreateRange(keys);
         m_keys = m_set.ToArray();
     }
-
+    
     public InputKeys() : this([]) { }
 
     public int Count => m_keys.Length;
 
+    [JsonIgnore]
     public InputKey this[int index] => m_keys[index];
 
     public bool Equals(InputKeys? other) => Count == (other?.Count) && this.SequenceEqual(other);
@@ -44,4 +45,34 @@ public class InputKeys : IReadOnlyList<InputKey>, IEquatable<InputKeys>
     public override bool Equals(object? obj) => Equals(obj as InputKeys);
 
     public bool Contains(InputKey key) => m_set.Contains(key);
+
+    public bool IsProperSubsetOf(IEnumerable<InputKey> other) => m_set.IsProperSubsetOf(other);
+
+    public bool IsProperSupersetOf(IEnumerable<InputKey> other) => m_set.IsProperSupersetOf(other);
+
+    public bool IsSubsetOf(IEnumerable<InputKey> other) => m_set.IsSubsetOf(other);
+
+    public bool IsSupersetOf(IEnumerable<InputKey> other) => m_set.IsSupersetOf(other);
+
+    public bool Overlaps(IEnumerable<InputKey> other) => m_set.Overlaps(other);
+
+    public bool SetEquals(IEnumerable<InputKey> other) => m_set.SetEquals(other);
+
+    public int CompareTo(InputKeys? other)
+    {
+        if (other is null) return 1;
+
+        var i = 0;
+
+        for (; i < m_keys.Length; ++i)
+        {
+            if (i >= m_keys.Length) return 1;
+
+            var cmp = m_keys[i].CompareTo(other[i]);
+
+            if(cmp != 0) return cmp;
+        }
+
+        return i < m_keys.Length ? - 1 : 0;
+    }
 }

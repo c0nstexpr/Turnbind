@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:viewModel="clr-namespace:Turnbind.ViewModel"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" mc:Ignorable="d" d:DesignHeight="400" d:DesignWidth="400"
         d:DataContext="{d:DesignInstance viewModel:ProfileControlViewModel}">
-    <Border BorderBrush="Gray" BorderThickness="1">
+    <Border BorderBrush="Gray" BorderThickness="0.5">
         <DockPanel>
             <Grid Margin="5" DockPanel.Dock="Bottom">
                 <Grid.RowDefinitions>
@@ -12,11 +12,12 @@
                     <RowDefinition />
                 </Grid.RowDefinitions>
 
-                <ui:TextBox BorderBrush="Gray" BorderThickness="1" Margin="10" PlaceholderText="Profile name..."
+                <ui:TextBox BorderBrush="Gray" BorderThickness="0.5" Margin="10" PlaceholderText="Profile name..."
                         Text="{Binding TextBoxProfileName}" />
 
-                <ui:Button BorderBrush="Gray" BorderThickness="1" Margin="10" Content="Add" Grid.Row="1"
-                        Command="{Binding AddProfileNameCommand}" HorizontalAlignment="Stretch" Appearance="Primary" />
+                <ui:Button BorderBrush="Gray" BorderThickness="0.5" Margin="10" Content="Add" Grid.Row="1"
+                        Command="{Binding AddProfileNameCommand, Mode=OneWay}" HorizontalAlignment="Stretch"
+                        Appearance="Primary" />
             </Grid>
 
             <ListView ItemsSource="{Binding ProfilesNames, Mode=OneWay}" Margin="5">
@@ -29,17 +30,17 @@
                                     <ColumnDefinition />
                                 </Grid.ColumnDefinitions>
 
-                                <ui:Button BorderBrush="Gray" BorderThickness="1" Margin="5" Appearance="Info"
-                                        Content="Edit" Command="{Binding EditProfileCommand,Mode=OneWay}" />
+                                <ui:Button BorderBrush="Gray" BorderThickness="0.5" Margin="5" Appearance="Info"
+                                        Content="Edit" Command="{Binding EditProfileCommand, Mode=OneWay}" />
 
-                                <ui:Button Grid.Column="1" BorderBrush="Gray" BorderThickness="1" Margin="5"
+                                <ui:Button Grid.Column="1" BorderBrush="Gray" BorderThickness="0.5" Margin="5"
                                         Appearance="Danger" Content="Remove" Foreground="White"
                                         Command="{Binding RemoveProfileCommand,Mode=OneWay}" />
                             </Grid>
 
                             <CheckBox DockPanel.Dock="Left" IsChecked="{Binding Enable}"
-                                    Content="{Binding Name,Mode=OneWay}"
-                                    Command="{Binding EnableProfileCommand,Mode=OneWay}" />
+                                    Content="{Binding Name, Mode=OneWay}"
+                                    Command="{Binding EnableProfileCommand, Mode=OneWay}" />
                         </DockPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>

@@ -1,13 +1,10 @@
-﻿using System.Windows;
+﻿using Turnbind.ViewModel;
 
-using CommunityToolkit.Mvvm.ComponentModel;
-
-using Turnbind.ViewModel;
+using Wpf.Ui.Controls;
 
 namespace Turnbind.View;
 
-[INotifyPropertyChanged]
-sealed partial class MainWindow : Window
+sealed partial class MainWindow : FluentWindow
 {
     readonly MainWindowViewModel m_viewModel = App.GetService<MainWindowViewModel>();
 

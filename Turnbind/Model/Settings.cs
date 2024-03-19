@@ -32,7 +32,7 @@ public class Settings
 
     public void Save(string jsonPath = JsonPath)
     {
-        using var json = File.Create(jsonPath);
-        JsonSerializer.Serialize(json, Profiles);
+        var json = JsonSerializer.Serialize(Profiles);
+        File.WriteAllText(jsonPath, json);
     }
 }

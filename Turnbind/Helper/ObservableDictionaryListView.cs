@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
 
@@ -7,7 +8,8 @@ using ObservableCollections;
 
 namespace Turnbind.Helper;
 
-public sealed partial class ObservableDictionaryListView<TKey, TValue> : INotifyCollectionChanged,
+public sealed partial class ObservableDictionaryListView<TKey, TValue> : 
+    INotifyCollectionChanged,
     IReadOnlyDictionary<TKey, TValue>,
     IDisposable where TKey : notnull
 {
@@ -19,7 +21,7 @@ public sealed partial class ObservableDictionaryListView<TKey, TValue> : INotify
 
     public int Count => Dictionary.Count;
 
-    public TValue this[TKey key] => Dictionary[key];
+    public TValue this[TKey key] => m_values[key]();
 
     SortedList<TKey, Func<TValue>> m_values;
 
@@ -43,24 +45,39 @@ public sealed partial class ObservableDictionaryListView<TKey, TValue> : INotify
     )
         .ToDictionary();
 
+    public int IndexOfKey(TKey key) => m_values.IndexOfKey(key);
+
+    public TKey GetKeyAtIndex(int i) => m_values.GetKeyAtIndex(i);
+
+    public TValue GetValueAtIndex(int i) => m_values.GetValueAtIndex(i)();
+
     void OnCollectionChanged(in NotifyCollectionChangedEventArgs<KeyValuePair<TKey, TValue>> e)
     {
+        var oldItem = e.OldItem;
+        var newItem = e.NewItem;
+        var oldItems = e.OldItems;
+        var newItems = e.NewItems;
+
         switch (e.Action)
         {
             case NotifyCollectionChangedAction.Add:
-                OnAdd(e.NewItem);
-                foreach (var item in e.NewItems) OnAdd(item);
+                OnAdd(newItem);
+                foreach (var item in newItems) OnAdd(item);
 
                 break;
 
             case NotifyCollectionChangedAction.Remove:
-                OnRemove(e.OldItem.Key);
-                foreach (var item in e.OldItems) OnRemove(item.Key);
+                OnRemove(oldItem);
+                foreach (var item in oldItems) OnRemove(item);
                 break;
 
             case NotifyCollectionChangedAction.Replace:
-                OnReplace(e.NewItem);
-                foreach (var item in e.NewItems) OnReplace(item);
+                OnReplace(oldItem, newItem);
+
+                Debug.Assert(oldItems.Length == newItems.Length);
+
+                for(var i = 0; i < oldItems.Length; ++i)
+                    OnReplace(oldItems[i], newItems[i]);
                 break;
 
             case NotifyCollectionChangedAction.Reset:
@@ -89,13 +106,12 @@ public sealed partial class ObservableDictionaryListView<TKey, TValue> : INotify
         );
     }
 
-    void OnRemove(TKey key)
+    void OnRemove(KeyValuePair<TKey, TValue> item)
     {
+        var key = item.Key;
         var index = m_values.IndexOfKey(key);
 
         if (index < 0) return;
-
-        var value = m_values.GetValueAtIndex(index);
 
         m_values.RemoveAt(index);
 
@@ -103,15 +119,16 @@ public sealed partial class ObservableDictionaryListView<TKey, TValue> : INotify
             this,
             new(
                 NotifyCollectionChangedAction.Remove,
-                value,
+                item,
                 index
             )
         );
     }
 
-    void OnReplace(KeyValuePair<TKey, TValue> item)
+    void OnReplace(KeyValuePair<TKey, TValue> oldItem, KeyValuePair<TKey, TValue> newItem)
     {
-        var index = m_values.IndexOfKey(item.Key);
+        var key = oldItem.Key;
+        var index = m_values.IndexOfKey(key);
 
         if (index < 0) return;
 
@@ -119,7 +136,8 @@ public sealed partial class ObservableDictionaryListView<TKey, TValue> : INotify
             this,
             new(
                 NotifyCollectionChangedAction.Replace,
-                item,
+                oldItem,
+                newItem,
                 index
             )
         );

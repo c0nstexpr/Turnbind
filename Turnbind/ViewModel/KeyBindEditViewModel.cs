@@ -1,4 +1,5 @@
-﻿using System.Reactive.Disposables;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Reactive.Disposables;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -11,14 +12,15 @@ partial class KeyBindEditViewModel : ObservableObject, IDisposable
 {
     public readonly RelayCommand DefaultCommand = new(() => { }, () => false);
 
-    IDisposable m_keyBindDisposable = Disposable.Empty;
+    readonly SerialDisposable m_keyBindDisposable = new();
 
-    KeyBindViewModel m_keyBind = new();
+    KeyBindViewModel m_keyBind;
 
     public KeyBindViewModel KeyBind
     {
         get => m_keyBind;
 
+        [MemberNotNull(nameof(m_keyBind))]
         set
         {
             SetProperty(ref m_keyBind, value);
@@ -27,7 +29,7 @@ partial class KeyBindEditViewModel : ObservableObject, IDisposable
             RemoveCommand.NotifyCanExecuteChanged();
             ModifyCommand.NotifyCanExecuteChanged();
 
-            m_keyBindDisposable = value.WhenChanged(x => x.Keys).Subscribe(
+            m_keyBindDisposable.Disposable = value.WhenChanged(x => x.Keys).Subscribe(
                 _ =>
                 {
                     AddCommand.NotifyCanExecuteChanged();
@@ -36,13 +38,6 @@ partial class KeyBindEditViewModel : ObservableObject, IDisposable
                 }
             );
         }
-    }
-
-    public void OnInputKey(InputKey k)
-    {
-        if (KeyBind.Keys.Contains(k)) return;
-
-        KeyBind.Keys = new(KeyBind.Keys.Concat([k]));
     }
 
     [ObservableProperty]
@@ -59,6 +54,14 @@ partial class KeyBindEditViewModel : ObservableObject, IDisposable
         m_addCommand = DefaultCommand;
         m_modifyCommand = DefaultCommand;
         m_removeCommand = DefaultCommand;
+        KeyBind = new();
+    }
+
+    public void OnInputKey(InputKey k)
+    {
+        if (KeyBind.Keys.Contains(k)) return;
+
+        KeyBind.Keys = new(KeyBind.Keys.Concat([k]));
     }
 
     public void Dispose() => m_keyBindDisposable.Dispose();

@@ -3,27 +3,35 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:viewModel="clr-namespace:Turnbind.ViewModel"
-        xmlns:view="clr-namespace:Turnbind.View" mc:Ignorable="d" d:DesignHeight="600" d:DesignWidth="400"
+        xmlns:model="clr-namespace:Turnbind.Model" xmlns:view="clr-namespace:Turnbind.View"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" mc:Ignorable="d" d:DesignHeight="600" d:DesignWidth="400"
         d:DataContext="{d:DesignInstance viewModel:KeyBindListViewModel}">
     <DockPanel Grid.Column="1">
-        <Border BorderBrush="Gray" BorderThickness="1" DockPanel.Dock="Bottom" Margin="0,5,0,0">
+        <Border BorderBrush="Gray" BorderThickness="0.5"  DockPanel.Dock="Bottom" Margin="0,5,0,0">
             <view:KeyBindEditControl x:Name="KeyBindEdit" />
         </Border>
 
-        <Border BorderBrush="Gray" BorderThickness="1" DockPanel.Dock="Top" Margin="0,0,0,5">
-            <ListView ItemsSource="{Binding KeyBinds, Mode=OneWay}" BorderThickness="10" BorderBrush="Black"
-                    SelectedValue="{Binding Selected}">
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn Width="100" Header="Dir"
-                                DisplayMemberBinding="{Binding Path=TurnSetting.Dir,Mode=OneWay}" />
-                        <GridViewColumn Width="100" Header="Pix/Sec"
-                                DisplayMemberBinding="{Binding Path=TurnSetting.PixelPerSec,Mode=OneWay}" />
-                        <GridViewColumn Width="200" Header="Keys"
-                                DisplayMemberBinding="{Binding Path=KeysString,Mode=OneWay}" />
-                    </GridView>
-                </ListView.View>
-            </ListView>
-        </Border>
+        <ui:DataGrid DockPanel.Dock="Top" ItemsSource="{Binding KeyBinds, Mode=OneWay}" AutoGenerateColumns="False"
+                IsReadOnly="False" SelectionUnit="FullRow" SelectionMode="Single" BorderBrush="Gray" BorderThickness="0.5" 
+                SelectedIndex="{Binding SelectedIndex}" Margin="0,0,0,5">
+            <DataGrid.Columns>
+                <DataGridTextColumn IsReadOnly="True" CanUserSort="True" Header="Input Keys"
+                        Binding="{Binding KeysString, Mode=OneWay}" />
+
+                <DataGridTextColumn IsReadOnly="False" CanUserSort="True" Header="Pix/Sec"
+                        Binding="{Binding PixelPerSec}" />
+
+                <DataGridComboBoxColumn CanUserSort="True" IsReadOnly="False"
+                        ItemsSource="{Binding Source={StaticResource directionValues}}" Header="Direction"
+                        SelectedItemBinding="{Binding Dir}" />
+            </DataGrid.Columns>
+
+            <d:DataGrid.ItemsSource>
+                <x:Array Type="{x:Type viewModel:KeyBindViewModel}">
+                    <viewModel:KeyBindViewModel Dir="Left" PixelPerSec="5" />
+                    <viewModel:KeyBindViewModel Dir="Right" PixelPerSec="10" />
+                </x:Array>
+            </d:DataGrid.ItemsSource>
+        </ui:DataGrid>
     </DockPanel>
 </UserControl>

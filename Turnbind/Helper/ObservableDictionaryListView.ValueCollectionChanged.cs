@@ -6,7 +6,7 @@ namespace Turnbind.Helper;
 
 partial class ObservableDictionaryListView<TKey, TValue>
 {
-    public sealed class ValueCollectionChanged : INotifyCollectionChanged, IReadOnlyCollection<TValue>, IDisposable
+    public sealed class ValueCollectionChanged : INotifyCollectionChanged, IReadOnlyList<TValue>, IDisposable
     {
         readonly ObservableDictionaryListView<TKey, TValue> m_view;
 
@@ -15,6 +15,8 @@ partial class ObservableDictionaryListView<TKey, TValue>
         public int Count => m_view.Count;
 
         public bool IsReadOnly => true;
+
+        public TValue this[int i] => m_view.GetValueAtIndex(i);
 
         public event NotifyCollectionChangedEventHandler? CollectionChanged;
 
@@ -27,6 +29,8 @@ partial class ObservableDictionaryListView<TKey, TValue>
 
         void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
+            var newItems = Select(e.NewItems);
+            var oldItems = Select(e.OldItems);
 
             switch (e.Action)
             {
@@ -35,9 +39,7 @@ partial class ObservableDictionaryListView<TKey, TValue>
                         this,
                         new(
                             NotifyCollectionChangedAction.Add,
-                            e.NewItems?.Cast<KeyValuePair<TKey, TValue>>()
-                                .Select(pair => pair.Value)
-                                .ToList(),
+                            newItems,
                             e.NewStartingIndex
                         )
                     );
@@ -47,10 +49,8 @@ partial class ObservableDictionaryListView<TKey, TValue>
                     CollectionChanged?.Invoke(
                         this,
                         new(
-                            NotifyCollectionChangedAction.Add,
-                            e.OldItems?.Cast<KeyValuePair<TKey, TValue>>()
-                                .Select(pair => pair.Value)
-                                .ToList(),
+                            NotifyCollectionChangedAction.Remove,
+                            oldItems,
                             e.OldStartingIndex
                         )
                     );
@@ -61,9 +61,8 @@ partial class ObservableDictionaryListView<TKey, TValue>
                         this,
                         new(
                             NotifyCollectionChangedAction.Replace,
-                            e.NewItems?.Cast<KeyValuePair<TKey, TValue>>()
-                                .Select(pair => pair.Value)
-                                .ToList(),
+                            oldItems,
+                            newItems,
                             e.NewStartingIndex
                         )
                     );
@@ -75,6 +74,8 @@ partial class ObservableDictionaryListView<TKey, TValue>
             }
         }
 
+        static IEnumerable<TValue>? Select(IList? list) => list?.Cast<KeyValuePair<TKey, TValue>>()
+                                        .Select(pair => pair.Value);
         public IEnumerator<TValue> GetEnumerator() => m_view.Values.GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => m_view.Values.GetEnumerator();

@@ -20,7 +20,7 @@
                         Appearance="Primary" />
             </Grid>
 
-            <ListView ItemsSource="{Binding ProfilesNames, Mode=OneWay}" Margin="5">
+            <ui:ListView ItemsSource="{Binding ProfilesNames, Mode=OneWay}" Margin="5">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <DockPanel>
@@ -38,9 +38,10 @@
                                         Command="{Binding RemoveProfileCommand,Mode=OneWay}" />
                             </Grid>
 
-                            <CheckBox DockPanel.Dock="Left" IsChecked="{Binding Enable}"
+                            <CheckBox DockPanel.Dock="Left"
                                     Content="{Binding Name, Mode=OneWay}"
-                                    Command="{Binding EnableProfileCommand, Mode=OneWay}" />
+                                    Command="{Binding EnableProfileCommand, Mode=OneWay}"
+                                    CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"/>
                         </DockPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>
@@ -51,7 +52,7 @@
                         <viewModel:ProfileNameItemViewModel Name="custom" />
                     </x:Array>
                 </d:ListView.ItemsSource>
-            </ListView>
+            </ui:ListView>
         </DockPanel>
     </Border >
 </UserControl>

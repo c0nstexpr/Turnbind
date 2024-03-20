@@ -15,9 +15,5 @@ sealed partial class KeyBindListControl : UserControl, IDisposable
         DataContext = m_viewModel;
     }
 
-    public void Dispose()
-    {
-        KeyBindEdit.Dispose();
-        m_viewModel.Dispose();
-    }
+    public void Dispose() => KeyBindEdit.Dispose();
 }

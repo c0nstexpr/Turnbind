@@ -15,8 +15,8 @@ public class InputKeys : IReadOnlyList<InputKey>, IReadOnlySet<InputKey>, IEquat
 
     public InputKeys(IEnumerable<InputKey> keys)
     {
-        m_set = ImmutableHashSet.CreateRange(keys);
-        m_keys = m_set.ToArray();
+        m_keys = keys.ToArray();
+        m_set = ImmutableHashSet.CreateRange(m_keys);
     }
     
     public InputKeys() : this([]) { }

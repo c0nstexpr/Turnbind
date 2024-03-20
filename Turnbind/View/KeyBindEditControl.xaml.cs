@@ -2,6 +2,7 @@
 using System.Windows.Controls;
 using System.Windows.Input;
 
+using Turnbind.Action;
 using Turnbind.Model;
 using Turnbind.ViewModel;
 
@@ -19,9 +20,9 @@ sealed partial class KeyBindEditControl : UserControl, IDisposable
 
     void InputKeysTextBoxKeyDown(object sender, KeyEventArgs e)
     {
-        if (!m_isFocusFirstInput)
+        if (m_isFocusFirstInput)
         {
-            m_isFocusFirstInput = true;
+            m_isFocusFirstInput = false;
             return;
         }
 
@@ -161,7 +162,7 @@ sealed partial class KeyBindEditControl : UserControl, IDisposable
                         Key.OemCloseBrackets => InputKey.RightBracket,
                         Key.OemPipe => InputKey.Backslash,
                         Key.OemQuotes => InputKey.Quote,
-                        _ => InputKey.None
+                        _ => GetLatestPressedKey()
                     }
                     #endregion
                 );
@@ -171,11 +172,17 @@ sealed partial class KeyBindEditControl : UserControl, IDisposable
         e.Handled = true;
     }
 
+    static InputKey GetLatestPressedKey()
+    {
+        var latest = App.GetService<InputAction>().LatestKeyState;
+        return latest.Pressed ? latest.Key : InputKey.None;
+    }
+
     void InputKeysTextBoxMouseDown(object sender, MouseButtonEventArgs e)
     {
-        if (!m_isFocusFirstInput)
+        if (m_isFocusFirstInput)
         {
-            m_isFocusFirstInput = true;
+            m_isFocusFirstInput = false;
             return;
         }
 
@@ -187,7 +194,7 @@ sealed partial class KeyBindEditControl : UserControl, IDisposable
                 MouseButton.Right => InputKey.MouseRight,
                 MouseButton.XButton1 => InputKey.MouseX1,
                 MouseButton.XButton2 => InputKey.MouseX2,
-                _ => InputKey.None
+                _ => GetLatestPressedKey()
             }
         );
 
@@ -196,7 +203,7 @@ sealed partial class KeyBindEditControl : UserControl, IDisposable
 
     public void Dispose() => m_viewModel.Dispose();
 
-    bool m_isFocusFirstInput = false;
+    bool m_isFocusFirstInput = true;
 
-    void InputKeysTextBoxLostFocus(object sender, RoutedEventArgs e) => m_isFocusFirstInput = false;
+    void InputKeysTextBoxLostFocus(object sender, RoutedEventArgs e) => m_isFocusFirstInput = true;
 }

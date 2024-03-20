@@ -9,7 +9,7 @@ using Turnbind.Model;
 
 namespace Turnbind.ViewModel;
 
-partial class KeyBindListViewModel : ObservableObject, IDisposable
+partial class KeyBindListViewModel : ObservableObject
 {
     readonly KeyBindEditViewModel m_keyBindEdit;
 
@@ -32,9 +32,9 @@ partial class KeyBindListViewModel : ObservableObject, IDisposable
 
     internal IObservableCollection<KeyValuePair<InputKeys, KeyBindViewModel>> m_observableKeyBinds => m_keyBinds;
 
-    readonly ObservableDictionaryListView<InputKeys, KeyBindViewModel> m_keyBindsListView;
+    readonly ObservableDicListView<InputKeys, KeyBindViewModel> m_keyBindsListView;
 
-    public ObservableDictionaryListView<InputKeys, KeyBindViewModel>.ValueCollectionChanged KeyBinds { get; }
+    public ObservableDicValueListView<InputKeys, KeyBindViewModel> KeyBinds { get; }
 
     KeyBindViewModel? m_selected;
 
@@ -42,7 +42,7 @@ partial class KeyBindListViewModel : ObservableObject, IDisposable
     {
         get => m_selected;
 
-        private set
+        set
         {
             SetProperty(ref m_selected, value);
 
@@ -56,20 +56,6 @@ partial class KeyBindListViewModel : ObservableObject, IDisposable
                 Dir = turnSetting.Dir,
                 PixelPerSec = turnSetting.PixelPerSec
             };
-        }
-    }
-
-    int? m_selectedIndex;
-
-    public int? SelectedIndex
-    {
-        get => m_selectedIndex;
-
-        set
-        {
-            SetProperty(ref m_selectedIndex, value);
-
-            if (value is { } v) Selected = KeyBinds[v];
         }
     }
 
@@ -135,11 +121,9 @@ partial class KeyBindListViewModel : ObservableObject, IDisposable
             Dir = turnSetting.Dir,
             PixelPerSec = turnSetting.PixelPerSec
         };
-    }
 
-    public void Dispose()
-    {
-        m_keyBindsListView.Dispose();
-        KeyBinds.Dispose();
+        KeyBindEdit.AddCommand.NotifyCanExecuteChanged();
+        KeyBindEdit.ModifyCommand.NotifyCanExecuteChanged();
+        KeyBindEdit.RemoveCommand.NotifyCanExecuteChanged();
     }
 }

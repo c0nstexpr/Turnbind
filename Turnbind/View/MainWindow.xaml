@@ -8,8 +8,14 @@
         xmlns:viewModel="clr-namespace:Turnbind.ViewModel" xmlns:view="clr-namespace:Turnbind.View"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" mc:Ignorable="d" Title="MainWindow" Height="1000" Width="800"
         d:DataContext="{d:DesignInstance Type=viewModel:MainWindowViewModel}">
-    <DockPanel Margin="5">
-        <ui:TitleBar DockPanel.Dock="Top" Title="Turn Bind" CloseWindowByDoubleClickOnIcon="True" />
+    <DockPanel>
+        <ui:TitleBar DockPanel.Dock="Top" Title="Turn Bind" CloseWindowByDoubleClickOnIcon="True">
+            <ui:TitleBar.Resources>
+                <Style TargetType="ui:TitleBarButton" BasedOn="{StaticResource {x:Type ui:TitleBarButton}}">
+                    <Setter Property="MouseOverButtonsForeground" Value="Black" />
+                </Style>
+            </ui:TitleBar.Resources>
+        </ui:TitleBar>
 
         <Grid DockPanel.Dock="Top" Margin="5">
             <Grid.ColumnDefinitions>
@@ -32,13 +38,13 @@
                     VerticalAlignment="Center" />
 
             <ui:TextBox Margin="5" Grid.Row="1" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
-                    VerticalAlignment="Center" Text="{Binding IsWindowFocused,  Mode=OneWay}" />
+                    VerticalAlignment="Center" Text="{Binding IsWindowFocused,  Mode=OneWay}" IsReadOnly="True" />
 
             <ui:TextBlock Margin="5" Grid.Row="2" Text="Current Keys:" HorizontalAlignment="Center"
                     VerticalAlignment="Center" />
 
             <ui:TextBox Margin="5" Grid.Row="2" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
-                    VerticalAlignment="Center" Text="{Binding CurrentKeyStr,  Mode=OneWay}" />
+                    VerticalAlignment="Center" Text="{Binding CurrentKeyStr,  Mode=OneWay}" IsReadOnly="True" />
         </Grid>
 
         <view:KeyBindsControl x:Name="KeyBindsControl" Margin="5" />

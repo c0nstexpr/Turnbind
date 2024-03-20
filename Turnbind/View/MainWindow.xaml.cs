@@ -20,4 +20,9 @@ sealed partial class MainWindow : FluentWindow
         m_viewModel.Dispose();
         base.OnClosed(e);
     }
+
+    private void TextBox_TextChanged()
+    {
+
+    }
 }

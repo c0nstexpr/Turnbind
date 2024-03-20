@@ -29,7 +29,7 @@ partial class KeyBindEditViewModel : ObservableObject, IDisposable
             RemoveCommand.NotifyCanExecuteChanged();
             ModifyCommand.NotifyCanExecuteChanged();
 
-            m_keyBindDisposable.Disposable = value.WhenChanged(x => x.Keys).Subscribe(
+            m_keyBindDisposable.Disposable = m_keyBind.WhenChanged(x => x.Keys).Subscribe(
                 _ =>
                 {
                     AddCommand.NotifyCanExecuteChanged();

@@ -22,7 +22,7 @@ class ProfileControl(string profileName) : IDisposable
 
         m_binds.Add(keys, control);
 
-        if (Active) control.Enable();
+        if (Enable) control.Enable = true;
     }
 
     public void Remove(InputKeys keys)
@@ -40,18 +40,17 @@ class ProfileControl(string profileName) : IDisposable
 
     public void Contains(InputKeys keys) => m_binds.ContainsKey(keys);
 
-    public bool Active { get; private set; } = false;
+    bool m_enable = false;
 
-    public void Enable()
+    public bool Enable
     {
-        m_binds.Values.ForEach(item => item.Enable());
-        Active = true;
-    }
+        get => m_enable;
 
-    public void Disable()
-    {
-        m_binds.Values.ForEach(item => item.Disable());
-        Active = false;
+        set
+        {
+            m_enable = value;
+            m_binds.Values.ForEach(item => item.Enable = value);
+        }
     }
 
     public void Dispose() =>

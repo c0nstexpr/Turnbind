@@ -17,9 +17,11 @@ public sealed class InputAction : IDisposable
 
     public readonly IReactiveGlobalHook Hook;
 
+    public KeyState LatestKeyState { get; private set; }
+
     readonly CompositeDisposable m_disposables = [];
 
-    readonly Dictionary<InputKey, bool> m_pressedKeys = 
+    readonly Dictionary<InputKey, bool> m_pressedKeys =
         Enum.GetValues<InputKey>().ToDictionary(k => k, _ => false);
 
     readonly Subject<KeyState> m_input = new();
@@ -38,8 +40,6 @@ public sealed class InputAction : IDisposable
         m_disposables.Add(Hook.RunAsync().Subscribe());
     }
 
-    record struct KeyValidation(bool Valid, bool Pressed);
-
     public IObservable<bool> SubscribeKeys(InputKeys keys)
     {
         var count = keys.Count;
@@ -51,31 +51,59 @@ public sealed class InputAction : IDisposable
 
         var nextKeyI = 0;
 
-        return m_input.Where(state => nextKeyI == count && state.Pressed).Select(
+        return m_input.Select(
             state =>
             {
-                var (k, p) = state;
-
-                if (!dic.TryGetValue(k, out var i)) return new KeyValidation(false, false);
-
-                if (p)
-                {
-                    nextKeyI++;
-                    return new KeyValidation(nextKeyI == count, true);
-                }
-
-                nextKeyI = i;
-                return new(true, false);
+                var i = -1;
+                dic.TryGetValue(state.Key, out i);
+                return (state, i);
             }
         )
-            .Where(s => s.Valid)
+            .Where(
+                 tuple =>
+                {
+                    var (state, index) = tuple;
+
+                    if (index == -1) return false;
+
+                    if (state.Pressed)
+                    {
+                        if (nextKeyI == count)
+                            return false;
+                        else
+                        {
+                            if(index == 
+                            nextKeyI++;
+                        }
+                    }
+
+                    return true;
+                }
+            )
+            .Select(
+                tuple =>
+                {
+                    var (state, i) = tuple;
+                    var (k, p) = state;
+
+                    if (p)
+                    {
+                        nextKeyI++;
+                        return nextKeyI == count;
+                    }
+
+                    nextKeyI = i;
+                    return new(true, false);
+                }
+            )
             .Select(s => s.Pressed);
     }
 
     void OnKeyRelease(KeyboardHookEventArgs args)
     {
         var input = args.Data.KeyCode.ToInputKey();
-        m_input.OnNext(new(input, false));
+        LatestKeyState = new(input, false);
+        m_input.OnNext(LatestKeyState);
         m_pressedKeys[input] = false;
     }
 
@@ -83,9 +111,11 @@ public sealed class InputAction : IDisposable
     {
         var input = args.Data.KeyCode.ToInputKey();
 
+        LatestKeyState = new(input, true);
+
         if (m_pressedKeys[input]) return;
 
-        m_input.OnNext(new(input, true));
+        m_input.OnNext(LatestKeyState);
         m_pressedKeys[input] = true;
     }
 

@@ -19,9 +19,9 @@ partial class ProfileControlViewModel : ObservableObject, IDisposable
 
     readonly Dictionary<string, IDisposable> m_profileDisposable = [];
 
-    readonly ObservableDictionaryListView<string, ProfileNameItemViewModel> m_profilesNamesView;
+    readonly ObservableDicListView<string, ProfileNameItemViewModel> m_profilesNamesView;
 
-    public ObservableDictionaryListView<string, ProfileNameItemViewModel>.ValueCollectionChanged ProfilesNames { get; }
+    public ObservableDicValueListView<string, ProfileNameItemViewModel> ProfilesNames { get; }
 
     string? m_textBoxProfileName;
 
@@ -86,8 +86,6 @@ partial class ProfileControlViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
-        m_profilesNamesView.Dispose();
-        ProfilesNames.Dispose();
         m_profileDisposable.Values.ForEach(item => item.Dispose());
         (m_profilesNames as IDictionary<string, ProfileNameItemViewModel>).Values
             .ForEach(item => item.Dispose());

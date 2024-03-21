@@ -1,38 +1,39 @@
 ﻿using System.IO;
 using System.Text.Json;
 
+using CommunityToolkit.Mvvm.ComponentModel;
+
 namespace Turnbind.Model;
 
-public class Settings
+public partial class Settings : ObservableObject
 {
-    public readonly Dictionary<string, KeyBinds> Profiles = [];
+    public Dictionary<string, KeyBinds> Profiles { get; set; } = [];
+
+    [ObservableProperty]
+    string m_processName = "";
+
+    [ObservableProperty]
+    double m_turnInterval = 10;
 
     public const string JsonPath = "turn_settings.json";
 
     public const string DefaultProfileName = "default";
 
-    public Settings() => Load();
-
-    public void Load(string jsonPath = JsonPath)
+    public Settings()
     {
-        if (!File.Exists(jsonPath)) return;
+    }
 
-        Profiles.Clear();
+    public static Settings? Load(string jsonPath = JsonPath)
+    {
+        if (!File.Exists(jsonPath)) return null;
 
-        Dictionary<string, KeyBinds> binds;
-
-        {
-            using var json = File.OpenRead(jsonPath);
-            binds = JsonSerializer.Deserialize<Dictionary<string, KeyBinds>>(json) ?? [];
-        }
-
-        foreach (var (name, keyBinds) in binds)
-            Profiles[name] = keyBinds;
+        using var json = File.OpenRead(jsonPath);
+        return JsonSerializer.Deserialize<Settings>(json);
     }
 
     public void Save(string jsonPath = JsonPath)
     {
-        var json = JsonSerializer.Serialize(Profiles);
+        var json = JsonSerializer.Serialize(this, options: new() { WriteIndented = true });
         File.WriteAllText(jsonPath, json);
     }
 }

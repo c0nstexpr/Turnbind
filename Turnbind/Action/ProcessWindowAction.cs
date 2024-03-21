@@ -4,43 +4,24 @@ using System.Runtime.InteropServices;
 
 using Serilog;
 
+using Turnbind.Action;
 using Turnbind.Helper;
 
 namespace Turnbind;
 
 partial class ProcessWindowAction : IDisposable
 {
+    readonly ILogger m_log = Log.ForContext<ProcessWindowAction>();
+
     public string? ProcessName { get; set; }
 
-    public IntPtr? WindowHandle
-    {
-        get
-        {
-            if (ProcessName is null) return null;
-
-            var candidates = Process.GetProcessesByName(ProcessName);
-
-            if (candidates.Length == 0)
-            {
-                Log.Logger.WithSourceInfo().Warning("No processes found for {ProcessName}", ProcessName);
-                return null;
-            }
-
-            if (candidates.Length > 1)
-            {
-                Log.Logger.WithSourceInfo().Warning("Multiple processes found for {ProcessName}", ProcessName);
-                return null;
-            }
-
-            return candidates[0].MainWindowHandle;
-        }
-    }
+    public IEnumerable<IntPtr>? WindowHandle => ProcessName is null ? 
+        null :
+        Process.GetProcessesByName(ProcessName).Select(p => p.MainWindowHandle);
 
     readonly BehaviorSubject<bool> m_focused = new(false);
 
-    public IObservable<bool> Focused => m_focused;
-
-    public bool IsFocused => m_focused.Value;
+    public BehaviorObservable<bool> Focused { get; }
 
     readonly IntPtr m_focusedHook;
     readonly WinEventDelegate m_focusedCallback;
@@ -70,32 +51,33 @@ partial class ProcessWindowAction : IDisposable
         const uint EVENT_OBJECT_DESTROY = 0x8001;
         const uint WINEVENT_OUTOFCONTEXT = 0x0000;
 
+        Focused = m_focused.AsObservable();
+
         m_focusedCallback = (_, _, win, _, _, _, _) =>
         {
             if (m_focused.IsDisposed) return;
 
             var handle = WindowHandle;
+
             if (handle is null) return;
 
-            if (win == handle)
+            if (handle.Contains(win) && !m_focused.Value)
             {
-                Log.Logger.WithSourceInfo().Information("Window focused");
+                m_log.WithSourceInfo().Information("Window focused");
                 m_focused.OnNext(true);
             }
-            else
+            else if(m_focused.Value)
             {
-                Log.Logger.WithSourceInfo().Information("Window lost focuse");
+                m_log.WithSourceInfo().Information("Window lost focuse");
                 m_focused.OnNext(false);
             }
         };
 
         m_destroyedCallback = (_, _, win, _, _, _, _) =>
         {
-            var handle = WindowHandle;
+            if (WindowHandle?.Contains(win) != true) return;
 
-            if (handle is null || win != handle) return;
-
-            Log.Logger.WithSourceInfo().Information("Window destroyed");
+            m_log.WithSourceInfo().Information("Window destroyed");
 
             if(m_focused.IsDisposed) return;
 

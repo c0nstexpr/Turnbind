@@ -1,4 +1,6 @@
-﻿using Turnbind.ViewModel;
+﻿using System.Windows;
+
+using Turnbind.ViewModel;
 
 using Wpf.Ui.Controls;
 
@@ -21,8 +23,9 @@ sealed partial class MainWindow : FluentWindow
         base.OnClosed(e);
     }
 
-    private void TextBox_TextChanged()
+    void LaunchConsoleWindow(object sender, RoutedEventArgs e)
     {
-
+        ConsoleWindow consoleWindow = new();
+        consoleWindow.Show();
     }
 }

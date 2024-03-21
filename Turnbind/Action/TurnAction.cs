@@ -1,17 +1,29 @@
-﻿using Serilog;
+﻿using System.Runtime.InteropServices;
 
-using SharpHook;
+using Serilog;
 
-using Turnbind.Model;
+using Turnbind.Helper;
 
 namespace Turnbind.Action;
 
-sealed class TurnAction : IDisposable
+sealed partial class TurnAction : IDisposable
 {
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MousePoint(int x, int y)
+    {
+        public int X = x;
+        public int Y = y;
+    }
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool SetCursorPos(int x, int y);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool GetCursorPos(out MousePoint lpPoint);
+
     readonly ILogger m_log = Log.ForContext<TurnAction>();
-
-
-    public readonly EventSimulator Simulator = new();
 
     public TimeSpan Interval
     {
@@ -30,18 +42,42 @@ sealed class TurnAction : IDisposable
 
     async void Tick()
     {
+        var remain = 0.0;
+        var isRunning = false;
+        var preDirection = TurnInstruction.Stop;
+
         while (true)
         {
             if (Direction != TurnInstruction.Stop)
             {
-                m_log.Information("Simulate turn {Direction}", Direction.ToString());
+                var p = PixelPerSec * m_timer.Period.TotalSeconds;
 
-                Simulator.Turn(
-                    Direction == TurnInstruction.Left ? TurnDirection.Left : TurnDirection.Right,
-                    PixelPerSec * m_timer.Period.TotalSeconds
-                );
+                if (Direction == TurnInstruction.Left) p = -p;
+
+                p += remain;
+
+                var intP = (int)Math.Clamp(p, int.MinValue, int.MaxValue);
+
+                GetCursorPos(out var pos);
+                SetCursorPos(pos.X + intP, pos.Y);
+                remain = p - intP;
+
+                isRunning = true;
+
+                if (preDirection != Direction)
+                {
+                    m_log.WithSourceInfo().Information("Turn action changed, {Dir} direction, {p} Pixels/Sec", Direction, PixelPerSec);
+                    preDirection = Direction;
+                }
             }
-            else m_log.Information("Stop simulate turning");
+            else if (isRunning)
+            {
+                m_log.WithSourceInfo().Information("Turn action Stop");
+                preDirection = TurnInstruction.Stop;
+
+                isRunning = false;
+                remain = 0;
+            }
 
             if (!await m_timer.WaitForNextTickAsync()) break;
         }

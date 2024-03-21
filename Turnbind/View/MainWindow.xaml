@@ -27,6 +27,7 @@
                 <RowDefinition />
                 <RowDefinition />
                 <RowDefinition />
+                <RowDefinition />
             </Grid.RowDefinitions>
 
             <ui:TextBlock Margin="5" Text="Process Name:" HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -38,14 +39,23 @@
                     VerticalAlignment="Center" />
 
             <ui:TextBox Margin="5" Grid.Row="1" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
-                    VerticalAlignment="Center" Text="{Binding IsWindowFocused,  Mode=OneWay}" IsReadOnly="True" />
+                    VerticalAlignment="Center" Text="{Binding IsWindowFocused, Mode=OneWay}" IsReadOnly="True" />
 
             <ui:TextBlock Margin="5" Grid.Row="2" Text="Current Keys:" HorizontalAlignment="Center"
                     VerticalAlignment="Center" />
 
             <ui:TextBox Margin="5" Grid.Row="2" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
-                    VerticalAlignment="Center" Text="{Binding CurrentKeyStr,  Mode=OneWay}" IsReadOnly="True" />
+                    VerticalAlignment="Center" Text="{Binding CurrentKeyStr, Mode=OneWay}" IsReadOnly="True" />
+
+            <ui:TextBlock Margin="5" Grid.Row="3" Text="Turn Interval:" HorizontalAlignment="Center"
+                    VerticalAlignment="Center" />
+
+            <ui:TextBox Margin="5" Grid.Row="3" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
+                    VerticalAlignment="Center" Text="{Binding TurnInterval}" />
         </Grid>
+
+        <ui:Button Appearance="Caution" Foreground="Wheat" DockPanel.Dock="Bottom" HorizontalAlignment="Stretch"
+                Margin="5" Content="Consolw Window" Click="LaunchConsoleWindow"/>
 
         <view:KeyBindsControl x:Name="KeyBindsControl" Margin="5" />
     </DockPanel>

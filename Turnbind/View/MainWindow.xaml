@@ -47,7 +47,7 @@
             <ui:TextBox Margin="5" Grid.Row="2" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
                     VerticalAlignment="Center" Text="{Binding CurrentKeyStr, Mode=OneWay}" IsReadOnly="True" />
 
-            <ui:TextBlock Margin="5" Grid.Row="3" Text="Turn Interval:" HorizontalAlignment="Center"
+            <ui:TextBlock Margin="5" Grid.Row="3" Text="Turn Interval(ms):" HorizontalAlignment="Center"
                     VerticalAlignment="Center" />
 
             <ui:TextBox Margin="5" Grid.Row="3" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"

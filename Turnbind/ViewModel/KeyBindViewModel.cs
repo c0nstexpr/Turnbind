@@ -19,7 +19,7 @@ partial class KeyBindViewModel : ObservableObject, IEquatable<KeyBindViewModel>
         }
     }
 
-    public string KeysString => m_keys.ToKeyString();
+    public string KeysString => string.Join(" + ", ((IEnumerable<InputKey>)m_keys).Select(k => $"{k}"));
 
     [ObservableProperty]
     TurnDirection m_dir;

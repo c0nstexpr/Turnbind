@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:viewModel="clr-namespace:Turnbind.ViewModel"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" mc:Ignorable="d" d:DesignHeight="400" d:DesignWidth="400"
         d:DataContext="{d:DesignInstance viewModel:ProfileControlViewModel}">
-    <Border BorderBrush="Gray" BorderThickness="0.5">
+    <Border BorderBrush="Gray" BorderThickness="1">
         <DockPanel>
             <Grid Margin="5" DockPanel.Dock="Bottom">
                 <Grid.RowDefinitions>

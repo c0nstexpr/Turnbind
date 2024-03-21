@@ -43,7 +43,7 @@ jobs:
         Configuration: ${{ matrix.configuration }}
 
     - name: Archive Release
-      uses: thedoctor0/zip-release@0.7.5
+      uses: thedoctor0/zip-release@0.7.6
       with:
         type: zip
         path: './${{ env.Wpf_Project_Directory }}/bin/Release/'

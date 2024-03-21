@@ -21,4 +21,4 @@ Turnbind is a WPF application for CS surf
 
 ## License
 
-This project is licensed under the [MIT](https://unlicense.org/) license
+This project is licensed under the [MIT](https://mit-license.org/) license

@@ -46,7 +46,7 @@ jobs:
       uses: thedoctor0/zip-release@0.7.5
       with:
         type: zip
-        directory: ./${{ env.Wpf_Project_Directory }}/bin/Release/
+        path: './${{ env.Wpf_Project_Directory }}/bin/Release/'
         filename: release.zip
         
     - name: Release

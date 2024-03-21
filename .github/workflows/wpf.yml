@@ -44,7 +44,6 @@ jobs:
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
-        files: |
-          D:\a\QTTabBar\QTTabBar\bin\Release\**\*
+        files: ./${{ env.Wpf_Project_Path }}/bin/Release/net8.0-windows/**/*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

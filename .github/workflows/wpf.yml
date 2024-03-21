@@ -39,4 +39,12 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: Package
-        path: ${{ env.Wpf_Project_Path }}/bin/Release/net8.0-windows
+        path: ./${{ env.Wpf_Project_Path }}/bin/Release/net8.0-windows/**/*
+        
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          D:\a\QTTabBar\QTTabBar\bin\Release\**\*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

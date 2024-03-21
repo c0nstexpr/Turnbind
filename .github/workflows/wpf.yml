@@ -2,6 +2,10 @@ name: WPF Release
 
 on:
   workflow_dispatch:
+  push:
+    branches: [master]
+    tags:
+      - "*.*.*"
 
 jobs:
   build:

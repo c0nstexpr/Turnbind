@@ -39,4 +39,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: Package
-        path: ${{ env.Wpf_Project_Path }}/bin/Release
+        path: ${{ env.Wpf_Project_Path }}/bin/Release/net8.0-windows

@@ -34,15 +34,9 @@ jobs:
       run: msbuild $env:Wpf_Project_Path /p:Configuration=Release
       env:
         Configuration: ${{ matrix.configuration }}
-
-    - name: Get current time
-      uses: josStorer/get-current-time@v2
-      id: current-time
-      with:
-        format: YYYY-MM-DD-HH-mm-ss
-        utcOffset: "+08:00"
         
     - name: Release
+      if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v2
       with:
         files: ./${{ env.Wpf_Project_Directory }}/bin/Release/net8.0-windows/**/*

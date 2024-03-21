@@ -13,6 +13,7 @@ using Turnbind.Model;
 using Autofac.Extensions.DependencyInjection;
 using Turnbind.ViewModel;
 using Turnbind.View;
+using Turnbind.Helper;
 
 namespace Turnbind;
 
@@ -49,6 +50,8 @@ public partial class App : Application
         )
         .Build();
 
+    readonly ILogger m_log = Log.ForContext<App>();
+
     public static T GetService<T>() where T : class => m_host.Services.GetRequiredService<T>();
 
     void OnStartup(object sender, StartupEventArgs e) => m_host.Start();
@@ -59,7 +62,7 @@ public partial class App : Application
 
     void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
-        Log.Logger.Error(e.Exception, "Unhandled exception");
+        m_log.WithSourceInfo().Error(e.Exception, "Unhandled exception");
         MessageBox.Show(e.Exception.ToString(), "Unhandled exception", MessageBoxButton.OK, MessageBoxImage.Error);
     }
 }

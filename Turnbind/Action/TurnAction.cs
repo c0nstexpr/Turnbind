@@ -2,9 +2,7 @@
 
 using Serilog;
 
-using SharpHook;
-
-using Turnbind.Model;
+using Turnbind.Helper;
 
 namespace Turnbind.Action;
 
@@ -27,7 +25,6 @@ sealed partial class TurnAction : IDisposable
 
     readonly ILogger m_log = Log.ForContext<TurnAction>();
 
-
     public TimeSpan Interval
     {
         get => m_timer.Period;
@@ -47,6 +44,7 @@ sealed partial class TurnAction : IDisposable
     {
         var remain = 0.0;
         var isRunning = false;
+        var preDirection = TurnInstruction.Stop;
 
         while (true)
         {
@@ -61,24 +59,22 @@ sealed partial class TurnAction : IDisposable
                 var intP = (int)Math.Clamp(p, int.MinValue, int.MaxValue);
 
                 GetCursorPos(out var pos);
-
-                m_log.Information(
-                    "Simulate turn {Direction}, go {shortP} pixels, {remain} pixels remains (X: {CurrentX}, Y: {CurrentY})",
-                    Direction,
-                    intP,
-                    remain,
-                    pos.X,
-                    pos.Y
-                );      
-                
                 SetCursorPos(pos.X + intP, pos.Y);
                 remain = p - intP;
 
                 isRunning = true;
+
+                if (preDirection != Direction)
+                {
+                    m_log.WithSourceInfo().Information("Turn action changed, {Dir} direction, {p} Pixels/Sec", Direction, PixelPerSec);
+                    preDirection = Direction;
+                }
             }
             else if (isRunning)
             {
-                m_log.Information("Stop simulate turning");
+                m_log.WithSourceInfo().Information("Turn action Stop");
+                preDirection = TurnInstruction.Stop;
+
                 isRunning = false;
                 remain = 0;
             }

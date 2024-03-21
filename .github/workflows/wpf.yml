@@ -44,6 +44,5 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         files: ./${{ env.Wpf_Project_Directory }}/bin/Release/net8.0-windows/**/*
-        tag_name: v${{ steps.current-time.outputs.formattedTime }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

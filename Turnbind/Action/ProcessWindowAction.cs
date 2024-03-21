@@ -22,13 +22,13 @@ partial class ProcessWindowAction : IDisposable
 
             if (candidates.Length == 0)
             {
-                Log.Logger.WithSourceInfo().Warning("No processes found for {ProcessName}", ProcessName);
+                Log.Logger.WithSourceInfo().Information("No processes found for {ProcessName}", ProcessName);
                 return null;
             }
 
             if (candidates.Length > 1)
             {
-                Log.Logger.WithSourceInfo().Warning("Multiple processes found for {ProcessName}", ProcessName);
+                Log.Logger.WithSourceInfo().Information("Multiple processes found for {ProcessName}", ProcessName);
                 return null;
             }
 
@@ -38,9 +38,7 @@ partial class ProcessWindowAction : IDisposable
 
     readonly BehaviorSubject<bool> m_focused = new(false);
 
-    public IObservable<bool> Focused => m_focused;
-
-    public bool IsFocused => m_focused.Value;
+    public BehaviorObservable<bool> Focused { get; }
 
     readonly IntPtr m_focusedHook;
     readonly WinEventDelegate m_focusedCallback;
@@ -70,19 +68,22 @@ partial class ProcessWindowAction : IDisposable
         const uint EVENT_OBJECT_DESTROY = 0x8001;
         const uint WINEVENT_OUTOFCONTEXT = 0x0000;
 
+        Focused = m_focused.AsObservable();
+
         m_focusedCallback = (_, _, win, _, _, _, _) =>
         {
             if (m_focused.IsDisposed) return;
 
             var handle = WindowHandle;
+
             if (handle is null) return;
 
-            if (win == handle)
+            if (win == handle && !m_focused.Value)
             {
                 Log.Logger.WithSourceInfo().Information("Window focused");
                 m_focused.OnNext(true);
             }
-            else
+            else if(m_focused.Value)
             {
                 Log.Logger.WithSourceInfo().Information("Window lost focuse");
                 m_focused.OnNext(false);

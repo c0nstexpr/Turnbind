@@ -5,6 +5,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
+using Turnbind.Helper;
 using Turnbind.Model;
 
 namespace Turnbind.Action;
@@ -32,12 +33,14 @@ public sealed class InputAction : IDisposable
     {
         Hook = new ReactiveGlobalHookAdapter(m_taskPoolGlobalHook);
 
-        m_disposables.Add(Hook.KeyPressed.Subscribe(OnKeyPress));
-        m_disposables.Add(Hook.MousePressed.Subscribe(OnMousePress));
-        m_disposables.Add(Hook.KeyReleased.Subscribe(OnKeyRelease));
-        m_disposables.Add(Hook.MouseReleased.Subscribe(OnMouseRelease));
-        // m_disposables.Add(Hook.MouseWheel.Subscribe(OnMouseWheel));
-        m_disposables.Add(Hook.RunAsync().Subscribe());
+        m_disposables.AddRange(
+            Hook.KeyPressed.Subscribe(OnKeyPress),
+            Hook.MousePressed.Subscribe(OnMousePress),
+            Hook.KeyReleased.Subscribe(OnKeyRelease),
+            Hook.MouseReleased.Subscribe(OnMouseRelease),
+            Hook.RunAsync().Subscribe()
+            // Hook.MouseWheel.Subscribe(OnMouseWheel)
+        );
     }
 
     public IObservable<bool> SubscribeKeys(InputKeys keys)
@@ -46,57 +49,34 @@ public sealed class InputAction : IDisposable
 
         if (count == 0) return Observable.Empty<bool>();
 
-        var dic = keys.Select((k, index) => new KeyValuePair<InputKey, int>(k, index))
-            .ToDictionary();
+        var next = 0;
 
-        var nextKeyI = 0;
-
-        return m_input.Select(
+        return m_input.Where(
             state =>
             {
-                var i = -1;
-                dic.TryGetValue(state.Key, out i);
-                return (state, i);
+                var (key, pressed) = state;
+
+                if (!keys.TryGetValue(key, out var i)) return false;
+
+                if (pressed)
+                {
+                    if(next == count || i != next) return false;
+
+                    ++next;
+
+                    return next == count;
+                }
+                
+                if (i >= next) return false;
+
+                var isDeactive = next == count;
+
+                next = i;
+
+                return isDeactive;                
             }
         )
-            .Where(
-                 tuple =>
-                {
-                    var (state, index) = tuple;
-
-                    if (index == -1) return false;
-
-                    if (state.Pressed)
-                    {
-                        if (nextKeyI == count)
-                            return false;
-                        else
-                        {
-                            if(index == 
-                            nextKeyI++;
-                        }
-                    }
-
-                    return true;
-                }
-            )
-            .Select(
-                tuple =>
-                {
-                    var (state, i) = tuple;
-                    var (k, p) = state;
-
-                    if (p)
-                    {
-                        nextKeyI++;
-                        return nextKeyI == count;
-                    }
-
-                    nextKeyI = i;
-                    return new(true, false);
-                }
-            )
-            .Select(s => s.Pressed);
+            .Select(state => state.Pressed);
     }
 
     void OnKeyRelease(KeyboardHookEventArgs args)
@@ -142,9 +122,9 @@ public sealed class InputAction : IDisposable
 
     public void Dispose()
     {
+        m_disposables.Dispose();
         Hook.Dispose();
         m_taskPoolGlobalHook.Dispose();
-        m_disposables.Dispose();
         m_input.Dispose();
     }
 }

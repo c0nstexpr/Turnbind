@@ -12,11 +12,14 @@ using Turnbind.Action;
 using Turnbind.Model;
 using Autofac.Extensions.DependencyInjection;
 using Turnbind.ViewModel;
+using Turnbind.View;
 
 namespace Turnbind;
 
 public partial class App : Application
 {
+    static readonly LogTextBlock m_logTextBlock = new();
+
     static readonly IHost m_host = Host.CreateDefaultBuilder()
         .UseServiceProviderFactory(new AutofacServiceProviderFactory())
         .ConfigureAppConfiguration(c => c.SetBasePath(AppContext.BaseDirectory))
@@ -25,21 +28,23 @@ public partial class App : Application
                 .Enrich.FromLogContext()
                 .Enrich.WithExceptionDetails()
                 .WriteTo.Console()
+                .WriteTo.RichTextBox(m_logTextBlock.LogTextBox)
                 .WriteTo.File(
                     new RenderedCompactJsonFormatter(),
                     $"logs.json",
+                    fileSizeLimitBytes: 1_000_000,
                     rollOnFileSizeLimit: true
                 )
         )
         .ConfigureServices(
             (_, services) =>
             {
-                // actions
                 services.AddSingleton<InputAction>();
                 services.AddSingleton<ProcessWindowAction>();
                 services.AddSingleton<TurnAction>();
-                services.AddSingleton<Settings>();
+                services.AddSingleton(Settings.Load() ?? new());
                 services.AddSingleton<MainWindowViewModel>();
+                services.AddSingleton(m_logTextBlock);
             }
         )
         .Build();

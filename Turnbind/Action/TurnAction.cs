@@ -1,4 +1,6 @@
-﻿using Serilog;
+﻿using System.Runtime.InteropServices;
+
+using Serilog;
 
 using SharpHook;
 
@@ -6,12 +8,25 @@ using Turnbind.Model;
 
 namespace Turnbind.Action;
 
-sealed class TurnAction : IDisposable
+sealed partial class TurnAction : IDisposable
 {
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MousePoint(int x, int y)
+    {
+        public int X = x;
+        public int Y = y;
+    }
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool SetCursorPos(int x, int y);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool GetCursorPos(out MousePoint lpPoint);
+
     readonly ILogger m_log = Log.ForContext<TurnAction>();
 
-
-    public readonly EventSimulator Simulator = new();
 
     public TimeSpan Interval
     {
@@ -30,18 +45,43 @@ sealed class TurnAction : IDisposable
 
     async void Tick()
     {
+        var remain = 0.0;
+        var isRunning = false;
+
         while (true)
         {
             if (Direction != TurnInstruction.Stop)
             {
-                m_log.Information("Simulate turn {Direction}", Direction.ToString());
+                var p = PixelPerSec * m_timer.Period.TotalSeconds;
 
-                Simulator.Turn(
-                    Direction == TurnInstruction.Left ? TurnDirection.Left : TurnDirection.Right,
-                    PixelPerSec * m_timer.Period.TotalSeconds
-                );
+                if (Direction == TurnInstruction.Left) p = -p;
+
+                p += remain;
+
+                var intP = (int)Math.Clamp(p, int.MinValue, int.MaxValue);
+
+                GetCursorPos(out var pos);
+
+                m_log.Information(
+                    "Simulate turn {Direction}, go {shortP} pixels, {remain} pixels remains (X: {CurrentX}, Y: {CurrentY})",
+                    Direction,
+                    intP,
+                    remain,
+                    pos.X,
+                    pos.Y
+                );      
+                
+                SetCursorPos(pos.X + intP, pos.Y);
+                remain = p - intP;
+
+                isRunning = true;
             }
-            else m_log.Information("Stop simulate turning");
+            else if (isRunning)
+            {
+                m_log.Information("Stop simulate turning");
+                isRunning = false;
+                remain = 0;
+            }
 
             if (!await m_timer.WaitForNextTickAsync()) break;
         }

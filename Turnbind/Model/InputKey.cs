@@ -1,6 +1,6 @@
 ﻿namespace Turnbind.Model;
 
-public enum InputKey
+public enum InputKey : int
 {
     /// <summary>
     ///  The bit mask to extract a key code from a key value.

@@ -9,7 +9,7 @@
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" mc:Ignorable="d" Title="MainWindow" Height="1000" Width="800"
         d:DataContext="{d:DesignInstance Type=viewModel:MainWindowViewModel}">
     <DockPanel>
-        <ui:TitleBar DockPanel.Dock="Top" Title="Turn Bind" CloseWindowByDoubleClickOnIcon="True">
+        <ui:TitleBar DockPanel.Dock="Top" Title="Turn Bind" CloseWindowByDoubleClickOnIcon="True" Height="30">
             <ui:TitleBar.Resources>
                 <Style TargetType="ui:TitleBarButton" BasedOn="{StaticResource {x:Type ui:TitleBarButton}}">
                     <Setter Property="MouseOverButtonsForeground" Value="Black" />
@@ -17,46 +17,70 @@
             </ui:TitleBar.Resources>
         </ui:TitleBar>
 
-        <Grid DockPanel.Dock="Top" Margin="5">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="200" />
-                <ColumnDefinition />
-            </Grid.ColumnDefinitions>
+        <DockPanel x:Name="MainDockPanel" Margin="15,5,15,15">
+            <Grid x:Name="AdminSuggest" DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="0" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-            <Grid.RowDefinitions>
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-            </Grid.RowDefinitions>
+                <ui:Flyout IsOpen="{Binding IsAdminSuggestFlyoutOpen, Mode=TwoWay}" Placement="Top">
+                    <StackPanel>
+                        <TextBlock HorizontalAlignment="Left" Width="400" Margin="5"
+                                Text="Some process may require current app run as admin to work to capture its keyboard events. If you find app has no keyboard event when focusing some windows, try to restart this app and run as admin."
+                                TextWrapping="WrapWithOverflow" />
 
-            <ui:TextBlock Margin="5" Text="Process Name:" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <ui:Button Appearance="Primary" Foreground="White" Margin="5" Content="Restart as admin"
+                                HorizontalAlignment="Center" Command="{Binding RestartAsAdminCommand}" />
+                    </StackPanel>
+                </ui:Flyout>
 
-            <ui:TextBox Margin="5" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                    BorderBrush="Gray" Text="{Binding ProcessName}" />
+                <ui:Button Appearance="Caution" Foreground="White" Grid.Row="1"
+                        Command="{Binding AdminSuggestButtonClickCommand, Mode=OneWay}" Content="App not run as admin"
+                        ToolTip="Click to see why app may need admin privilages" />
+            </Grid>
 
-            <ui:TextBlock Margin="5" Grid.Row="1" Text="Window State:" HorizontalAlignment="Center"
-                    VerticalAlignment="Center" />
+            <Grid DockPanel.Dock="Top" Margin="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="200" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
 
-            <ui:TextBox Margin="5" Grid.Row="1" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
-                    VerticalAlignment="Center" Text="{Binding IsWindowFocused, Mode=OneWay}" IsReadOnly="True" />
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
 
-            <ui:TextBlock Margin="5" Grid.Row="2" Text="Current Keys:" HorizontalAlignment="Center"
-                    VerticalAlignment="Center" />
+                <ui:TextBlock Margin="5" Text="Process Name" HorizontalAlignment="Center" VerticalAlignment="Center" />
 
-            <ui:TextBox Margin="5" Grid.Row="2" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
-                    VerticalAlignment="Center" Text="{Binding CurrentKeyStr, Mode=OneWay}" IsReadOnly="True" />
+                <ui:TextBox Margin="5" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                        PlaceholderText="e.g. csgo" BorderBrush="Gray" Text="{Binding ProcessName}" />
 
-            <ui:TextBlock Margin="5" Grid.Row="3" Text="Turn Interval(ms):" HorizontalAlignment="Center"
-                    VerticalAlignment="Center" />
+                <ui:TextBlock Margin="5" Grid.Row="1" Text="Window State" HorizontalAlignment="Center"
+                        VerticalAlignment="Center" />
 
-            <ui:TextBox Margin="5" Grid.Row="3" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
-                    VerticalAlignment="Center" Text="{Binding TurnInterval}" />
-        </Grid>
+                <ui:TextBox Margin="5" Grid.Row="1" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
+                        VerticalAlignment="Center" Text="{Binding IsWindowFocused, Mode=OneWay}" IsReadOnly="True" />
 
-        <ui:Button Appearance="Caution" Foreground="Wheat" DockPanel.Dock="Bottom" HorizontalAlignment="Stretch"
-                Margin="5" Content="Consolw Window" Click="LaunchConsoleWindow"/>
+                <ui:TextBlock Margin="5" Grid.Row="2" Text="Current Keys" HorizontalAlignment="Center"
+                        VerticalAlignment="Center" />
 
-        <view:KeyBindsControl x:Name="KeyBindsControl" Margin="5" />
+                <ui:TextBox Margin="5" Grid.Row="2" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
+                        VerticalAlignment="Center" Text="{Binding CurrentKeyStr, Mode=OneWay}" IsReadOnly="True" />
+
+                <ui:TextBlock Margin="5" Grid.Row="3" Text="Turn Interval (ms)" HorizontalAlignment="Center"
+                        VerticalAlignment="Center" />
+
+                <ui:TextBox Margin="5" Grid.Row="3" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
+                        PlaceholderText="e.g. 50" VerticalAlignment="Center" Text="{Binding TurnInterval}" />
+            </Grid>
+
+            <ui:Button Appearance="Caution" Foreground="White" DockPanel.Dock="Bottom" HorizontalAlignment="Stretch"
+                    Margin="5" Content="Consolw Window" Click="LaunchConsoleWindow" />
+
+            <view:KeyBindsControl x:Name="KeyBindsControl" Margin="5" />
+        </DockPanel>
     </DockPanel>
 </ui:FluentWindow>

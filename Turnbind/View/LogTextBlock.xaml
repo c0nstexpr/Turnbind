@@ -3,6 +3,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         mc:Ignorable="d" d:DesignHeight="450" d:DesignWidth="800">
-    <ui:RichTextBox x:Name="LogTextBox" Background="Black" Foreground="LightGray" TextChanged="OnTextChanged"
-            FontFamily="Cascadia Mono, Consolas, Courier New, monospace" VerticalScrollBarVisibility="Auto" />
+    <DockPanel>
+        <ui:Button Appearance="Primary" Margin="5" HorizontalAlignment="Stretch" DockPanel.Dock="Bottom" Content="Clear" Click="ClearButtonClick"/>
+
+        <ui:RichTextBox x:Name="LogTextBox" Background="Black" Foreground="LightGray" TextChanged="OnTextChanged"
+                IsReadOnly="True" IsReadOnlyCaretVisible="True"
+                FontFamily="Cascadia Mono, Consolas, Courier New, monospace" VerticalScrollBarVisibility="Auto"
+                ScrollViewer.ScrollChanged="OnScroll">
+        </ui:RichTextBox>
+    </DockPanel>
 </UserControl>

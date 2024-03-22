@@ -1,8 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-using Serilog;
-
-using Turnbind.Helper;
+using Microsoft.Extensions.Logging;
 
 namespace Turnbind.Action;
 
@@ -23,7 +21,7 @@ sealed partial class TurnAction : IDisposable
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool GetCursorPos(out MousePoint lpPoint);
 
-    readonly ILogger m_log = Log.ForContext<TurnAction>();
+    readonly ILogger<TurnAction> m_log = App.GetService<ILogger<TurnAction>>();
 
     public TimeSpan Interval
     {
@@ -66,13 +64,13 @@ sealed partial class TurnAction : IDisposable
 
                 if (preDirection != Direction)
                 {
-                    m_log.WithSourceInfo().Information("Turn action changed, {Dir} direction, {p} Pixels/Sec", Direction, PixelPerSec);
+                    m_log.LogInformation("Turn action changed, {Dir} direction, {p} Pixels/Sec", Direction, PixelPerSec);
                     preDirection = Direction;
                 }
             }
             else if (isRunning)
             {
-                m_log.WithSourceInfo().Information("Turn action Stop");
+                m_log.LogInformation("Turn action Stop");
                 preDirection = TurnInstruction.Stop;
 
                 isRunning = false;

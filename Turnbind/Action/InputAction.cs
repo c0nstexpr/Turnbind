@@ -3,11 +3,17 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 
+using Microsoft.Extensions.Logging;
+
+using MoreLinq;
+
 using Turnbind.Model;
 namespace Turnbind.Action;
 
 public sealed partial class InputAction : IDisposable
 {
+    readonly ILogger<InputAction> m_logger = App.GetService<ILogger<InputAction>>();
+
     public record struct KeyState(InputKey Key, bool Pressed);
 
     public KeyState LatestKeyState { get; private set; }
@@ -41,16 +47,37 @@ public sealed partial class InputAction : IDisposable
     [LibraryImport("user32", SetLastError = true)]
     private static partial short GetKeyState(InputKey nVirtKey);
 
+    static readonly IReadOnlyList<InputKey> m_shiftKeys = new InputKey[] {
+        InputKey.Shift,
+        InputKey.ShiftKey,
+        InputKey.LShiftKey,
+        InputKey.RShiftKey,
+        InputKey.Menu,
+        InputKey.Alt,
+        InputKey.LMenu,
+        InputKey.RMenu,
+    }.Distinct().ToArray();
+
+    public static readonly IReadOnlyList<InputKey> ModifierKeys = new InputKey[] {
+        InputKey.LControlKey,
+        InputKey.RControlKey,
+        InputKey.LWin,
+        InputKey.RWin
+    }.Append(m_shiftKeys).Distinct().ToArray();
+
     readonly nint m_keyboardHook;
 
     readonly HookProc m_hookProc;
 
     public InputAction()
     {
-        var hMod = GetModuleHandle(Process.GetCurrentProcess().MainModule!.ModuleName);
-
         m_hookProc = OnKeyboard;
-        m_keyboardHook = SetWindowsHookEx(13, m_hookProc, hMod, 0);
+        m_keyboardHook = SetWindowsHookEx(
+            13,
+            m_hookProc,
+            GetModuleHandle(Process.GetCurrentProcess().MainModule!.ModuleName),
+            0
+        );
     }
 
     enum KeyEvent
@@ -61,37 +88,35 @@ public sealed partial class InputAction : IDisposable
         WM_SYSKEYDOWN = 0x105
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    class KBDLLHOOKSTRUCT
+    {
+        public InputKey VkCode;
+        public int ScanCode;
+        public int Flags;
+        public uint Time;
+        public nuint DwExtraInfo;
+    }
+
+    void UpdateModifier(InputKey modifier)
+    {
+        m_logger.LogInformation("Modifier key released: {modifier}", modifier);
+
+        m_pressedKeys[modifier] = false;
+        m_input.OnNext(new(modifier, false));
+    }
+
+    void UpdateModifiers(InputKey currentKey) =>
+        ModifierKeys.Where(k => currentKey != k && GetKeyState(k) >= 0 && m_pressedKeys[k])
+            .ForEach(UpdateModifier);
+
     nint OnKeyboard(int nCode, nint wParam, nint lParam)
     {
-        List<InputKey> modifiers = new(10);
+        var e = (KeyEvent)wParam;
+        var kbd = Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam)!;
 
-        if (GetKeyState(InputKey.LShiftKey) < 0 && !m_pressedKeys[InputKey.LShiftKey]) { m_pressedKeys[InputKey.LShiftKey] = true; }
-        if (GetKeyState(InputKey.RShiftKey) < 0) { set_modifier_mask(MASK_SHIFT_R); }
-        if (GetKeyState(InputKey.LControlKey) < 0) { set_modifier_mask(MASK_CTRL_L); }
-        if (GetKeyState(InputKey.RControlKey) < 0) { set_modifier_mask(MASK_CTRL_R); }
-        if (GetKeyState(InputKey.LMenu) < 0) { set_modifier_mask(MASK_ALT_L); }
-        if (GetKeyState(InputKey.RMenu) < 0) { set_modifier_mask(MASK_ALT_R); }
-        if (GetKeyState(InputKey.LWin) < 0) { set_modifier_mask(MASK_META_L); }
-        if (GetKeyState(InputKey.RWin) < 0) { set_modifier_mask(MASK_META_R); }
-
-        switch ((KeyEvent)wParam)
-        {
-            case KeyEvent.WM_KEYDOWN:
-                OnKeyPress(lParam);
-                break;
-
-            case KeyEvent.WM_SYSKEYDOWN:
-                OnKeyPress(lParam);
-                break;
-
-            case KeyEvent.WM_KEYUP:
-                OnKeyRelease(lParam);
-                break;
-
-            case KeyEvent.WM_SYSKEYUP:
-                OnKeyRelease(lParam);
-                break;
-        }
+        if (e is KeyEvent.WM_KEYDOWN or KeyEvent.WM_SYSKEYDOWN) OnKey(kbd, true);
+        else if (e is KeyEvent.WM_KEYUP or KeyEvent.WM_SYSKEYUP) OnKey(kbd, false);
 
         return CallNextHookEx(nint.Zero, nCode, wParam, lParam);
     }
@@ -132,24 +157,24 @@ public sealed partial class InputAction : IDisposable
             .Select(state => state.Pressed);
     }
 
-    void OnKeyPress(nint keyPtr)
+    void OnKey(KBDLLHOOKSTRUCT keyPtr, bool pressed)
     {
-        var input = (InputKey)Marshal.ReadInt32(keyPtr);
+        var input = keyPtr.VkCode;
 
-        LatestKeyState = new(input, true);
+        UpdateModifiers(input); // Modifier key released event need to be handled manually
 
-        if (m_pressedKeys[input]) return;
+        LatestKeyState = new(input, pressed);
+
+        if (m_pressedKeys[input] == pressed) return;
+
+        m_logger.LogInformation(
+            "Key {pressedStr} {input}",
+            pressed ? "pressed" : "released",
+            input
+        );
 
         m_input.OnNext(LatestKeyState);
-        m_pressedKeys[input] = true;
-    }
-
-    void OnKeyRelease(nint keyPtr)
-    {
-        var input = (InputKey)Marshal.ReadInt32(keyPtr);
-        LatestKeyState = new(input, false);
-        m_input.OnNext(LatestKeyState);
-        m_pressedKeys[input] = false;
+        m_pressedKeys[input] = pressed;
     }
 
     public void Dispose()

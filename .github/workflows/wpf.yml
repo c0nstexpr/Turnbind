@@ -3,9 +3,7 @@ name: WPF Release
 on:
   workflow_dispatch:
   push:
-    branches: [main]
-    tags:
-      - "*.*.*"
+    branches: [main]    
 
 permissions:
   contents: write

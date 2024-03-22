@@ -13,11 +13,14 @@
         <ui:ListView DockPanel.Dock="Top" ItemsSource="{Binding KeyBinds, Mode=OneWay}" BorderBrush="Gray"
                 BorderThickness="1" SelectedItem="{Binding Selected}" Margin="0,0,0,5">
             <ListView.View>
-                <GridView>
+                <GridView AllowsColumnReorder="True">
                     <GridView.Columns>
-                        <GridViewColumn Header="Input Keys" DisplayMemberBinding="{Binding KeysString, Mode=OneWay}" />
-                        <GridViewColumn Header="Pix/Sec" DisplayMemberBinding="{Binding PixelPerSec, Mode=OneWay}" />
-                        <GridViewColumn Header="Direction" DisplayMemberBinding="{Binding Dir, Mode=OneWay}" />
+                        <GridViewColumn Width="Auto" Header="keys"
+                                DisplayMemberBinding="{Binding KeysString, Mode=OneWay}" />
+                        <GridViewColumn Width="Auto" Header="p/s"
+                                DisplayMemberBinding="{Binding PixelPerSec, Mode=OneWay}" />
+                        <GridViewColumn Width="Auto" Header="dir"
+                                DisplayMemberBinding="{Binding Dir, Mode=OneWay}" />
                     </GridView.Columns>
                 </GridView>
             </ListView.View>

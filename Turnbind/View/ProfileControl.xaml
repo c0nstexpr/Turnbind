@@ -30,18 +30,16 @@
                                     <ColumnDefinition />
                                 </Grid.ColumnDefinitions>
 
-                                <ui:Button BorderBrush="Gray" BorderThickness="0.5" Margin="5" Appearance="Info"
-                                        Content="Edit" Command="{Binding EditProfileCommand, Mode=OneWay}" />
+                                <ui:Button Margin="5" Appearance="Info" Content="Edit"
+                                        Command="{Binding EditProfileCommand, Mode=OneWay}" />
 
-                                <ui:Button Grid.Column="1" BorderBrush="Gray" BorderThickness="0.5" Margin="5"
-                                        Appearance="Danger" Content="Remove" Foreground="White"
-                                        Command="{Binding RemoveProfileCommand,Mode=OneWay}" />
+                                <ui:Button Grid.Column="1" Margin="5" Appearance="Danger" Content="Remove"
+                                        Foreground="White" Command="{Binding RemoveProfileCommand, Mode=OneWay}" />
                             </Grid>
 
-                            <CheckBox DockPanel.Dock="Left"
-                                    Content="{Binding Name, Mode=OneWay}"
+                            <CheckBox DockPanel.Dock="Left" Content="{Binding Name, Mode=OneWay}"
                                     Command="{Binding EnableProfileCommand, Mode=OneWay}"
-                                    CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"/>
+                                    CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}" />
                         </DockPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>

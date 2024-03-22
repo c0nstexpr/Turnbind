@@ -1,4 +1,7 @@
-﻿using System.Windows.Controls;
+﻿using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 
 using Turnbind.Action;
@@ -17,41 +20,46 @@ sealed partial class KeyBindEditControl : UserControl, IDisposable
         InitializeComponent();
     }
 
-    void InputKeysTextBoxKeyDown(object sender, KeyEventArgs e)
+    void InputKeysTextBoxKeyDown(InputKey key)
     {
-        var key = e.Key;
-        var textBlock = (Wpf.Ui.Controls.TextBox)sender;
-
         switch (key)
         {
-            case Key.Tab:
-                textBlock.MoveFocus(new(FocusNavigationDirection.Next));
+            case InputKey.Tab:
+                InputKeysTextBox.MoveFocus(new(FocusNavigationDirection.Next));
                 break;
 
-            case Key.Enter:
-                textBlock.MoveFocus(new(FocusNavigationDirection.Next));
+            case InputKey.Enter:
+                InputKeysTextBox.MoveFocus(new(FocusNavigationDirection.Next));
                 break;
 
-            case Key.Escape:
-                textBlock.MoveFocus(new(FocusNavigationDirection.Previous));
+            case InputKey.Escape:
+                InputKeysTextBox.MoveFocus(new(FocusNavigationDirection.Previous));
                 break;
 
-            case Key.Back:
+            case InputKey.Back:
                 m_viewModel.KeyBind.Keys = [];
                 break;
 
             default:
-                m_viewModel.OnInputKey(key == Key.None ? GetLatestPressedKey() : (InputKey)KeyInterop.VirtualKeyFromKey(key));
+                m_viewModel.OnInputKey(key);
                 break;
         }
-
-        e.Handled = true;
     }
-    static InputKey GetLatestPressedKey()
+
+    readonly SerialDisposable m_keyboardDisposable = new();
+
+    void InputKeysTextBoxFocus(object sender, RoutedEventArgs e) => 
+        m_keyboardDisposable.Disposable = App.GetService<InputAction>()
+            .Input
+            .Where(state => state.Pressed)
+            .Select(state => state.Key)
+            .Subscribe(InputKeysTextBoxKeyDown);
+
+    void InputKeysTextBoxLostFocus(object sender, RoutedEventArgs e) => m_keyboardDisposable.Disposable = null;
+
+    public void Dispose()
     {
-        var latest = App.GetService<InputAction>().LatestKeyState;
-        return latest.Pressed ? latest.Key : InputKey.None;
+        m_keyboardDisposable.Dispose();
+        m_viewModel.Dispose();
     }
-
-    public void Dispose() => m_viewModel.Dispose();
 }

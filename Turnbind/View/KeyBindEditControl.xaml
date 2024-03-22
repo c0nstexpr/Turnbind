@@ -46,8 +46,8 @@
 
             <ui:TextBox Margin="5" x:Name="InputKeysTextBox" IsReadOnly="True" BorderThickness="0.5"
                     VerticalContentAlignment="Center" BorderBrush=" Gray"
-                    Text="{Binding Path=KeyBind.KeysString, Mode=OneWay}" PreviewKeyDown="InputKeysTextBoxKeyDown"
-                    Grid.Row="1" Grid.Column="1" />
+                    Text="{Binding Path=KeyBind.KeysString, Mode=OneWay}" GotFocus="InputKeysTextBoxFocus"
+                    LostFocus="InputKeysTextBoxLostFocus" Grid.Row="1" Grid.Column="1" />
 
             <ui:TextBlock Margin="5" Text="Pixel/Second:" VerticalAlignment="Center" Grid.Row="2" Grid.Column="0" />
 

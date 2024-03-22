@@ -30,27 +30,12 @@ jobs:
 
     - name: Setup MSBuild.exe
       uses: microsoft/setup-msbuild@v2
-    - name: Restore the application
-      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=Release
-      env:
-        Configuration: ${{ matrix.configuration }}
 
-    - name: Create the app package
+    - name: Build app
       run: msbuild $env:Wpf_Project_Path /p:Configuration=Release
-      env:
-        Configuration: ${{ matrix.configuration }}
 
-    - name: Archive Release
-      uses: thedoctor0/zip-release@0.7.6
-      with:
-        type: zip
-        path: './${{ env.Wpf_Project_Directory }}/bin/Release/'
-        filename: release.zip
-        
     - name: Release
       if: startsWith(github.ref, 'refs/tags/')
-      uses: softprops/action-gh-release@v2
+      uses: ./.github/actions/release
       with:
-        files: release.zip
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        project-dir: $env:Wpf_Project_Directory

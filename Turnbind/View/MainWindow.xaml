@@ -40,7 +40,7 @@
                         ToolTip="Click to see why app may need admin privilages" />
             </Grid>-->
 
-            <Grid DockPanel.Dock="Top" Margin="5">
+            <Grid DockPanel.Dock="Top" Margin="10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="200" />
                     <ColumnDefinition />
@@ -73,9 +73,9 @@
                 <ui:TextBlock Margin="5" Grid.Row="3" Text="Turn Interval (ms)" HorizontalAlignment="Center"
                         VerticalAlignment="Center" />
 
-                <ui:NumberBox SpinButtonPlacementMode="Hidden" Minimum="0" Maximum="{Binding MaxTurnInterval}" Margin="5" Grid.Row="3" Grid.Column="1"
-                        BorderBrush="Gray" HorizontalAlignment="Stretch" PlaceholderText="e.g. 50"
-                        VerticalAlignment="Center" Value="{Binding TurnInterval}" />
+                <ui:NumberBox SpinButtonPlacementMode="Hidden" Minimum="0" Maximum="{Binding MaxTurnInterval}"
+                        Margin="5" Grid.Row="3" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
+                        PlaceholderText="e.g. 50" VerticalAlignment="Center" Value="{Binding TurnInterval}" />
             </Grid>
 
             <ui:Button Appearance="Caution" Foreground="White" DockPanel.Dock="Bottom" HorizontalAlignment="Stretch"

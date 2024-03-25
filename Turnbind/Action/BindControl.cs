@@ -13,7 +13,7 @@ class BindControl : IDisposable
     public required TurnSetting Setting
     {
         get => m_setting;
-        
+
         set
         {
             m_setting = value;
@@ -33,6 +33,7 @@ class BindControl : IDisposable
     public bool Enable
     {
         get => m_disposble is { };
+
         set
         {
             if (!value)
@@ -48,6 +49,22 @@ class BindControl : IDisposable
 
             void OnFocuse(bool focused)
             {
+                var index = -1;
+
+                void OnActive(bool active)
+                {
+                    var turnAction = App.GetService<TurnAction>();
+
+                    if (!active)
+                    {
+                        if (index != -1) turnAction.UpdateDirection(index, TurnInstruction.Stop);
+                        return;
+                    }
+
+                    index = turnAction.InputDirection(m_dir);
+                    turnAction.PixelPerSec = Setting.PixelPerSec;
+                }
+
                 if (!focused)
                 {
                     OnActive(false);
@@ -56,34 +73,16 @@ class BindControl : IDisposable
                     return;
                 }
 
-                if (focusedDisposable is { })
-                {
-                    OnActive(true);
-                    return;
-                }
-
-                void OnActive(bool active)
-                {
-                    var turnAction = App.GetService<TurnAction>();
-
-                    if (!active)
-                    {
-                        turnAction.Direction = TurnInstruction.Stop;
-                        return;
-                    }
-
-                    turnAction.Direction = m_dir;
-                    turnAction.PixelPerSec = Setting.PixelPerSec;
-                }
+                if (focusedDisposable is { }) return;
 
                 focusedDisposable = App.GetService<InputAction>().SubscribeKeys(Keys).Subscribe(OnActive);
             }
 
             m_disposble = new CompositeDisposable()
-        {
-            Disposable.Create(() => OnFocuse(false)),
-            App.GetService<ProcessWindowAction>().Focused.Subscribe(OnFocuse)
-        };
+            {
+                Disposable.Create(() => OnFocuse(false)),
+                App.GetService<ProcessWindowAction>().Focused.Subscribe(OnFocuse)
+            };
         }
     }
     public void Dispose() => Enable = false;

@@ -12,18 +12,17 @@
 
         <ui:ListView DockPanel.Dock="Top" ItemsSource="{Binding KeyBinds, Mode=OneWay}" BorderBrush="Gray"
                 BorderThickness="1" SelectedItem="{Binding Selected}" Margin="0,0,0,5">
-            <ListView.View>
-                <GridView AllowsColumnReorder="True">
-                    <GridView.Columns>
-                        <GridViewColumn Width="Auto" Header="keys"
+            <ui:ListView.View>
+                <ui:GridView AllowsColumnReorder="True">
+                    <ui:GridView.Columns>
+                        <ui:GridViewColumn Width="Auto" Header="keys"
                                 DisplayMemberBinding="{Binding KeysString, Mode=OneWay}" />
-                        <GridViewColumn Width="Auto" Header="p/s"
+                        <ui:GridViewColumn Width="Auto" Header="p/s"
                                 DisplayMemberBinding="{Binding PixelPerSec, Mode=OneWay}" />
-                        <GridViewColumn Width="Auto" Header="dir"
-                                DisplayMemberBinding="{Binding Dir, Mode=OneWay}" />
-                    </GridView.Columns>
-                </GridView>
-            </ListView.View>
+                        <ui:GridViewColumn Width="Auto" Header="dir" DisplayMemberBinding="{Binding Dir, Mode=OneWay}" />
+                    </ui:GridView.Columns>
+                </ui:GridView>
+            </ui:ListView.View>
 
             <d:ListView.ItemsSource>
                 <x:Array Type="{x:Type viewModel:KeyBindViewModel}">

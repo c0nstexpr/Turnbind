@@ -14,6 +14,8 @@ using Autofac.Extensions.DependencyInjection;
 using Turnbind.ViewModel;
 using Turnbind.View;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Turnbind;
 
@@ -54,7 +56,15 @@ public partial class App : Application
 
     public static T GetService<T>() where T : class => m_host.Services.GetRequiredService<T>();
 
-    void OnStartup(object sender, StartupEventArgs e) => m_host.Start();
+    [LibraryImport("kernel32", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool SetPriorityClass(nint hProcess, uint dwPriorityClass);
+
+    void OnStartup(object sender, StartupEventArgs e)
+    {
+        SetPriorityClass(Process.GetCurrentProcess().Handle, 0x00000080);
+        m_host.Start();
+    }
 
     void OnExit(object sender, ExitEventArgs e) => m_host.StopAsync()
         .ContinueWith(_ => m_host.Dispose())

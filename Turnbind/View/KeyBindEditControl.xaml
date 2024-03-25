@@ -51,8 +51,9 @@
 
             <ui:TextBlock Margin="5" Text="Pixel/Second:" VerticalAlignment="Center" Grid.Row="2" Grid.Column="0" />
 
-            <ui:TextBox Margin="5" BorderThickness="0.5" VerticalContentAlignment="Center" BorderBrush="Gray"
-                    Text="{Binding Path=KeyBind.PixelPerSec}" Grid.Row="2" Grid.Column="1" />
+            <ui:NumberBox Minimum="0" SpinButtonPlacementMode="Hidden" Margin="5" BorderThickness="0.5"
+                    VerticalContentAlignment="Center" BorderBrush="Gray" Text="{Binding Path=KeyBind.PixelPerSec}"
+                    Grid.Row="2" Grid.Column="1" />
         </Grid>
     </DockPanel>
 </UserControl>

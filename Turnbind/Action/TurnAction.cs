@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 using Microsoft.Extensions.Logging;
 
@@ -7,19 +8,30 @@ namespace Turnbind.Action;
 sealed partial class TurnAction : IDisposable
 {
     [StructLayout(LayoutKind.Sequential)]
-    public struct MousePoint(int x, int y)
+    public struct MouseInput
     {
-        public int X = x;
-        public int Y = y;
+        public int dx;
+        public int dy;
+        public uint mouseData;
+        public uint dwFlags;
+        public uint time;
+        public nint dwExtraInfo;
     }
 
-    [LibraryImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool SetCursorPos(int x, int y);
+    private struct Input
+    {
+        public uint type;
+        public MouseInput mi;
 
-    [LibraryImport("user32.dll")]
+        public static readonly int Size = Marshal.SizeOf(typeof(Input));
+    }
+
+    [LibraryImport("user32", SetLastError = true)]
+    private static partial uint SendInput(uint inputs, [In] Input[] input, int size);
+
+    [LibraryImport("kernel32", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool GetCursorPos(out MousePoint lpPoint);
+    private static partial bool SetPriorityClass(nint hProcess, uint dwPriorityClass);
 
     readonly ILogger<TurnAction> m_log = App.GetService<ILogger<TurnAction>>();
 
@@ -36,13 +48,20 @@ sealed partial class TurnAction : IDisposable
 
     readonly PeriodicTimer m_timer = new(TimeSpan.FromSeconds(1) / 288);
 
-    public TurnAction() => Tick();
+    public TurnAction()
+    {
+        Tick();
+        SetPriorityClass(Process.GetCurrentProcess().Handle, 0x00000080);
+    }
 
     async void Tick()
     {
         var remain = 0.0;
         var isRunning = false;
         var preDirection = TurnInstruction.Stop;
+        var inputs = new Input[1];
+
+        inputs[0] = new() { mi = new() { dwFlags = 0x0001 } };
 
         while (true)
         {
@@ -56,8 +75,10 @@ sealed partial class TurnAction : IDisposable
 
                 var intP = (int)Math.Clamp(p, int.MinValue, int.MaxValue);
 
-                GetCursorPos(out var pos);
-                SetCursorPos(pos.X + intP, pos.Y);
+                inputs[0].mi.dx = intP;
+
+                SendInput(1, inputs, Input.Size);
+
                 remain = p - intP;
 
                 isRunning = true;

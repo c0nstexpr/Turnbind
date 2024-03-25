@@ -1,13 +1,7 @@
-﻿using System.Diagnostics;
-using System.Reactive.Disposables;
+﻿using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Security.Principal;
-using System.Windows;
 
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 
 using Turnbind.Action;
 using Turnbind.Model;
@@ -38,10 +32,10 @@ internal partial class MainWindowViewModel : ObservableObject, IDisposable
         }
     }
 
-    public bool AdminSuggestEnable { get; }
+    //public bool AdminSuggestEnable { get; }
 
-    [ObservableProperty]
-    bool m_isAdminSuggestFlyoutOpen;
+    //[ObservableProperty]
+    //bool m_isAdminSuggestFlyoutOpen;
 
     public string IsWindowFocused => m_windowAction.Focused.Value ? "Yes" : "No";
 
@@ -62,9 +56,9 @@ internal partial class MainWindowViewModel : ObservableObject, IDisposable
         m_windowAction.ProcessName = m_settings.ProcessName;
         m_turnAction.Interval = TimeSpan.FromMilliseconds(m_settings.TurnInterval);
 
-        using var identity = WindowsIdentity.GetCurrent();
-        var principal = new WindowsPrincipal(identity);
-        AdminSuggestEnable = !principal.IsInRole(WindowsBuiltInRole.Administrator);
+        //using var identity = WindowsIdentity.GetCurrent();
+        //var principal = new WindowsPrincipal(identity);
+        //AdminSuggestEnable = !principal.IsInRole(WindowsBuiltInRole.Administrator);
     }
 
     public string CurrentKeyStr => string.Join(" + ", m_inputKeys);
@@ -76,6 +70,8 @@ internal partial class MainWindowViewModel : ObservableObject, IDisposable
 
         OnPropertyChanged(nameof(CurrentKeyStr));
     }
+
+    public static uint MaxTurnInterval { get; } = uint.MaxValue - 1;
 
     public double TurnInterval
     {
@@ -89,24 +85,24 @@ internal partial class MainWindowViewModel : ObservableObject, IDisposable
         }
     }
 
-    [RelayCommand]
-    void OnAdminSuggestButtonClick() => IsAdminSuggestFlyoutOpen = !IsAdminSuggestFlyoutOpen;
+    //[RelayCommand]
+    //void OnAdminSuggestButtonClick() => IsAdminSuggestFlyoutOpen = !IsAdminSuggestFlyoutOpen;
 
-    [RelayCommand]
-    static void RestartAsAdmin()
-    {
-        Process.Start(
-            new ProcessStartInfo()
-            {
-                UseShellExecute = true,
-                FileName = Environment.ProcessPath,
-                Verb = "runas",
-                CreateNoWindow = false,
-                ErrorDialog = true
-            }
-        );
-        Application.Current.Shutdown();
-    }
+    //[RelayCommand]
+    //static void RestartAsAdmin()
+    //{
+    //    Process.Start(
+    //        new ProcessStartInfo()
+    //        {
+    //            UseShellExecute = true,
+    //            FileName = Environment.ProcessPath,
+    //            Verb = "runas",
+    //            CreateNoWindow = false,
+    //            ErrorDialog = true
+    //        }
+    //    );
+    //    Application.Current.Shutdown();
+    //}
 
     public void Dispose()
     {

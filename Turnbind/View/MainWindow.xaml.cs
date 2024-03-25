@@ -15,8 +15,8 @@ sealed partial class MainWindow : FluentWindow
         DataContext = m_viewModel;
         InitializeComponent();
 
-        if (!m_viewModel.AdminSuggestEnable)
-            MainDockPanel.Children.Remove(AdminSuggest);
+        //if (!m_viewModel.AdminSuggestEnable)
+        //    MainDockPanel.Children.Remove(AdminSuggest);
     }
 
     protected override void OnClosed(EventArgs e)

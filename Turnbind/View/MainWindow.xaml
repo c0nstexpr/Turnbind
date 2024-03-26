@@ -73,9 +73,9 @@
                 <ui:TextBlock Margin="5" Grid.Row="3" Text="Turn Interval (ms)" HorizontalAlignment="Center"
                         VerticalAlignment="Center" />
 
-                <ui:NumberBox SpinButtonPlacementMode="Hidden" Minimum="0" Maximum="{Binding MaxTurnInterval}"
-                        Margin="5" Grid.Row="3" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
-                        PlaceholderText="e.g. 50" VerticalAlignment="Center" Value="{Binding TurnInterval}" />
+                <ui:TextBox Margin="5" Grid.Row="3" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
+                        PlaceholderText="e.g. 50" VerticalAlignment="Center"
+                        Text="{Binding TurnInterval, ValidatesOnNotifyDataErrors=True}" />
             </Grid>
 
             <ui:Button Appearance="Caution" Foreground="White" DockPanel.Dock="Bottom" HorizontalAlignment="Stretch"

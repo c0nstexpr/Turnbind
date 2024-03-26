@@ -1,10 +1,12 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.ComponentModel.DataAnnotations;
+
+using CommunityToolkit.Mvvm.ComponentModel;
 
 using Turnbind.Model;
 
 namespace Turnbind.ViewModel;
 
-partial class KeyBindViewModel : ObservableObject, IEquatable<KeyBindViewModel>
+partial class KeyBindViewModel : ObservableValidator, IEquatable<KeyBindViewModel>
 {
     InputKeys m_keys = new();
 
@@ -27,6 +29,19 @@ partial class KeyBindViewModel : ObservableObject, IEquatable<KeyBindViewModel>
     [ObservableProperty]
     double m_pixelPerSec;
 
+    [Range(double.Epsilon, double.MaxValue)]
+    public string PixelPerSecString
+    {
+        get => PixelPerSec.ToString();
+
+        set
+        {
+            ValidateProperty(value);
+            if (GetErrors().Any()) return;
+            PixelPerSec = double.Parse(value);
+        }
+    }
+
     public TurnSetting TurnSetting => new()
     {
         Dir = Dir,
@@ -40,6 +55,6 @@ partial class KeyBindViewModel : ObservableObject, IEquatable<KeyBindViewModel>
 
     public override bool Equals(object? obj) => Equals(obj as KeyBindViewModel);
 
-    public override int GetHashCode() => 
+    public override int GetHashCode() =>
         HashCode.Combine(Keys.GetHashCode(), Dir.GetHashCode(), PixelPerSec.GetHashCode());
 }

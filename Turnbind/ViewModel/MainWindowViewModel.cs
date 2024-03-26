@@ -1,4 +1,5 @@
-﻿using System.Reactive.Disposables;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -8,7 +9,7 @@ using Turnbind.Model;
 
 namespace Turnbind.ViewModel;
 
-internal partial class MainWindowViewModel : ObservableObject, IDisposable
+internal partial class MainWindowViewModel : ObservableValidator, IDisposable
 {
     readonly Settings m_settings;
 
@@ -73,15 +74,19 @@ internal partial class MainWindowViewModel : ObservableObject, IDisposable
 
     public static uint MaxTurnInterval { get; } = uint.MaxValue - 1;
 
-    public double TurnInterval
+    [Range(1.0, uint.MaxValue)]
+    public string TurnInterval
     {
-        get => m_turnAction.Interval.TotalMilliseconds;
+        get => m_turnAction.Interval.TotalMilliseconds.ToString();
 
         set
         {
-            m_turnAction.Interval = TimeSpan.FromMilliseconds(value);
-            m_settings.TurnInterval = value;
-            OnPropertyChanged();
+            ValidateProperty(value);
+            if (GetErrors().Any()) return;
+
+            var interval = double.Parse(value);
+            m_turnAction.Interval = TimeSpan.FromMilliseconds(interval);
+            m_settings.TurnInterval = interval;
         }
     }
 

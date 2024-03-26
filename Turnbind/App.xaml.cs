@@ -10,7 +10,6 @@ using Serilog.Formatting.Compact;
 using Serilog.Exceptions;
 using Turnbind.Action;
 using Turnbind.Model;
-using Autofac.Extensions.DependencyInjection;
 using Turnbind.ViewModel;
 using Turnbind.View;
 using Microsoft.Extensions.Logging;
@@ -24,7 +23,6 @@ public partial class App : Application
     static readonly LogTextBlock m_logTextBlock = new();
 
     static readonly IHost m_host = Host.CreateDefaultBuilder()
-        .UseServiceProviderFactory(new AutofacServiceProviderFactory())
         .ConfigureAppConfiguration(c => c.SetBasePath(AppContext.BaseDirectory))
         .UseSerilog(
             (context, services, loggerConfiguration) => loggerConfiguration

@@ -9,8 +9,6 @@ using CommunityToolkit.Mvvm.Input;
 using Turnbind.Action;
 using Turnbind.Model;
 
-using Wpf.Ui.Controls;
-
 namespace Turnbind.ViewModel;
 
 internal partial class MainWindowViewModel : ObservableValidator, IDisposable

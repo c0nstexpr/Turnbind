@@ -69,6 +69,8 @@ public sealed partial class InputAction : IDisposable
 
     readonly HookProc m_hookProc;
 
+    readonly SpinLock m_spinLock = new();
+
     public InputAction()
     {
         m_hookProc = OnKeyboard;
@@ -159,6 +161,15 @@ public sealed partial class InputAction : IDisposable
 
     void OnKey(KBDLLHOOKSTRUCT keyPtr, bool pressed)
     {
+        {
+            var lockTaken = false;
+            m_spinLock.TryEnter(0, ref lockTaken);
+
+            if (!lockTaken) return;
+
+            if (!lockTaken || m_input.IsDisposed) return;
+        }
+
         var input = keyPtr.VkCode;
 
         UpdateModifiers(input); // Modifier key released event need to be handled manually
@@ -175,11 +186,22 @@ public sealed partial class InputAction : IDisposable
 
         m_input.OnNext(LatestKeyState);
         m_pressedKeys[input] = pressed;
+
+        m_spinLock.Exit();
     }
 
     public void Dispose()
     {
         UnhookWindowsHookEx(m_keyboardHook);
+
+        {
+            var lockTaken = false;
+            m_spinLock.TryEnter(ref lockTaken);
+
+            if (!lockTaken) return;
+        }
+
         m_input.Dispose();
+        m_spinLock.Exit();
     }
 }

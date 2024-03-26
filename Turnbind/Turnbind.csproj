@@ -26,5 +26,7 @@
         <PackageReference Include="ReactiveMarbles.PropertyChanged.SourceGenerator" Version="2.0.27" />
         
         <Page Include="App.xaml" />
+        
+        <Resource Include="Assets\logo-icon.png" />
     </ItemGroup>
 </Project>

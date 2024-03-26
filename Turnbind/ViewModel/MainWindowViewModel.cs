@@ -1,11 +1,15 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Windows;
 
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 using Turnbind.Action;
 using Turnbind.Model;
+
+using Wpf.Ui.Controls;
 
 namespace Turnbind.ViewModel;
 
@@ -108,6 +112,9 @@ internal partial class MainWindowViewModel : ObservableValidator, IDisposable
     //    );
     //    Application.Current.Shutdown();
     //}
+
+    [RelayCommand]
+    static void OnExit() => Application.Current.Shutdown();
 
     public void Dispose()
     {

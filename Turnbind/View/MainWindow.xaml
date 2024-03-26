@@ -13,7 +13,9 @@
         <tray:NotifyIcon Grid.Row="0" FocusOnLeftClick="True" Icon="pack://application:,,,/Assets/logo-icon.png"
                 MenuOnRightClick="True" TooltipText="Turnbind">
             <tray:NotifyIcon.Menu>
-                <ContextMenu ItemsSource="{Binding TrayMenuItems, Mode=OneWay}" />
+                <ContextMenu>
+                    <ui:MenuItem Header="Exit" Command="{Binding ExitCommand, Mode=OneWay}" />
+                </ContextMenu>
             </tray:NotifyIcon.Menu>
         </tray:NotifyIcon>
 

@@ -1,10 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v3">
-    <assemblyIdentity version="1.0.0" name="Turnbind.app"/>
+<assembly manifestVersion="1.0"
+          xmlns="urn:schemas-microsoft-com:asm.v3">
+    <assemblyIdentity version="1.0.0.0"
+                      name="Turnbind"/>
     <trustInfo>
         <security>
             <requestedPrivileges>
-                <requestedExecutionLevel level="requireAdministrator" uiAccess="false" />
+                <requestedExecutionLevel level="requireAdministrator"
+                                         uiAccess="false" />
             </requestedPrivileges>
         </security>
     </trustInfo>

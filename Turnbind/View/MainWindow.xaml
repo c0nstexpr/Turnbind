@@ -7,8 +7,16 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModel="clr-namespace:Turnbind.ViewModel" xmlns:view="clr-namespace:Turnbind.View"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" mc:Ignorable="d" Title="MainWindow" Height="1000" Width="800"
+        xmlns:tray="http://schemas.lepo.co/wpfui/2022/xaml/tray"
         d:DataContext="{d:DesignInstance Type=viewModel:MainWindowViewModel}">
     <DockPanel>
+        <tray:NotifyIcon Grid.Row="0" FocusOnLeftClick="True" Icon="pack://application:,,,/Assets/logo-icon.png"
+                MenuOnRightClick="True" TooltipText="Turnbind">
+            <tray:NotifyIcon.Menu>
+                <ContextMenu ItemsSource="{Binding TrayMenuItems, Mode=OneWay}" />
+            </tray:NotifyIcon.Menu>
+        </tray:NotifyIcon>
+
         <ui:TitleBar DockPanel.Dock="Top" Title="Turn Bind" CloseWindowByDoubleClickOnIcon="True" Height="30">
             <ui:TitleBar.Resources>
                 <Style TargetType="ui:TitleBarButton" BasedOn="{StaticResource {x:Type ui:TitleBarButton}}">

@@ -16,7 +16,7 @@
         <GridSplitter Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Stretch" ShowsPreview="True"
                 Background="Transparent" Width="5" />
 
-        <DockPanel Grid.Column="2">
+        <DockPanel Grid.Column="2" IsEnabled="{Binding KeyBindListEnable, Mode=OneWay}">
             <ui:TextBlock DockPanel.Dock="Top" Margin="5" Text="{Binding ProfileTitle, Mode=OneWay}" Height="20" />
 
             <view:KeyBindListControl x:Name="KeyBindList" Margin="5" />

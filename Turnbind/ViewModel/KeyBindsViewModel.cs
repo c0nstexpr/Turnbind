@@ -81,7 +81,13 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
 
             KeyBindList.Clear();
 
-            if (value is null) return;
+            if (value is null)
+            {
+                KeyBindListEnable = false;
+                return;
+            }
+
+            KeyBindListEnable = true;
 
             foreach (var (keys, turnsetting) in m_settings.Profiles[value])
                 KeyBindList.Add(keys, turnsetting);
@@ -93,6 +99,15 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
     }
 
     public string ProfileTitle => $"Current Profile: {CurrentEditProfileName}";
+
+    bool m_keyBindListEnable;
+
+    public bool KeyBindListEnable
+    {
+        get => m_keyBindListEnable;
+
+        private set => SetProperty(ref m_keyBindListEnable, value);
+    }
 
     readonly Dictionary<string, IDisposable> m_profileDiposables = [];
 
@@ -149,6 +164,8 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
             control.Dispose();
             m_profileControls.Remove(name);
         }
+
+        if (CurrentEditProfileName == name) CurrentEditProfileName = null;
 
         m_logger.LogInformation("Remove profile {ProfileName}", name);
     }

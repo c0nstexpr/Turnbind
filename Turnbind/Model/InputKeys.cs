@@ -56,17 +56,19 @@ public class InputKeys :
         if (other is null) return 1;
 
         var i = 0;
+        var count = Count;
+        var otherCount = other.Count;
 
-        for (; i < m_keys.Length; ++i)
+        for (; i < count; ++i)
         {
-            if (i >= m_keys.Length) return 1;
+            if (i >= otherCount) return 1;
 
             var cmp = m_keys[i].CompareTo(other[i]);
 
             if (cmp != 0) return cmp;
         }
 
-        return i < m_keys.Length ? -1 : 0;
+        return i < otherCount ? -1 : 0;
     }
 
     public IEnumerator<InputKey> GetEnumerator() => ((IEnumerable<InputKey>)m_keys).GetEnumerator();

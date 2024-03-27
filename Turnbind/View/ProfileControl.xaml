@@ -30,16 +30,18 @@
                                     <ColumnDefinition />
                                 </Grid.ColumnDefinitions>
 
-                                <ui:Button Margin="5" Appearance="Info" Content="Edit"
+                                <ui:Button Margin="5" Appearance="Info" Content="View"
                                         Command="{Binding EditProfileCommand, Mode=OneWay}" />
 
                                 <ui:Button Grid.Column="1" Margin="5" Appearance="Danger" Content="Remove"
                                         Foreground="White" Command="{Binding RemoveProfileCommand, Mode=OneWay}" />
                             </Grid>
 
-                            <CheckBox DockPanel.Dock="Left" Content="{Binding Name, Mode=OneWay}"
-                                    Command="{Binding EnableProfileCommand, Mode=OneWay}"
+                            <ui:ToggleSwitch DockPanel.Dock="Left" Command="{Binding EnableProfileCommand, Mode=OneWay}"
+                                    Content="{Binding ToggleContent, Mode=OneWay}"
                                     CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}" />
+
+                            <TextBlock VerticalAlignment="Stretch" Text="{Binding Name, Mode=OneWay}" Margin="10" />
                         </DockPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>

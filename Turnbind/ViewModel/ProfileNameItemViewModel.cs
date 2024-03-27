@@ -25,10 +25,23 @@ partial class ProfileNameItemViewModel : ObservableObject, IDisposable
 
     public BehaviorObservable<bool> EnableProfile { get; }
 
+    string m_toggleContent = "OFF";
+
+    public string ToggleContent
+    {
+        get => m_toggleContent;
+
+        private set => SetProperty(ref m_toggleContent, value);
+    }
+
     public ProfileNameItemViewModel() => EnableProfile = m_enableProfile.AsObservable();
 
     [RelayCommand]
-    void OnEnableProfile(bool enable) => m_enableProfile.OnNext(enable);
+    void OnEnableProfile(bool enable)
+    {
+        m_enableProfile.OnNext(enable);
+        ToggleContent = enable ? "ON" : "OFF";
+    }
 
     [RelayCommand]
     void OnRemoveProfile() => m_removeProfile.OnNext(default);

@@ -44,3 +44,5 @@ jobs:
       uses: ./.github/actions/gh-release
       with:
         project-dir: $env:Wpf_Project_Directory
+      secrets:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

@@ -14,13 +14,11 @@ sealed partial class MainWindow : FluentWindow
     {
         DataContext = m_viewModel;
         InitializeComponent();
-
-        //if (!m_viewModel.AdminSuggestEnable)
-        //    MainDockPanel.Children.Remove(AdminSuggest);
     }
 
     protected override void OnClosed(EventArgs e)
     {
+        Tray.Dispose();
         KeyBindsControl.Dispose();
         m_viewModel.Dispose();
         base.OnClosed(e);

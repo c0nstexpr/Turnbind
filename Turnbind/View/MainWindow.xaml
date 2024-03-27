@@ -10,7 +10,7 @@
         xmlns:tray="http://schemas.lepo.co/wpfui/2022/xaml/tray"
         d:DataContext="{d:DesignInstance Type=viewModel:MainWindowViewModel}">
     <DockPanel>
-        <tray:NotifyIcon Grid.Row="0" FocusOnLeftClick="True" Icon="pack://application:,,,/Assets/logo-icon.png"
+        <tray:NotifyIcon x:Name="Tray" Grid.Row="0" FocusOnLeftClick="True" Icon="pack://application:,,,/Assets/logo-icon.png"
                 MenuOnRightClick="True" TooltipText="Turnbind">
             <tray:NotifyIcon.Menu>
                 <ContextMenu>

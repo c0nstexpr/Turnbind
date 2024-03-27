@@ -35,11 +35,6 @@ internal partial class MainWindowViewModel : ObservableValidator, IDisposable
         }
     }
 
-    //public bool AdminSuggestEnable { get; }
-
-    //[ObservableProperty]
-    //bool m_isAdminSuggestFlyoutOpen;
-
     public string IsWindowFocused => m_windowAction.Focused.Value ? "Yes" : "No";
 
     readonly List<InputKey> m_inputKeys = new(Enum.GetValues<InputKey>().Length);
@@ -58,10 +53,6 @@ internal partial class MainWindowViewModel : ObservableValidator, IDisposable
 
         m_windowAction.ProcessName = m_settings.ProcessName;
         m_turnAction.Interval = TimeSpan.FromMilliseconds(m_settings.TurnInterval);
-
-        //using var identity = WindowsIdentity.GetCurrent();
-        //var principal = new WindowsPrincipal(identity);
-        //AdminSuggestEnable = !principal.IsInRole(WindowsBuiltInRole.Administrator);
     }
 
     public string CurrentKeyStr => string.Join(" + ", m_inputKeys);
@@ -91,25 +82,6 @@ internal partial class MainWindowViewModel : ObservableValidator, IDisposable
             m_settings.TurnInterval = interval;
         }
     }
-
-    //[RelayCommand]
-    //void OnAdminSuggestButtonClick() => IsAdminSuggestFlyoutOpen = !IsAdminSuggestFlyoutOpen;
-
-    //[RelayCommand]
-    //static void RestartAsAdmin()
-    //{
-    //    Process.Start(
-    //        new ProcessStartInfo()
-    //        {
-    //            UseShellExecute = true,
-    //            FileName = Environment.ProcessPath,
-    //            Verb = "runas",
-    //            CreateNoWindow = false,
-    //            ErrorDialog = true
-    //        }
-    //    );
-    //    Application.Current.Shutdown();
-    //}
 
     [RelayCommand]
     static void OnExit() => Application.Current.Shutdown();

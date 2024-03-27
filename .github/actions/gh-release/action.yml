@@ -4,6 +4,10 @@ inputs:
   project-dir:
     required: true
 
+secrets:
+  GITHUB_TOKEN:
+    required: true
+
 runs:
   using: composite
 

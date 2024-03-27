@@ -48,7 +48,7 @@ partial class ProcessWindowAction : IDisposable
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool UnhookWinEvent(nint hWinEventHook);
 
-    readonly SpinLock m_spinLock = new();
+    SpinLock m_spinLock = new();
 
     public ProcessWindowAction()
     {
@@ -78,27 +78,30 @@ partial class ProcessWindowAction : IDisposable
         uint dwmsEventTime
     )
     {
+        var lockTaken = false;
+
+        try
         {
-            var lockTaken = false;
             m_spinLock.TryEnter(0, ref lockTaken);
 
             if (!lockTaken || m_focused.IsDisposed) return;
+
+            var focusd = m_focused.Value;
+            if (ContainsWin(hwnd) && !focusd)
+            {
+                m_log.LogInformation("Window focused");
+                m_focused.OnNext(true);
+            }
+            else if (focusd)
+            {
+                m_log.LogInformation("Window lost focuse");
+                m_focused.OnNext(false);
+            }
         }
-
-        var focusd = m_focused.Value;
-
-        if (ContainsWin(hwnd) && !focusd)
+        finally
         {
-            m_log.LogInformation("Window focused");
-            m_focused.OnNext(true);
+            if (lockTaken) m_spinLock.Exit(false);
         }
-        else if (focusd)
-        {
-            m_log.LogInformation("Window lost focuse");
-            m_focused.OnNext(false);
-        }
-
-        m_spinLock.Exit();
     }
 
     bool ContainsWin(nint hwnd)

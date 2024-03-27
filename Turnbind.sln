@@ -7,7 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Turnbind", "Turnbind\Turnbi
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{11E012AF-DCBC-428A-BEE9-A76D00311AF2}"
 	ProjectSection(SolutionItems) = preProject
-		.github\actions\release\action.yml = .github\actions\release\action.yml
+		.gitignore = .gitignore
+		.github\actions\gh-release\action.yml = .github\actions\gh-release\action.yml
 		.github\dependabot.yml = .github\dependabot.yml
 		LICENSE = LICENSE
 		README.md = README.md

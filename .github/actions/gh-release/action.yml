@@ -1,0 +1,23 @@
+name: Release on github
+
+inputs:
+  project-dir:
+    required: true
+
+runs:
+  using: composite
+
+  steps:  
+    - name: Archive
+      uses: thedoctor0/zip-release@0.7.6
+      with:
+        type: zip
+        path: './${{ inputs.project-dir }}/bin/Release/'
+        filename: release.zip
+        
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: release.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

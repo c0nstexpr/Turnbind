@@ -41,6 +41,6 @@ jobs:
 
     - name: Release
       if: startsWith(github.ref, 'refs/tags/')
-      uses: ./.github/actions/release
+      uses: ./.github/actions/gh-release
       with:
         project-dir: $env:Wpf_Project_Directory

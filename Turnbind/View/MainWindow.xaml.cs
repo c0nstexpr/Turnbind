@@ -10,6 +10,8 @@ sealed partial class MainWindow : FluentWindow
 {
     readonly MainWindowViewModel m_viewModel = App.GetService<MainWindowViewModel>();
 
+    ConsoleWindow? m_consoleWindow;
+
     public MainWindow()
     {
         DataContext = m_viewModel;
@@ -26,7 +28,10 @@ sealed partial class MainWindow : FluentWindow
 
     void LaunchConsoleWindow(object sender, RoutedEventArgs e)
     {
-        ConsoleWindow consoleWindow = new();
-        consoleWindow.Show();
+        if (m_consoleWindow is { }) return;
+
+        m_consoleWindow = new ConsoleWindow();
+        m_consoleWindow.Closed += (_, _) => m_consoleWindow = null;
+        m_consoleWindow.Show();
     }
 }

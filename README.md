@@ -8,7 +8,7 @@
 ![Windows Presentation Framework](https://img.shields.io/badge/Windows_Presentation_Framework-blue)
 [![wakatime](https://wakatime.com/badge/github/c0nstexpr/Turnbind.svg)](https://wakatime.com/badge/github/c0nstexpr/Turnbind)
 
-Turnbind is a WPF application for CS surf turn binds, requirs [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0):
+Turnbind is a WPF application for CS surf turn binds, requires [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0):
 - Designed to be a simple and easy to use tool for surfers.
 - Not depent on any CS plugins, command, etc. All simulations depend on native Windows API.
 - Require run as admin

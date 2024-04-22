@@ -20,14 +20,14 @@ Inspired by [Conturn](https://github.com/t5mat/conturn)
 <br/>
 
 ## Features
-- *Available for All Window App*
+- *Available for All Window App* <br/>
   Customizable process name allow user to enable functionality in any window application.
-- *Multi Profiles*
+- *Multi Profiles* <br/>
   Use different bind settings for various environments 
-- *Multi Key for Single Bind*
+- *Multi Key for Single Bind* <br/>
   Support multiple key rather than single key. For example, use "A+F" means press A and F in sequence will trigger turn instruction, and release any of them will cancel turning or continue previous turning.
-- *Adjust Turn Speed in Pixels*
-- *Adjust Turn Precision by Setting Instruction Interval*
+- *Adjust Turn Speed in Pixels* <br/>
+- *Adjust Turn Precision by Setting Instruction Interval* <br/>
 
 ## Dev Getting Started
 

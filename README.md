@@ -1,4 +1,7 @@
 # Turnbind
+<p align="center">
+<img src="Turnbind/Assets/logo-icon.png" width="200" />
+</p>
 
 ![C#](https://img.shields.io/badge/C%23-9016c0)
 ![.NET 8](https://img.shields.io/badge/.NET%208-512bd4)

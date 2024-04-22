@@ -8,7 +8,7 @@ namespace Turnbind.View;
 
 sealed partial class MainWindow : FluentWindow
 {
-    readonly MainWindowViewModel m_viewModel = App.GetService<MainWindowViewModel>();
+    readonly MainWindowViewModel m_viewModel = App.GetRequiredService<MainWindowViewModel>();
 
     ConsoleWindow? m_consoleWindow;
 
@@ -16,6 +16,9 @@ sealed partial class MainWindow : FluentWindow
     {
         DataContext = m_viewModel;
         InitializeComponent();
+
+        if (App.GetService<LogTextBlock>() is null)
+            MainDockPanel.Children.Remove(LaunchConsoleButton);
     }
 
     protected override void OnClosed(EventArgs e)

@@ -49,7 +49,7 @@ sealed partial class KeyBindEditControl : UserControl, IDisposable
     readonly SerialDisposable m_keyboardDisposable = new();
 
     void InputKeysTextBoxFocus(object sender, RoutedEventArgs e) => 
-        m_keyboardDisposable.Disposable = App.GetService<InputAction>()
+        m_keyboardDisposable.Disposable = App.GetRequiredService<InputAction>()
             .Input
             .Where(state => state.Pressed)
             .Select(state => state.Key)

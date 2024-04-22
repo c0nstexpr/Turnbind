@@ -7,6 +7,8 @@
         <UseWPF>true</UseWPF>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <ApplicationManifest>app.manifest</ApplicationManifest>
+        <ApplicationIcon>Assets/logo-icon.ico</ApplicationIcon>
+        <PackageIcon></PackageIcon>
     </PropertyGroup>
 
     <ItemGroup>
@@ -27,6 +29,6 @@
         
         <Page Include="App.xaml" />
         
-        <Resource Include="Assets\logo-icon.png" />
+        <Resource Include="Assets/*" />
     </ItemGroup>
 </Project>

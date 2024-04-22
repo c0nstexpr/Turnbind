@@ -18,9 +18,9 @@ namespace Turnbind.ViewModel;
 
 partial class KeyBindsViewModel : ObservableObject, IDisposable
 {
-    readonly ILogger<KeyBindsViewModel> m_logger = App.GetService<ILogger<KeyBindsViewModel>>();
+    readonly ILogger<KeyBindsViewModel> m_logger = App.GetRequiredService<ILogger<KeyBindsViewModel>>();
 
-    readonly Settings m_settings = App.GetService<Settings>();
+    readonly Settings m_settings = App.GetRequiredService<Settings>();
 
     readonly Dictionary<string, ProfileControl> m_profileControls = [];
 

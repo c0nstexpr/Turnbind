@@ -12,7 +12,7 @@ namespace Turnbind.Action;
 
 public sealed partial class InputAction : IDisposable
 {
-    readonly ILogger<InputAction> m_logger = App.GetService<ILogger<InputAction>>();
+    readonly ILogger<InputAction> m_logger = App.GetRequiredService<ILogger<InputAction>>();
 
     public record struct KeyState(InputKey Key, bool Pressed);
 

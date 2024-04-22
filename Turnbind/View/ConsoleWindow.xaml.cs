@@ -4,12 +4,12 @@ namespace Turnbind.View;
 
 public partial class ConsoleWindow : FluentWindow
 {
-    readonly LogTextBlock m_logTextBlock = App.GetService<LogTextBlock>();
+    readonly LogTextBlock m_logTextBlock = App.GetRequiredService<LogTextBlock>();
 
     public ConsoleWindow()
     {
         InitializeComponent();
-        DockPanel.Children.Add(App.GetService<LogTextBlock>());
+        DockPanel.Children.Add(App.GetRequiredService<LogTextBlock>());
     }
 
     protected override void OnClosed(EventArgs e)

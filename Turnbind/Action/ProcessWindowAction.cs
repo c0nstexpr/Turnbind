@@ -10,7 +10,7 @@ namespace Turnbind;
 
 partial class ProcessWindowAction : IDisposable
 {
-    readonly ILogger<ProcessWindowAction> m_log = App.GetService<ILogger<ProcessWindowAction>>();
+    readonly ILogger<ProcessWindowAction> m_log = App.GetRequiredService<ILogger<ProcessWindowAction>>();
 
     public string? ProcessName { get; set; }
 

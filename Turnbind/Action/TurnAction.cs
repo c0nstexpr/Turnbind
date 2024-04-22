@@ -28,7 +28,7 @@ sealed partial class TurnAction : IDisposable
     [LibraryImport("user32", SetLastError = true)]
     private static partial uint SendInput(uint inputs, [In] Input[] input, int size);
 
-    readonly ILogger<TurnAction> m_log = App.GetService<ILogger<TurnAction>>();
+    readonly ILogger<TurnAction> m_log = App.GetRequiredService<ILogger<TurnAction>>();
 
     public TimeSpan Interval
     {
@@ -38,7 +38,7 @@ sealed partial class TurnAction : IDisposable
         {
             m_pixelPerPeriod = m_pixelPerPeriod / m_timer.Period.TotalSeconds * value.TotalSeconds;
             m_timer.Period = value;
-            m_log.LogInformation("Turn Interval changed to {} ms", value.Milliseconds);
+            m_log.LogInformation("Turn Interval changed to {ms} ms", value.Milliseconds);
         }
     }
 

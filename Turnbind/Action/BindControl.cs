@@ -53,7 +53,7 @@ class BindControl : IDisposable
 
                 void OnActive(bool active)
                 {
-                    var turnAction = App.GetService<TurnAction>();
+                    var turnAction = App.GetRequiredService<TurnAction>();
 
                     if (!active)
                     {
@@ -75,13 +75,13 @@ class BindControl : IDisposable
 
                 if (focusedDisposable is { }) return;
 
-                focusedDisposable = App.GetService<InputAction>().SubscribeKeys(Keys).Subscribe(OnActive);
+                focusedDisposable = App.GetRequiredService<InputAction>().SubscribeKeys(Keys).Subscribe(OnActive);
             }
 
             m_disposble = new CompositeDisposable()
             {
                 Disposable.Create(() => OnFocuse(false)),
-                App.GetService<ProcessWindowAction>().Focused.Subscribe(OnFocuse)
+                App.GetRequiredService<ProcessWindowAction>().Focused.Subscribe(OnFocuse)
             };
         }
     }

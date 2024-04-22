@@ -10,8 +10,8 @@
         xmlns:tray="http://schemas.lepo.co/wpfui/2022/xaml/tray"
         d:DataContext="{d:DesignInstance Type=viewModel:MainWindowViewModel}">
     <DockPanel>
-        <tray:NotifyIcon x:Name="Tray" Grid.Row="0" FocusOnLeftClick="True" Icon="pack://application:,,,/Assets/logo-icon.png"
-                MenuOnRightClick="True" TooltipText="Turnbind">
+        <tray:NotifyIcon x:Name="Tray" Grid.Row="0" FocusOnLeftClick="True"
+                Icon="pack://application:,,,/Assets/logo-icon.png" MenuOnRightClick="True" TooltipText="Turnbind">
             <tray:NotifyIcon.Menu>
                 <ContextMenu>
                     <ui:MenuItem Header="Exit" Command="{Binding ExitCommand, Mode=OneWay}" />
@@ -20,6 +20,9 @@
         </tray:NotifyIcon>
 
         <ui:TitleBar DockPanel.Dock="Top" Title="Turn Bind" CloseWindowByDoubleClickOnIcon="True" Height="30">
+            <ui:TitleBar.Icon>
+                <ui:ImageIcon Source="pack://application:,,,/Assets/logo-icon.png" />
+            </ui:TitleBar.Icon>
             <ui:TitleBar.Resources>
                 <Style TargetType="ui:TitleBarButton" BasedOn="{StaticResource {x:Type ui:TitleBarButton}}">
                     <Setter Property="MouseOverButtonsForeground" Value="Black" />
@@ -52,7 +55,7 @@
 
             <Grid DockPanel.Dock="Top" Margin="10">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="200" />
+                    <ColumnDefinition Width="300" />
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
 
@@ -80,7 +83,7 @@
                 <ui:TextBox Margin="5" Grid.Row="2" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
                         VerticalAlignment="Center" Text="{Binding CurrentKeyStr, Mode=OneWay}" IsReadOnly="True" />
 
-                <ui:TextBlock Margin="5" Grid.Row="3" Text="Turn Interval (ms)" HorizontalAlignment="Center"
+                <ui:TextBlock Margin="5" Grid.Row="3" Text="Turn Instruction Interval (ms)" HorizontalAlignment="Center"
                         VerticalAlignment="Center" />
 
                 <ui:TextBox Margin="5" Grid.Row="3" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
@@ -88,8 +91,8 @@
                         Text="{Binding TurnInterval, ValidatesOnNotifyDataErrors=True}" />
             </Grid>
 
-            <ui:Button Appearance="Caution" Foreground="White" DockPanel.Dock="Bottom" HorizontalAlignment="Stretch"
-                    Margin="5" Content="Consolw Window" Click="LaunchConsoleWindow" />
+            <ui:Button x:Name="LaunchConsoleButton" Appearance="Caution" Foreground="White" DockPanel.Dock="Bottom"
+                    HorizontalAlignment="Stretch" Margin="5" Content="Console Window" Click="LaunchConsoleWindow" />
 
             <view:KeyBindsControl x:Name="KeyBindsControl" Margin="5" />
         </DockPanel>

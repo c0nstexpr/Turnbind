@@ -6,7 +6,7 @@ using Turnbind.Model;
 
 namespace Turnbind.ViewModel;
 
-partial class KeyBindViewModel : ObservableValidator, IEquatable<KeyBindViewModel>
+partial class KeyBindViewModel : ObservableValidator
 {
     InputKeys m_keys = new();
 
@@ -27,34 +27,17 @@ partial class KeyBindViewModel : ObservableValidator, IEquatable<KeyBindViewMode
     TurnDirection m_dir;
 
     [ObservableProperty]
-    double m_pixelPerSec;
-
     [Range(double.Epsilon, double.MaxValue)]
-    public string PixelPerSecString
-    {
-        get => PixelPerSec.ToString();
+    double m_pixelPerMs;
 
-        set
-        {
-            ValidateProperty(value);
-            if (GetErrors().Any()) return;
-            PixelPerSec = double.Parse(value);
-        }
-    }
+    [ObservableProperty]
+    [Range(double.Epsilon, double.MaxValue)]
+    double m_mouseMoveFactor;
 
     public TurnSetting TurnSetting => new()
     {
         Dir = Dir,
-        PixelPerSec = PixelPerSec
+        PixelPerMs = PixelPerMs,
+        MouseMoveFactor = MouseMoveFactor
     };
-
-    public bool Equals(KeyBindViewModel? other) => other is { } &&
-        Keys.Equals(other.Keys) &&
-        Dir == other.Dir &&
-        PixelPerSec == other.PixelPerSec;
-
-    public override bool Equals(object? obj) => Equals(obj as KeyBindViewModel);
-
-    public override int GetHashCode() =>
-        HashCode.Combine(Keys.GetHashCode(), Dir.GetHashCode(), PixelPerSec.GetHashCode());
 }

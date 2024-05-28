@@ -54,7 +54,7 @@ partial class KeyBindListViewModel : ObservableObject
             {
                 Keys = new(value.Keys),
                 Dir = turnSetting.Dir,
-                PixelPerSec = turnSetting.PixelPerSec
+                PixelPerMs = turnSetting.PixelPerMs
             };
         }
     }
@@ -71,7 +71,7 @@ partial class KeyBindListViewModel : ObservableObject
         {
             Keys = keys,
             Dir = turnSetting.Dir,
-            PixelPerSec = turnSetting.PixelPerSec,
+            PixelPerMs = turnSetting.PixelPerMs,
         };
 
         var res = m_keyBinds.TryAdd(keys, vm) ? vm : null;
@@ -119,7 +119,7 @@ partial class KeyBindListViewModel : ObservableObject
         {
             Keys = keyBind.Keys,
             Dir = turnSetting.Dir,
-            PixelPerSec = turnSetting.PixelPerSec
+            PixelPerMs = turnSetting.PixelPerMs
         };
 
         KeyBindEdit.AddCommand.NotifyCanExecuteChanged();

@@ -36,29 +36,31 @@ sealed partial class TurnAction : IDisposable
 
         set
         {
-            m_pixelPerPeriod = m_pixelPerPeriod / m_timer.Period.TotalSeconds * value.TotalSeconds;
+            m_pixelPerPeriod = m_pixelPerPeriod * (value / m_timer.Period);
             m_timer.Period = value;
             m_log.LogInformation("Turn Interval changed to {ms} ms", value.Milliseconds);
         }
     }
 
-    double m_pixelPerSec = 1;
+    double m_pixelPerMs = 1;
 
-    public double PixelPerSec
+    public double PixelPerMs
     {
-        get => m_pixelPerSec;
+        get => m_pixelPerMs;
 
         set
         {
-            m_pixelPerPeriod = m_pixelPerPeriod / m_pixelPerSec * value;
-            m_pixelPerSec = value;
-            m_log.LogInformation("Changed to {p} Pixels/Sec", PixelPerSec);
+            m_pixelPerPeriod = m_pixelPerPeriod / m_pixelPerMs * value;
+            m_pixelPerMs = value;
+            m_log.LogInformation("Changed to {p} Pixels/Sec", PixelPerMs);
         }
     }
 
     double m_pixelPerPeriod;
 
     readonly List<TurnInstruction> m_directions = [];
+
+    readonly IDisposable m_mouseMoveDisposable;
 
     TurnInstruction m_direction;
 
@@ -116,7 +118,15 @@ sealed partial class TurnAction : IDisposable
 
     public TurnAction()
     {
-        m_pixelPerPeriod = m_pixelPerSec * m_timer.Period.TotalSeconds;
+        var inputAction = App.GetRequiredService<InputAction>();
+
+        m_pixelPerPeriod = m_pixelPerMs * m_timer.Period.TotalSeconds;
+        m_mouseMoveDisposable = inputAction.MouseMove.Subscribe(
+            point =>
+            {
+            }
+        );
+
         Task.Run(Tick);
     }
 

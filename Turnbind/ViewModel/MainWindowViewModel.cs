@@ -47,7 +47,7 @@ internal partial class MainWindowViewModel : ObservableValidator, IDisposable
         m_turnAction = turnAction;
 
         m_disposables = [
-            m_inputAction.Input.Subscribe(OnInput),
+            m_inputAction.KeysInput.Subscribe(OnInput),
             m_windowAction.Focused.Subscribe(_ => OnPropertyChanged(nameof(IsWindowFocused)))
         ];
 

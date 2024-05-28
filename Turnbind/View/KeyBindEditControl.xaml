@@ -25,7 +25,7 @@
 
         <Grid VerticalAlignment="Center" Margin="10">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="150" />
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
 
@@ -36,23 +36,32 @@
                 <RowDefinition />
             </Grid.RowDefinitions>
 
-            <ui:TextBlock Margin="5" Text="Direction:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" />
+            <ui:TextBlock Margin="5" Text="Direction:" VerticalAlignment="Center" HorizontalAlignment="Center"
+                    Grid.Row="0" Grid.Column="0" />
 
             <ComboBox BorderBrush="Gray" BorderThickness="0.5" Margin="5" VerticalAlignment="Center"
                     SelectedValue="{Binding Path=KeyBind.Dir}" Grid.Row="0" Grid.Column="1"
                     ItemsSource="{Binding Source={StaticResource directionValues}}" />
 
-            <ui:TextBlock Margin="5" Text="Binding keys:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" />
+            <ui:TextBlock Margin="5" Text="Binding keys:" VerticalAlignment="Center" HorizontalAlignment="Center"
+                    Grid.Row="1" Grid.Column="0" />
 
             <ui:TextBox Margin="5" x:Name="InputKeysTextBox" IsReadOnly="True" BorderThickness="0.5"
                     VerticalContentAlignment="Center" BorderBrush=" Gray"
                     Text="{Binding Path=KeyBind.KeysString, Mode=OneWay}" GotFocus="InputKeysTextBoxFocus"
                     LostFocus="InputKeysTextBoxLostFocus" Grid.Row="1" Grid.Column="1" />
 
-            <ui:TextBlock Margin="5" Text="Pixel/Second:" VerticalAlignment="Center" Grid.Row="2" Grid.Column="0" />
+            <ui:TextBlock Margin="5" Text="Pixel/Milisecond:" VerticalAlignment="Center" HorizontalAlignment="Center"
+                    Grid.Row="2" Grid.Column="0" />
 
             <ui:TextBox Margin="5" BorderThickness="0.5" VerticalContentAlignment="Center" BorderBrush="Gray"
-                    Text="{Binding Path=KeyBind.PixelPerSecString, ValidatesOnNotifyDataErrors=True}" Grid.Row="2" Grid.Column="1" />
+                    Text="{Binding Path=KeyBind.PixelPerMs}" Grid.Row="2" Grid.Column="1" />
+
+            <ui:TextBlock Margin="5" Text="Mouse Move Factor:" VerticalAlignment="Center" HorizontalAlignment="Center"
+                    Grid.Row="3" Grid.Column="0" />
+
+            <ui:TextBox Margin="5" BorderThickness="0.5" VerticalContentAlignment="Center" BorderBrush="Gray"
+                    Text="{Binding Path=KeyBind.MouseMoveFactor}" Grid.Row="3" Grid.Column="1" />
         </Grid>
     </DockPanel>
 </UserControl>

@@ -289,7 +289,7 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
             new()
             {
                 Dir = setting.Dir,
-                PixelPerSec = setting.PixelPerSec
+                PixelPerMs = setting.PixelPerMs
             }
         );
 

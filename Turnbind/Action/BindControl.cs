@@ -50,10 +50,11 @@ class BindControl : IDisposable
             void OnFocuse(bool focused)
             {
                 var index = -1;
+                var turnAction = App.GetRequiredService<TurnAction>();
+                var inputAction = App.GetRequiredService<InputAction>();
 
                 void OnActive(bool active)
                 {
-                    var turnAction = App.GetRequiredService<TurnAction>();
 
                     if (!active)
                     {
@@ -62,7 +63,7 @@ class BindControl : IDisposable
                     }
 
                     index = turnAction.InputDirection(m_dir);
-                    turnAction.PixelPerSec = Setting.PixelPerSec;
+                    turnAction.PixelPerMs = Setting.PixelPerMs;
                 }
 
                 if (!focused)
@@ -75,7 +76,7 @@ class BindControl : IDisposable
 
                 if (focusedDisposable is { }) return;
 
-                focusedDisposable = App.GetRequiredService<InputAction>().SubscribeKeys(Keys).Subscribe(OnActive);
+                focusedDisposable = inputAction.SubscribeKeys(Keys).Subscribe(OnActive);
             }
 
             m_disposble = new CompositeDisposable()

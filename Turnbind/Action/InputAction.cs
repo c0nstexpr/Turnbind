@@ -14,17 +14,6 @@ public sealed partial class InputAction : IDisposable
 {
     readonly ILogger<InputAction> m_logger = App.GetRequiredService<ILogger<InputAction>>();
 
-    public record struct KeyState(InputKey Key, bool Pressed);
-
-    public KeyState LatestKeyState { get; private set; }
-
-    readonly Dictionary<InputKey, bool> m_pressedKeys =
-        Enum.GetValues<InputKey>().Distinct().ToDictionary(k => k, _ => false);
-
-    readonly Subject<KeyState> m_input = new();
-
-    public IObservable<KeyState> Input => m_input;
-
     delegate nint HookProc(int nCode, nint wParam, nint lParam);
 
     [LibraryImport(
@@ -47,6 +36,39 @@ public sealed partial class InputAction : IDisposable
     [LibraryImport("user32", SetLastError = true)]
     private static partial short GetKeyState(InputKey nVirtKey);
 
+    readonly nint m_keyboardHook;
+
+    readonly nint m_mouseHook;
+
+    readonly HookProc m_keyboardProc;
+
+    readonly HookProc m_mouseProc;
+
+    SpinLock m_spinLock = new();
+
+    public InputAction()
+    {
+        m_keyboardProc = OnKeyboard;
+        m_mouseProc = OnMouse;
+
+        var hMod = GetModuleHandle((string?)Process.GetCurrentProcess().MainModule!.ModuleName);
+
+        m_keyboardHook = SetWindowsHookEx(13, m_keyboardProc, hMod, 0);
+        m_mouseHook = SetWindowsHookEx(14, m_mouseProc, hMod, 0);
+    }
+
+    #region Keyboard
+    public record struct KeyState(InputKey Key, bool Pressed);
+
+    public KeyState LatestKeyState { get; private set; }
+
+    readonly Dictionary<InputKey, bool> m_pressedKeys =
+        Enum.GetValues<InputKey>().Distinct().ToDictionary(k => k, _ => false);
+
+    readonly Subject<KeyState> m_keysInput = new();
+
+    public IObservable<KeyState> KeysInput => m_keysInput;
+
     static readonly IReadOnlyList<InputKey> m_shiftKeys = new InputKey[] {
         InputKey.Shift,
         InputKey.ShiftKey,
@@ -64,23 +86,6 @@ public sealed partial class InputAction : IDisposable
         InputKey.LWin,
         InputKey.RWin
     }.Append(m_shiftKeys).Distinct().ToArray();
-
-    readonly nint m_keyboardHook;
-
-    readonly HookProc m_hookProc;
-
-    SpinLock m_spinLock = new();
-
-    public InputAction()
-    {
-        m_hookProc = OnKeyboard;
-        m_keyboardHook = SetWindowsHookEx(
-            13,
-            m_hookProc,
-            GetModuleHandle(Process.GetCurrentProcess().MainModule!.ModuleName),
-            0
-        );
-    }
 
     enum KeyEvent
     {
@@ -105,7 +110,7 @@ public sealed partial class InputAction : IDisposable
         m_logger.LogInformation("Modifier key released: {modifier}", modifier);
 
         m_pressedKeys[modifier] = false;
-        m_input.OnNext(new(modifier, false));
+        m_keysInput.OnNext(new(modifier, false));
     }
 
     void UpdateModifiers(InputKey currentKey) =>
@@ -123,6 +128,39 @@ public sealed partial class InputAction : IDisposable
         return CallNextHookEx(nint.Zero, nCode, wParam, lParam);
     }
 
+    void OnKey(KBDLLHOOKSTRUCT keyPtr, bool pressed)
+    {
+        var lockTaken = false;
+
+        try
+        {
+            m_spinLock.TryEnter(0, ref lockTaken);
+
+            if (!lockTaken || m_keysInput.IsDisposed) return;
+
+            var input = keyPtr.VkCode;
+
+            UpdateModifiers(input); // Modifier key released event need to be handled manually
+
+            LatestKeyState = new(input, pressed);
+
+            if (m_pressedKeys[input] == pressed) return;
+
+            m_logger.LogInformation(
+                "Key {pressedStr} {input}",
+                pressed ? "pressed" : "released",
+                input
+            );
+
+            m_keysInput.OnNext(LatestKeyState);
+            m_pressedKeys[input] = pressed;
+        }
+        finally
+        {
+            if (lockTaken) m_spinLock.Exit();
+        }
+    }
+
     public IObservable<bool> SubscribeKeys(InputKeys keys)
     {
         var count = keys.Count;
@@ -131,7 +169,7 @@ public sealed partial class InputAction : IDisposable
 
         var next = 0;
 
-        return m_input.Where(
+        return m_keysInput.Where(
             state =>
             {
                 var (key, pressed) = state;
@@ -159,42 +197,46 @@ public sealed partial class InputAction : IDisposable
             .Select(state => state.Pressed);
     }
 
-    void OnKey(KBDLLHOOKSTRUCT keyPtr, bool pressed)
+    #endregion
+
+    #region Mouse
+
+    readonly Subject<Point> m_mouseMove = new();
+
+    public IObservable<Point> MouseMove => m_mouseMove;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public class Point
     {
-        var lockTaken = false;
-
-        try
-        {
-            m_spinLock.TryEnter(0, ref lockTaken);
-
-            if (!lockTaken || m_input.IsDisposed) return;
-
-            var input = keyPtr.VkCode;
-
-            UpdateModifiers(input); // Modifier key released event need to be handled manually
-
-            LatestKeyState = new(input, pressed);
-
-            if (m_pressedKeys[input] == pressed) return;
-
-            m_logger.LogInformation(
-                "Key {pressedStr} {input}",
-                pressed ? "pressed" : "released",
-                input
-            );
-
-            m_input.OnNext(LatestKeyState);
-            m_pressedKeys[input] = pressed;
-        }
-        finally
-        {
-            if (lockTaken) m_spinLock.Exit();
-        }
+        public int X;
+        public int Y;
     }
+
+    [StructLayout(LayoutKind.Sequential)]
+    class MSLLHOOKSTRUCT
+    {
+        public Point? Pt;
+        public uint MouseData;
+        public uint Flags;
+        public uint Time;
+        public uint DwExtraInfo;
+    }
+
+    nint OnMouse(int nCode, nint wParam, nint lParam)
+    {
+        if (wParam != 0x0200) return CallNextHookEx(nint.Zero, nCode, wParam, lParam);
+
+        m_mouseMove.OnNext(Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam)!.Pt!);
+
+        return CallNextHookEx(nint.Zero, nCode, wParam, lParam);
+    }
+
+    #endregion
 
     public void Dispose()
     {
         UnhookWindowsHookEx(m_keyboardHook);
+        UnhookWindowsHookEx(m_mouseHook);
 
         {
             var lockTaken = false;
@@ -203,7 +245,7 @@ public sealed partial class InputAction : IDisposable
             if (!lockTaken) return;
         }
 
-        m_input.Dispose();
+        m_keysInput.Dispose();
         m_spinLock.Exit();
     }
 }

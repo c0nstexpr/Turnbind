@@ -18,16 +18,17 @@
                         <ui:GridViewColumn Width="Auto" Header="keys"
                                 DisplayMemberBinding="{Binding KeysString, Mode=OneWay}" />
                         <ui:GridViewColumn Width="Auto" Header="p/s"
-                                DisplayMemberBinding="{Binding PixelPerSec, Mode=OneWay}" />
+                                DisplayMemberBinding="{Binding PixelPerMs, Mode=OneWay}" />
                         <ui:GridViewColumn Width="Auto" Header="dir" DisplayMemberBinding="{Binding Dir, Mode=OneWay}" />
+                        <ui:GridViewColumn Width="Auto" Header="factor" DisplayMemberBinding="{Binding MouseMoveFactor, Mode=OneWay}" />
                     </ui:GridView.Columns>
                 </ui:GridView>
             </ui:ListView.View>
 
             <d:ListView.ItemsSource>
                 <x:Array Type="{x:Type viewModel:KeyBindViewModel}">
-                    <viewModel:KeyBindViewModel Dir="Left" PixelPerSec="5" />
-                    <viewModel:KeyBindViewModel Dir="Right" PixelPerSec="10" />
+                    <viewModel:KeyBindViewModel Dir="Left" PixelPerMs="5" />
+                    <viewModel:KeyBindViewModel Dir="Right" PixelPerMs="10" />
                 </x:Array>
             </d:ListView.ItemsSource>
         </ui:ListView>

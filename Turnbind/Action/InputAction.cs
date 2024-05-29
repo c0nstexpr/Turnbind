@@ -1,60 +1,44 @@
 ﻿using System.Diagnostics;
+using System.Drawing;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 
 using Microsoft.Extensions.Logging;
-
-using MoreLinq;
+using Microsoft.Win32.SafeHandles;
 
 using Turnbind.Model;
+
+using Windows.Win32;
+using Windows.Win32.Foundation;
+using Windows.Win32.UI.WindowsAndMessaging;
 namespace Turnbind.Action;
 
 public sealed partial class InputAction : IDisposable
 {
     readonly ILogger<InputAction> m_logger = App.GetRequiredService<ILogger<InputAction>>();
 
-    delegate nint HookProc(int nCode, nint wParam, nint lParam);
+    readonly SafeProcessHandle m_moduleHandle = new(Process.GetCurrentProcess().Handle, false);
 
-    [LibraryImport(
-        "kernel32",
-        EntryPoint = "GetModuleHandleW",
-        SetLastError = true,
-        StringMarshalling = StringMarshalling.Utf16
-    )]
-    private static partial nint GetModuleHandle(string? lpModuleName);
+    readonly UnhookWindowsHookExSafeHandle m_keyboardHook;
 
-    [LibraryImport("user32", SetLastError = true, EntryPoint = "SetWindowsHookExW")]
-    private static partial nint SetWindowsHookEx(int idHook, HookProc lpfn, nint hMod, int dwThreadId);
+    readonly UnhookWindowsHookExSafeHandle m_mouseHook;
 
-    [LibraryImport("user32", SetLastError = true)]
-    private static partial int UnhookWindowsHookEx(nint hhk);
+    readonly HOOKPROC m_keyboardProc;
 
-    [LibraryImport("user32", SetLastError = true)]
-    private static partial nint CallNextHookEx(nint hhk, int nCode, nint wParam, nint lParam);
+    readonly HOOKPROC m_mouseProc;
 
-    [LibraryImport("user32", SetLastError = true)]
-    private static partial short GetKeyState(InputKey nVirtKey);
+    SpinLock m_keyboardLock = new();
 
-    readonly nint m_keyboardHook;
-
-    readonly nint m_mouseHook;
-
-    readonly HookProc m_keyboardProc;
-
-    readonly HookProc m_mouseProc;
-
-    SpinLock m_spinLock = new();
+    SpinLock m_mouseLock = new();
 
     public InputAction()
     {
         m_keyboardProc = OnKeyboard;
         m_mouseProc = OnMouse;
 
-        var hMod = GetModuleHandle((string?)Process.GetCurrentProcess().MainModule!.ModuleName);
-
-        m_keyboardHook = SetWindowsHookEx(13, m_keyboardProc, hMod, 0);
-        m_mouseHook = SetWindowsHookEx(14, m_mouseProc, hMod, 0);
+        m_keyboardHook = PInvoke.SetWindowsHookEx(WINDOWS_HOOK_ID.WH_KEYBOARD_LL, m_keyboardProc, m_moduleHandle, 0);
+        m_mouseHook = PInvoke.SetWindowsHookEx(WINDOWS_HOOK_ID.WH_MOUSE_LL, m_mouseProc, m_moduleHandle, 0);
     }
 
     #region Keyboard
@@ -80,52 +64,33 @@ public sealed partial class InputAction : IDisposable
         InputKey.RMenu,
     }.Distinct().ToArray();
 
-    public static readonly IReadOnlyList<InputKey> ModifierKeys = new InputKey[] {
+    public static readonly IReadOnlySet<InputKey> ModifierKeys = new InputKey[] {
         InputKey.LControlKey,
         InputKey.RControlKey,
         InputKey.LWin,
         InputKey.RWin
-    }.Append(m_shiftKeys).Distinct().ToArray();
+    }.Append(m_shiftKeys).Distinct().ToHashSet();
 
-    enum KeyEvent
+    void UpdateModifiers(InputKey currentKey)
     {
-        WM_KEYDOWN = 0x100,
-        WM_KEYUP = 0x101,
-        WM_SYSKEYUP = 0x104,
-        WM_SYSKEYDOWN = 0x105
+        foreach (var k in from k in ModifierKeys where currentKey != k && PInvoke.GetKeyState((int)k) >= 0 && m_pressedKeys[k] select k)
+        {
+            m_logger.LogInformation("Modifier key released: {modifier}", k);
+
+            m_pressedKeys[k] = false;
+            m_keysInput.OnNext(new(k, false));
+        }
     }
 
-    [StructLayout(LayoutKind.Sequential)]
-    class KBDLLHOOKSTRUCT
+    LRESULT OnKeyboard(int code, WPARAM wParam, LPARAM lParam)
     {
-        public InputKey VkCode;
-        public int ScanCode;
-        public int Flags;
-        public uint Time;
-        public nuint DwExtraInfo;
-    }
-
-    void UpdateModifier(InputKey modifier)
-    {
-        m_logger.LogInformation("Modifier key released: {modifier}", modifier);
-
-        m_pressedKeys[modifier] = false;
-        m_keysInput.OnNext(new(modifier, false));
-    }
-
-    void UpdateModifiers(InputKey currentKey) =>
-        ModifierKeys.Where(k => currentKey != k && GetKeyState(k) >= 0 && m_pressedKeys[k])
-            .ForEach(UpdateModifier);
-
-    nint OnKeyboard(int nCode, nint wParam, nint lParam)
-    {
-        var e = (KeyEvent)wParam;
+        var e = wParam.Value;
         var kbd = Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam)!;
 
-        if (e is KeyEvent.WM_KEYDOWN or KeyEvent.WM_SYSKEYDOWN) OnKey(kbd, true);
-        else if (e is KeyEvent.WM_KEYUP or KeyEvent.WM_SYSKEYUP) OnKey(kbd, false);
+        if (e is PInvoke.WM_KEYDOWN or PInvoke.WM_SYSKEYDOWN) OnKey(kbd, true);
+        else if (e is PInvoke.WM_KEYUP or PInvoke.WM_SYSKEYUP) OnKey(kbd, false);
 
-        return CallNextHookEx(nint.Zero, nCode, wParam, lParam);
+        return PInvoke.CallNextHookEx(HHOOK.Null, code, wParam, lParam);
     }
 
     void OnKey(KBDLLHOOKSTRUCT keyPtr, bool pressed)
@@ -134,11 +99,11 @@ public sealed partial class InputAction : IDisposable
 
         try
         {
-            m_spinLock.TryEnter(0, ref lockTaken);
+            m_keyboardLock.Enter(ref lockTaken);
 
             if (!lockTaken || m_keysInput.IsDisposed) return;
 
-            var input = keyPtr.VkCode;
+            var input = (InputKey)keyPtr.vkCode;
 
             UpdateModifiers(input); // Modifier key released event need to be handled manually
 
@@ -157,7 +122,7 @@ public sealed partial class InputAction : IDisposable
         }
         finally
         {
-            if (lockTaken) m_spinLock.Exit();
+            if (lockTaken) m_keyboardLock.Exit();
         }
     }
 
@@ -201,51 +166,36 @@ public sealed partial class InputAction : IDisposable
 
     #region Mouse
 
-    readonly Subject<Point> m_mouseMove = new();
+    readonly BehaviorSubject<Point> m_mouseMove = new(default);
+
+    public Point Point => m_mouseMove.Value;
 
     public IObservable<Point> MouseMove => m_mouseMove;
 
-    [StructLayout(LayoutKind.Sequential)]
-    public class Point
+    LRESULT OnMouse(int code, WPARAM wParam, LPARAM lParam)
     {
-        public int X;
-        public int Y;
-    }
+        if (wParam != PInvoke.WM_MOUSEMOVE) return PInvoke.CallNextHookEx(HHOOK.Null, code, wParam, lParam);
 
-    [StructLayout(LayoutKind.Sequential)]
-    class MSLLHOOKSTRUCT
-    {
-        public Point? Pt;
-        public uint MouseData;
-        public uint Flags;
-        public uint Time;
-        public uint DwExtraInfo;
-    }
+        var lockTaken = false;
 
-    nint OnMouse(int nCode, nint wParam, nint lParam)
-    {
-        if (wParam != 0x0200) return CallNextHookEx(nint.Zero, nCode, wParam, lParam);
+        try
+        {
+            m_mouseLock.Enter(ref lockTaken);
+            m_mouseMove.OnNext(Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam).pt);
+        }
+        finally
+        {
+            if (lockTaken) m_mouseLock.Exit();
+        }
 
-        m_mouseMove.OnNext(Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam)!.Pt!);
-
-        return CallNextHookEx(nint.Zero, nCode, wParam, lParam);
+        return PInvoke.CallNextHookEx(HHOOK.Null, code, wParam, lParam);
     }
 
     #endregion
 
     public void Dispose()
     {
-        UnhookWindowsHookEx(m_keyboardHook);
-        UnhookWindowsHookEx(m_mouseHook);
-
-        {
-            var lockTaken = false;
-            m_spinLock.TryEnter(ref lockTaken);
-
-            if (!lockTaken) return;
-        }
-
-        m_keysInput.Dispose();
-        m_spinLock.Exit();
+        m_keyboardHook.Dispose();
+        m_mouseHook.Dispose();
     }
 }

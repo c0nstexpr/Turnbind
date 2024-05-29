@@ -3,8 +3,14 @@ using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Win32.SafeHandles;
 
 using Turnbind.Helper;
+
+using Windows.Win32;
+using Windows.Win32.Foundation;
+using Windows.Win32.UI.Accessibility;
+using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Turnbind;
 
@@ -14,53 +20,26 @@ partial class ProcessWindowAction : IDisposable
 
     public string? ProcessName { get; set; }
 
-    readonly Dictionary<nint, Dictionary<int, Process>> m_processes = [];
+    readonly Dictionary<HWND, Dictionary<int, Process>> m_processes = [];
 
     readonly BehaviorSubject<bool> m_focused = new(false);
 
     public BehaviorObservable<bool> Focused { get; }
 
-    readonly nint m_focusedHook;
-    readonly WinEventDelegate m_focusedCallback;
-
-    delegate void WinEventDelegate(
-        nint hWinEventHook,
-        uint eventType,
-        nint hwnd,
-        int idObject,
-        int idChild,
-        uint dwEventThread,
-        uint dwmsEventTime
-    );
-
-    [LibraryImport("user32")]
-    private static partial nint SetWinEventHook(
-        uint eventMin,
-        uint eventMax,
-        nint hmodWinEventProc,
-        WinEventDelegate lpfnWinEventProc,
-        uint idProcess,
-        uint idThread,
-        uint dwFlags
-    );
-
-    [LibraryImport("user32")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool UnhookWinEvent(nint hWinEventHook);
+    readonly UnhookWinEventSafeHandle m_focusedHook;
+    readonly WINEVENTPROC m_focusedCallback;
 
     SpinLock m_spinLock = new();
 
     public ProcessWindowAction()
     {
-        const uint EVENT_SYSTEM_FOREGROUND = 0x0003;
-
         Focused = m_focused.AsObservable();
         m_focusedCallback = OnFocused;
 
-        m_focusedHook = SetWinEventHook(
-            EVENT_SYSTEM_FOREGROUND,
-            EVENT_SYSTEM_FOREGROUND,
-            0,
+        m_focusedHook = PInvoke.SetWinEventHook(
+            PInvoke.EVENT_SYSTEM_FOREGROUND,
+            PInvoke.EVENT_SYSTEM_FOREGROUND,
+            null,
             m_focusedCallback,
             0,
             0,
@@ -69,12 +48,12 @@ partial class ProcessWindowAction : IDisposable
     }
 
     void OnFocused(
-        nint hWinEventHook,
-        uint eventType,
-        nint hwnd,
+        HWINEVENTHOOK hWinEventHook,
+        uint @event,
+        HWND hwnd,
         int idObject,
         int idChild,
-        uint dwEventThread,
+        uint idEventThread,
         uint dwmsEventTime
     )
     {
@@ -104,13 +83,13 @@ partial class ProcessWindowAction : IDisposable
         }
     }
 
-    bool ContainsWin(nint hwnd)
+    bool ContainsWin(HWND hwnd)
     {
         if (m_processes.ContainsKey(hwnd)) return true;
 
         foreach (var p in Process.GetProcessesByName(ProcessName))
         {
-            var handle = p.MainWindowHandle;
+            HWND handle = new(p.MainWindowHandle);
 
             if (!m_processes.TryGetValue(handle, out var processDic))
             {
@@ -139,7 +118,7 @@ partial class ProcessWindowAction : IDisposable
 
     public void Dispose()
     {
-        UnhookWinEvent(m_focusedHook);
+        m_focusedHook.Dispose();
 
         {
             var lockTaken = false;

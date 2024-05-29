@@ -1,32 +1,27 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.DirectoryServices.ActiveDirectory;
+using System.Runtime.InteropServices;
 
 using Microsoft.Extensions.Logging;
+
+using Windows.Win32;
+using Windows.Win32.UI.Input.KeyboardAndMouse;
 
 namespace Turnbind.Action;
 
 sealed partial class TurnAction : IDisposable
 {
-    [StructLayout(LayoutKind.Sequential)]
-    private struct MouseInput
-    {
-        public int dx;
-        public int dy;
-        public uint mouseData;
-        public uint dwFlags;
-        public uint time;
-        public nint dwExtraInfo;
-    }
+    static readonly int m_inputTypeSize = Marshal.SizeOf(typeof(INPUT));
 
-    private struct Input
-    {
-        public uint type;
-        public MouseInput mi;
-
-        public static readonly int Size = Marshal.SizeOf(typeof(Input));
-    }
-
-    [LibraryImport("user32", SetLastError = true)]
-    private static partial uint SendInput(uint inputs, [In] Input[] input, int size);
+    readonly INPUT[] m_inputs = [
+        new()
+        {
+            type = INPUT_TYPE.INPUT_MOUSE,
+            Anonymous = new()
+            {
+                mi = new() { dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE }
+            }
+        }
+    ];
 
     readonly ILogger<TurnAction> m_log = App.GetRequiredService<ILogger<TurnAction>>();
 
@@ -58,33 +53,117 @@ sealed partial class TurnAction : IDisposable
 
     double m_pixelPerPeriod;
 
-    readonly List<TurnInstruction> m_directions = [];
+    double m_remain;
 
-    readonly IDisposable m_mouseMoveDisposable;
+    double m_anchorX;
+
+    readonly List<TurnInstruction> m_directions = [];
 
     TurnInstruction m_direction;
 
     public TurnInstruction Direction
     {
-        get => m_direction;
-        
+        get
+        {
+            TurnInstruction dir;
+            var token = false;
+
+            try
+            {
+                m_lock.Enter(ref token);
+                dir = m_direction;
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                if (token) m_lock.Exit();
+            }
+
+            return dir;
+        }
+
         private set
         {
+            var token = false;
+
+            if (value == m_direction) return;
+
             m_direction = value;
-
-            switch (value)
+            try
             {
-                case TurnInstruction.Left:
-                    if (m_pixelPerPeriod > 0) m_pixelPerPeriod = -m_pixelPerPeriod;
-                    break;
+                m_lock.Enter(ref token);
 
-                case TurnInstruction.Right:
-                    if (m_pixelPerPeriod < 0) m_pixelPerPeriod = -m_pixelPerPeriod;
-                    break;
+                void Reset()
+                {
+                    m_remain = 0;
+                    m_anchorX = m_inputAction.Point.X;
+                }
+
+                switch (value)
+                {
+                    case TurnInstruction.Left:
+                        if (m_pixelPerPeriod > 0) m_pixelPerPeriod = -m_pixelPerPeriod;
+                        Reset();
+                        break;
+
+                    case TurnInstruction.Right:
+                        if (m_pixelPerPeriod < 0) m_pixelPerPeriod = -m_pixelPerPeriod;
+                        Reset();
+                        break;
+                }
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                if (token) m_lock.Exit();
             }
 
             m_log.LogInformation("Turn action changed to {Dir}", value);
         }
+    }
+
+    readonly PeriodicTimer m_timer = new(TimeSpan.FromMilliseconds(1));
+
+    ref MOUSEINPUT m_mouseInput => ref m_inputs[0].Anonymous.mi;
+
+    public void InputDeltaX(int dx)
+    {
+        var token = false;
+
+        try
+        {
+            m_lock.Enter(ref token);
+            m_mouseInput.dx = dx;
+            m_remain = m_pixelPerPeriod + m_remain - dx;
+        }
+        catch
+        {
+            throw;
+        }
+        finally
+        {
+            if (token) m_lock.Exit();
+        }
+
+        PInvoke.SendInput(m_inputs, m_inputTypeSize);
+    }
+
+    readonly InputAction m_inputAction = App.GetRequiredService<InputAction>();
+
+    public double MouseFactor { get; set; }
+
+    SpinLock m_lock;
+
+    public TurnAction()
+    {
+        m_pixelPerPeriod = m_pixelPerMs * m_timer.Period.TotalSeconds;
+        Task.Run(Tick);
     }
 
     public int InputDirection(TurnInstruction value)
@@ -114,43 +193,25 @@ sealed partial class TurnAction : IDisposable
         Direction = m_directions.Count == 0 ? TurnInstruction.Stop : m_directions[^1];
     }
 
-    readonly PeriodicTimer m_timer = new(TimeSpan.FromMilliseconds(1));
-
-    public TurnAction()
-    {
-        var inputAction = App.GetRequiredService<InputAction>();
-
-        m_pixelPerPeriod = m_pixelPerMs * m_timer.Period.TotalSeconds;
-        m_mouseMoveDisposable = inputAction.MouseMove.Subscribe(
-            point =>
-            {
-            }
-        );
-
-        Task.Run(Tick);
-    }
-
     async void Tick()
     {
-        Input[] inputs = [new() { mi = new() { dwFlags = 0x0001 } }];
-        var remain = 0.0;
-
         while (await m_timer.WaitForNextTickAsync())
-            if (Direction == TurnInstruction.Stop)
+        {
+            var token = false;
+
+            try
             {
-                remain = 0;
-                SpinWait.SpinUntil(() => Direction != TurnInstruction.Stop);
+                m_lock.Enter(ref token);
+
+                if (Direction == TurnInstruction.Stop)
+                    SpinWait.SpinUntil(() => Direction != TurnInstruction.Stop);
+                else InputDeltaX((int)(m_pixelPerPeriod + m_remain + MouseFactor * (m_inputAction.Point.X - m_anchorX)));
             }
-            else
+            finally
             {
-                var intP = (int)(m_pixelPerPeriod + remain);
-
-                remain = m_pixelPerPeriod + remain - intP;
-
-                inputs[0].mi.dx = intP;
-
-                SendInput(1, inputs, Input.Size);
+                if (token) m_lock.Exit();
             }
+        }
     }
 
     public void Dispose() => m_timer.Dispose();

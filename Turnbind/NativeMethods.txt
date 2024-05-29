@@ -1,0 +1,16 @@
+﻿SetWindowsHookEx
+
+WM_*
+KBDLLHOOKSTRUCT
+
+MSLLHOOKSTRUCT
+
+CallNextHookEx
+
+GetKeyState
+
+SetWinEventHook
+
+EVENT_*
+
+SendInput

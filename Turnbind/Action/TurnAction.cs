@@ -8,6 +8,8 @@ sealed partial class TurnAction : IDisposable
 {
     readonly ILogger<TurnAction> m_log = App.GetRequiredService<ILogger<TurnAction>>();
 
+    readonly TurnTickAction m_action = new();
+
     public TimeSpan Interval
     {
         get => m_timer.Period;
@@ -49,7 +51,6 @@ sealed partial class TurnAction : IDisposable
             m_log.LogInformation("Turn action changed to {Dir}", value);
         }
     }
-
 
     public double MouseFactor { get; set; }
 

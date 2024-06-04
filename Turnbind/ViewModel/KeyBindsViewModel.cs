@@ -284,15 +284,7 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
 
         var setting = keyBind.TurnSetting;
 
-        m_settings.Profiles[profileName].Add(
-            keys,
-            new()
-            {
-                Dir = setting.Dir,
-                PixelPerMs = setting.PixelPerMs
-            }
-        );
-
+        m_settings.Profiles[profileName].Add(keys, setting);
         control.Add(keys, setting);
 
         m_logger.LogInformation(
@@ -309,10 +301,8 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
 
         m_settings.Profiles[profileName].Remove(keys);
 
-        {
-            if (m_profileControls.TryGetValue(profileName, out var control))
-                control.Remove(keys);
-        }
+        if (m_profileControls.TryGetValue(profileName, out var control))
+            control.Remove(keys);
 
         m_logger.LogInformation(
             "Remove keybind {KeysString} from profile {ProfileName}",
@@ -327,10 +317,8 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
         var profileName = CurrentEditProfileName!;
         var turnSetting = keyBind.TurnSetting;
 
-        {
-            if (m_profileControls.TryGetValue(profileName, out var control))
-                control.Update(keys, turnSetting);
-        }
+        if (m_profileControls.TryGetValue(profileName, out var control))
+            control.Update(keys, turnSetting);
 
         m_settings.Profiles[profileName][keys] = turnSetting;
 

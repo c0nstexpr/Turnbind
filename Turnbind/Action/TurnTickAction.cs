@@ -3,6 +3,7 @@ using Windows.Win32.UI.Input.KeyboardAndMouse;
 using System.Runtime.InteropServices;
 
 namespace Turnbind.Action;
+
 sealed class TurnTickAction : IDisposable
 {
     #region Win32 Input

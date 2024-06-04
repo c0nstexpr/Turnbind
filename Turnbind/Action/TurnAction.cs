@@ -1,6 +1,4 @@
-﻿
-using Microsoft.Extensions.Logging;
-
+﻿using Microsoft.Extensions.Logging;
 
 namespace Turnbind.Action;
 
@@ -12,11 +10,11 @@ sealed partial class TurnAction : IDisposable
 
     public TimeSpan Interval
     {
-        get => m_timer.Period;
+        get => m_action.Interval;
 
         set
         {
-            m_timer.Period = value;
+            m_action.Interval = value;
             m_log.LogInformation("Turn Interval changed to {ms} ms", value.Milliseconds);
         }
     }
@@ -30,31 +28,33 @@ sealed partial class TurnAction : IDisposable
         set
         {
             m_pixelPerMs = value;
+            m_action.PixelSpeed = value * Interval.TotalMilliseconds;
             m_log.LogInformation("Changed to {p} Pixels/Sec", PixelPerMs);
         }
     }
 
     readonly List<TurnInstruction> m_directionQueue = [];
 
-    TurnInstruction m_direction;
-
     public TurnInstruction Direction
     {
-        get => m_direction;
+        get => m_action.Instruction;
 
         private set
         {
-            if (value == m_direction) return;
-
-            m_direction = value;
-
+            m_action.Instruction = value;
             m_log.LogInformation("Turn action changed to {Dir}", value);
         }
     }
 
-    public double MouseFactor { get; set; }
-
-    public TurnAction() => Task.Run(Tick);
+    public double MouseFactor
+    {
+        get => m_action.MouseFactor;
+        set
+        {
+            m_action.MouseFactor = value;
+            m_log.LogInformation("Mouse factor chaged to {factor}", value);
+        }
+    }
 
     public int InputDirection(TurnInstruction value)
     {
@@ -83,6 +83,5 @@ sealed partial class TurnAction : IDisposable
         Direction = m_directionQueue.Count == 0 ? TurnInstruction.Stop : m_directionQueue[^1];
     }
 
-
-    public void Dispose() => m_timer.Dispose();
+    public void Dispose() => m_action.Dispose();
 }

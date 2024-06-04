@@ -23,6 +23,12 @@ class BindControl : IDisposable
                 TurnDirection.Right => TurnInstruction.Right,
                 _ => TurnInstruction.Stop
             };
+
+            if (Enable)
+            {
+                Enable = false;
+                Enable = true;
+            }
         }
     }
 
@@ -64,6 +70,7 @@ class BindControl : IDisposable
 
                     index = turnAction.InputDirection(m_dir);
                     turnAction.PixelPerMs = Setting.PixelPerMs;
+                    turnAction.MouseFactor = Setting.MouseMoveFactor;
                 }
 
                 if (!focused)

@@ -48,14 +48,7 @@ partial class KeyBindListViewModel : ObservableObject
 
             if (value is null) return;
 
-            var turnSetting = value.TurnSetting;
-
-            KeyBindEdit.KeyBind = new()
-            {
-                Keys = new(value.Keys),
-                Dir = turnSetting.Dir,
-                PixelPerMs = turnSetting.PixelPerMs
-            };
+            KeyBindEdit.KeyBind = new() { Keys = new(value.Keys), TurnSetting = value.TurnSetting };
         }
     }
 
@@ -67,12 +60,7 @@ partial class KeyBindListViewModel : ObservableObject
 
     public KeyBindViewModel? Add(InputKeys keys, TurnSetting turnSetting)
     {
-        KeyBindViewModel vm = new()
-        {
-            Keys = keys,
-            Dir = turnSetting.Dir,
-            PixelPerMs = turnSetting.PixelPerMs,
-        };
+        KeyBindViewModel vm = new() { Keys = keys, TurnSetting = turnSetting };
 
         var res = m_keyBinds.TryAdd(keys, vm) ? vm : null;
 
@@ -115,12 +103,7 @@ partial class KeyBindListViewModel : ObservableObject
         var keyBind = m_keyBinds[Selected!.Keys];
         var turnSetting = KeyBindEdit.KeyBind.TurnSetting;
 
-        m_keyBinds[Selected!.Keys] = new()
-        {
-            Keys = keyBind.Keys,
-            Dir = turnSetting.Dir,
-            PixelPerMs = turnSetting.PixelPerMs
-        };
+        m_keyBinds[Selected!.Keys] = new() { Keys = keyBind.Keys, TurnSetting = turnSetting };
 
         KeyBindEdit.AddCommand.NotifyCanExecuteChanged();
         KeyBindEdit.ModifyCommand.NotifyCanExecuteChanged();

@@ -18,7 +18,7 @@ public sealed partial class InputAction : IDisposable
 {
     readonly ILogger<InputAction> m_logger = App.GetRequiredService<ILogger<InputAction>>();
 
-    readonly SafeProcessHandle m_moduleHandle = new(Process.GetCurrentProcess().Handle, false);
+    readonly FreeLibrarySafeHandle m_moduleHandle = PInvoke.GetModuleHandle(Process.GetCurrentProcess().MainModule!.ModuleName);
 
     readonly UnhookWindowsHookExSafeHandle m_keyboardHook;
 
@@ -197,5 +197,6 @@ public sealed partial class InputAction : IDisposable
     {
         m_keyboardHook.Dispose();
         m_mouseHook.Dispose();
+        m_moduleHandle.Dispose();
     }
 }

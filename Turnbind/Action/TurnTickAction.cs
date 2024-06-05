@@ -1,11 +1,14 @@
 ﻿using Windows.Win32;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.Logging;
 
 namespace Turnbind.Action;
 
 sealed class TurnTickAction : IDisposable
 {
+    readonly ILogger<TurnTickAction> m_log = App.GetRequiredService<ILogger<TurnTickAction>>();
+
     #region Win32 Input
 
     static readonly int m_inputTypeSize = Marshal.SizeOf(typeof(INPUT));
@@ -27,7 +30,7 @@ sealed class TurnTickAction : IDisposable
 
     #endregion
 
-    TurnInstruction m_instruction;
+    TurnInstruction m_instruction = TurnInstruction.Stop;
 
     public TurnInstruction Instruction
     {
@@ -36,20 +39,24 @@ sealed class TurnTickAction : IDisposable
         {
             if (m_instruction == value) return;
 
-            if (m_instruction == TurnInstruction.Stop)
+            if (value == TurnInstruction.Stop)
             {
-                m_timer.Change(default, Timeout.InfiniteTimeSpan);
+
+                m_timer.Change(TimeSpan.Zero, Timeout.InfiniteTimeSpan);
+                m_remain = 0;
+                m_instruction = TurnInstruction.Stop;
+
+                m_log.LogInformation("Stop ticking");
                 return;
             }
 
-            if (m_instruction == TurnInstruction.Stop)
-                m_timer.Change(default, m_interval);
-
-            m_remain = 0;
+            m_timer.Change(TimeSpan.Zero, Interval);
             m_anchorX = m_inputAction.Point.X;
             GetSpeed();
 
             m_instruction = value;
+
+            m_log.LogInformation("Set instruction {i}", m_instruction);
         }
     }
 
@@ -61,7 +68,14 @@ sealed class TurnTickAction : IDisposable
         set
         {
             m_interval = value;
-            m_timer.Change(default, value);
+
+            m_log.LogInformation("Set interval {i} ms", m_interval.TotalMicroseconds);
+
+            if (m_instruction != TurnInstruction.Stop)
+            { 
+                m_timer.Change(TimeSpan.Zero, value);
+                m_log.LogInformation("Set timer interval {i} ms", m_interval.TotalMicroseconds);
+            }
         }
     }
 
@@ -87,19 +101,21 @@ sealed class TurnTickAction : IDisposable
 
     readonly Timer m_timer;
 
-    public TurnTickAction() => m_timer = new Timer(TurnTick);
+    public TurnTickAction() => m_timer = new Timer(TurnTick, null, TimeSpan.Zero, Timeout.InfiniteTimeSpan);
 
     void GetSpeed() => m_speed = Instruction == TurnInstruction.Left ? PixelSpeed : -PixelSpeed;
 
     void TurnTick(object? state)
     {
         var dx = m_remain + m_speed + MouseFactor * (m_inputAction.Point.X - m_anchorX);
+        var input_dx = (int)dx;
 
-        m_mouseInput.dx = (int)dx;
+        m_mouseInput.dx = input_dx;
+        m_anchorX += input_dx;
+        m_remain = dx - input_dx;
 
-        m_remain = dx - m_mouseInput.dx;
-
-        PInvoke.SendInput(m_inputs, m_inputTypeSize);
+        if (PInvoke.SendInput(m_inputs, m_inputTypeSize) == 0)
+            m_log.LogWarning("Mouse move input was blocked");
     }
 
     public void Dispose() => m_timer.Dispose();

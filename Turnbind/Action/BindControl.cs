@@ -1,11 +1,15 @@
 ﻿using System.Reactive.Disposables;
 
+using Microsoft.Extensions.Logging;
+
 using Turnbind.Model;
 
 namespace Turnbind.Action;
 
 class BindControl : IDisposable
 {
+    readonly ILogger<BindControl> m_log = App.GetRequiredService<ILogger<BindControl>>();
+
     public required InputKeys Keys { get; init; }
 
     TurnSetting m_setting = new();
@@ -36,6 +40,8 @@ class BindControl : IDisposable
 
     IDisposable? m_disposble;
 
+    int m_instructionIndex = -1;
+
     public bool Enable
     {
         get => m_disposble is { };
@@ -55,20 +61,31 @@ class BindControl : IDisposable
 
             void OnFocuse(bool focused)
             {
-                var index = -1;
                 var turnAction = App.GetRequiredService<TurnAction>();
                 var inputAction = App.GetRequiredService<InputAction>();
 
                 void OnActive(bool active)
                 {
+                    m_log.LogInformation(
+                        "{active} {keys} input for {dir} at {speed}p/ms with mouse move {factor}",
+                        active ? "Activate" : "Deactivate",
+                        string.Join(" + ", ((IEnumerable<InputKey>)Keys).Select(k => $"{k}")),
+                        m_dir,
+                        Setting.PixelPerMs,
+                        Setting.MouseMoveFactor
+                    );
 
                     if (!active)
                     {
-                        if (index != -1) turnAction.UpdateDirection(index, TurnInstruction.Stop);
+                        if (m_instructionIndex != -1)
+                        {
+                            turnAction.UpdateDirection(m_instructionIndex, TurnInstruction.Stop);
+                            m_instructionIndex = -1;
+                        }
                         return;
                     }
 
-                    index = turnAction.InputDirection(m_dir);
+                    m_instructionIndex = turnAction.InputDirection(m_dir);
                     turnAction.PixelPerMs = Setting.PixelPerMs;
                     turnAction.MouseFactor = Setting.MouseMoveFactor;
                 }

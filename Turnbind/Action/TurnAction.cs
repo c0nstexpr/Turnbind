@@ -15,7 +15,7 @@ sealed partial class TurnAction : IDisposable
         set
         {
             m_action.Interval = value;
-            m_log.LogInformation("Turn Interval changed to {ms} ms", value.Milliseconds);
+            m_log.LogInformation("Set Turn Interval {interval} ms", value.TotalMilliseconds);
         }
     }
 
@@ -29,7 +29,7 @@ sealed partial class TurnAction : IDisposable
         {
             m_pixelPerMs = value;
             m_action.PixelSpeed = value * Interval.TotalMilliseconds;
-            m_log.LogInformation("Changed to {p} Pixels/Sec", PixelPerMs);
+            m_log.LogInformation("Set PixelPerMs {p}", PixelPerMs);
         }
     }
 
@@ -42,7 +42,7 @@ sealed partial class TurnAction : IDisposable
         private set
         {
             m_action.Instruction = value;
-            m_log.LogInformation("Turn action changed to {Dir}", value);
+            m_log.LogInformation("Set Direction {Dir}", value);
         }
     }
 
@@ -52,7 +52,7 @@ sealed partial class TurnAction : IDisposable
         set
         {
             m_action.MouseFactor = value;
-            m_log.LogInformation("Mouse factor chaged to {factor}", value);
+            m_log.LogInformation("Set Mouse factor {factor}", value);
         }
     }
 
@@ -64,8 +64,6 @@ sealed partial class TurnAction : IDisposable
             m_directionQueue.Add(value);
             Direction = value;
         }
-
-        m_log.LogInformation("Turn action changed to {Dir}", Direction);
 
         return m_directionQueue.Count - 1;
     }

@@ -11,13 +11,7 @@
         d:DataContext="{d:DesignInstance Type=viewModel:MainWindowViewModel}">
     <DockPanel>
         <tray:NotifyIcon x:Name="Tray" Grid.Row="0" FocusOnLeftClick="True"
-                Icon="pack://application:,,,/Assets/logo-icon.png" MenuOnRightClick="True" TooltipText="Turnbind">
-            <tray:NotifyIcon.Menu>
-                <ContextMenu>
-                    <ui:MenuItem Header="Exit" Command="{Binding ExitCommand, Mode=OneWay}" />
-                </ContextMenu>
-            </tray:NotifyIcon.Menu>
-        </tray:NotifyIcon>
+                Icon="pack://application:,,,/Assets/logo-icon.png" MenuOnRightClick="True" TooltipText="Turnbind" />
 
         <ui:TitleBar DockPanel.Dock="Top" Title="Turn Bind" CloseWindowByDoubleClickOnIcon="True" Height="30">
             <ui:TitleBar.Icon>
@@ -31,28 +25,6 @@
         </ui:TitleBar>
 
         <DockPanel x:Name="MainDockPanel" Margin="15,5,15,15">
-            <!--<Grid x:Name="AdminSuggest" DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="5">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="0" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-
-                <ui:Flyout IsOpen="{Binding IsAdminSuggestFlyoutOpen, Mode=TwoWay}" Placement="Top">
-                    <StackPanel>
-                        <TextBlock HorizontalAlignment="Left" Width="400" Margin="5"
-                                Text="App may not work properly without admin privilages, such as capturing keyboard events and simulating mouse movement."
-                                TextWrapping="WrapWithOverflow" />
-
-                        <ui:Button Appearance="Primary" Foreground="White" Margin="5" Content="Restart as admin"
-                                HorizontalAlignment="Center" Command="{Binding RestartAsAdminCommand}" />
-                    </StackPanel>
-                </ui:Flyout>
-
-                <ui:Button Appearance="Caution" Foreground="White" Grid.Row="1"
-                        Command="{Binding AdminSuggestButtonClickCommand, Mode=OneWay}" Content="App not run as admin"
-                        ToolTip="Click to see why app may need admin privilages" />
-            </Grid>-->
-
             <Grid DockPanel.Dock="Top" Margin="10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="300" />

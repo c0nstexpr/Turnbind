@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
 
 using Turnbind.ViewModel;
 
@@ -15,10 +16,21 @@ sealed partial class MainWindow : FluentWindow
     public MainWindow()
     {
         DataContext = m_viewModel;
+
         InitializeComponent();
 
         if (App.GetService<LogTextBlock>() is null)
             MainDockPanel.Children.Remove(LaunchConsoleButton);
+
+        // We don't use data binding for ContextMenu, because
+        // https://stackoverflow.com/questions/1013558/elementname-binding-from-menuitem-in-contextmenu
+        if (Tray.Menu is not { } menu)
+        {
+            menu = new();
+            Tray.Menu = menu;
+        }
+
+        menu.Items.Add(new System.Windows.Controls.MenuItem() { Header = "Exit", Command = m_viewModel.ExitCommand });
     }
 
     protected override void OnClosed(EventArgs e)

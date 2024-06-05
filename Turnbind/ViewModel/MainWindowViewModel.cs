@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Windows;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -84,7 +83,7 @@ internal partial class MainWindowViewModel : ObservableValidator, IDisposable
     }
 
     [RelayCommand]
-    static void OnExit() => Application.Current.Shutdown();
+    static void OnExit() => App.Current.Shutdown();
 
     public void Dispose()
     {

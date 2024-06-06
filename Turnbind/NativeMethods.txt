@@ -1,5 +1,7 @@
 ﻿GetModuleHandle
 SetWindowsHookEx
+GetMessageExtraInfo
+SetMessageExtraInfo
 
 WM_*
 KBDLLHOOKSTRUCT

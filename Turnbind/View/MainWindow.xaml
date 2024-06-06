@@ -36,6 +36,8 @@
                     <RowDefinition />
                     <RowDefinition />
                     <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
                 </Grid.RowDefinitions>
 
                 <ui:TextBlock Margin="5" Text="Process Name" HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -43,7 +45,7 @@
                 <ui:TextBox Margin="5" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center"
                         PlaceholderText="e.g. csgo" BorderBrush="Gray" Text="{Binding ProcessName}" />
 
-                <ui:TextBlock Margin="5" Grid.Row="1" Text="Window State" HorizontalAlignment="Center"
+                <ui:TextBlock Margin="5" Grid.Row="1" Text="Windows State" HorizontalAlignment="Center"
                         VerticalAlignment="Center" />
 
                 <ui:TextBox Margin="5" Grid.Row="1" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
@@ -55,10 +57,40 @@
                 <ui:TextBox Margin="5" Grid.Row="2" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
                         VerticalAlignment="Center" Text="{Binding CurrentKeyStr, Mode=OneWay}" IsReadOnly="True" />
 
-                <ui:TextBlock Margin="5" Grid.Row="3" Text="Turn Instruction Interval (ms)" HorizontalAlignment="Center"
+                <ui:TextBlock Margin="5" Grid.Row="3" Text="Current Mouse Position" HorizontalAlignment="Center"
                         VerticalAlignment="Center" />
 
-                <ui:TextBox Margin="5" Grid.Row="3" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
+                <Grid Grid.Row="3" Grid.Column="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="20" />
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="20" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+
+                    <ui:TextBlock Margin="5" Grid.Column="0" Text="x:" HorizontalAlignment="Center"
+                            VerticalAlignment="Center" />
+
+                    <ui:TextBox Margin="5" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
+                            VerticalAlignment="Center" Text="{Binding CurrentMousePosX, Mode=OneWay}" IsReadOnly="True" />
+
+                    <ui:TextBlock Margin="5" Grid.Column="2" Text="y:" HorizontalAlignment="Center"
+                            VerticalAlignment="Center" />
+
+                    <ui:TextBox Margin="5" Grid.Column="3" BorderBrush="Gray" HorizontalAlignment="Stretch"
+                            VerticalAlignment="Center" Text="{Binding CurrentMousePosY, Mode=OneWay}" IsReadOnly="True" />
+                </Grid>
+
+                <ui:TextBlock Margin="5" Grid.Row="4" Text="Current Instruction" HorizontalAlignment="Center"
+                        VerticalAlignment="Center" />
+
+                <ui:TextBox Margin="5" Grid.Row="4" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
+                        VerticalAlignment="Center" Text="{Binding Instruction, Mode=OneWay}" />
+
+                <ui:TextBlock Margin="5" Grid.Row="5" Text="Turn Instruction Interval (ms)" HorizontalAlignment="Center"
+                        VerticalAlignment="Center" />
+
+                <ui:TextBox Margin="5" Grid.Row="5" Grid.Column="1" BorderBrush="Gray" HorizontalAlignment="Stretch"
                         PlaceholderText="e.g. 50" VerticalAlignment="Center"
                         Text="{Binding TurnInterval, ValidatesOnNotifyDataErrors=True}" />
             </Grid>

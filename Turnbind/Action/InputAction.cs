@@ -51,7 +51,7 @@ public sealed partial class InputAction : IDisposable
 
     readonly Subject<KeyState> m_keysInput = new();
 
-    public IObservable<KeyState> KeysInput => m_keysInput;
+    public IObservable<KeyState> KeyboardInput => m_keysInput;
 
     static readonly IReadOnlyList<InputKey> m_shiftKeys = new InputKey[] {
         InputKey.Shift,
@@ -166,11 +166,13 @@ public sealed partial class InputAction : IDisposable
 
     #region Mouse
 
-    readonly BehaviorSubject<Point> m_mouseMove = new(default);
+    readonly BehaviorSubject<MSLLHOOKSTRUCT> m_mouseMove = new(default);
 
-    public Point Point => m_mouseMove.Value;
+    public Point Point => m_mouseMove.Value.pt;
 
-    public IObservable<Point> MouseMove => m_mouseMove;
+    public IObservable<MSLLHOOKSTRUCT> MouseMoveRaw => m_mouseMove;
+
+    public IObservable<Point> MouseMove => m_mouseMove.Select(m => m.pt);
 
     LRESULT OnMouse(int code, WPARAM wParam, LPARAM lParam)
     {
@@ -181,7 +183,7 @@ public sealed partial class InputAction : IDisposable
         try
         {
             m_mouseLock.Enter(ref lockTaken);
-            m_mouseMove.OnNext(Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam).pt);
+            m_mouseMove.OnNext(Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam));
         }
         finally
         {

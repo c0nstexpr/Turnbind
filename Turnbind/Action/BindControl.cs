@@ -1,4 +1,6 @@
-﻿using System.Reactive.Disposables;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 
 using Microsoft.Extensions.Logging;
 
@@ -10,7 +12,31 @@ class BindControl : IDisposable
 {
     readonly ILogger<BindControl> m_log = App.GetRequiredService<ILogger<BindControl>>();
 
-    public required InputKeys Keys { get; init; }
+    readonly TurnAction m_turnAction = App.GetRequiredService<TurnAction>();
+
+    readonly InputAction m_inputAction = App.GetRequiredService<InputAction>();
+
+    readonly CompositeDisposable m_disposble;
+
+    readonly InputKeys m_keys;
+
+    readonly string m_keysStr;
+
+    public required InputKeys Keys
+    {
+        get => m_keys;
+
+        [MemberNotNull(nameof(m_keys), nameof(m_disposble), nameof(m_keysStr))]
+        init
+        {
+            m_keys = value;
+            m_disposble = [
+                App.GetRequiredService<ProcessWindowAction>().Focused.Subscribe(OnFocused),
+                m_inputAction.SubscribeKeys(m_keys).Subscribe(OnActive)
+            ];
+            m_keysStr = string.Join(" + ", ((IEnumerable<InputKey>)Keys).Select(k => $"{k}"));
+        }
+    }
 
     TurnSetting m_setting = new();
 
@@ -38,77 +64,66 @@ class BindControl : IDisposable
 
     TurnInstruction m_dir;
 
-    IDisposable? m_disposble;
-
     int m_instructionIndex = -1;
+
+    bool m_focused;
+
+    bool m_enable;
 
     public bool Enable
     {
-        get => m_disposble is { };
+        get => m_enable;
 
         set
         {
-            if (!value)
-            {
-                m_disposble?.Dispose();
-                m_disposble = null;
-                return;
-            }
+            if (!value) Deactivate();
 
-            if (m_disposble is { }) return;
-
-            IDisposable? focusedDisposable = null;
-
-            void OnFocuse(bool focused)
-            {
-                var turnAction = App.GetRequiredService<TurnAction>();
-                var inputAction = App.GetRequiredService<InputAction>();
-
-                void OnActive(bool active)
-                {
-                    m_log.LogInformation(
-                        "{active} {keys} input for {dir} at {speed}p/ms with mouse move {factor}",
-                        active ? "Activate" : "Deactivate",
-                        string.Join(" + ", ((IEnumerable<InputKey>)Keys).Select(k => $"{k}")),
-                        m_dir,
-                        Setting.PixelPerMs,
-                        Setting.MouseMoveFactor
-                    );
-
-                    if (!active)
-                    {
-                        if (m_instructionIndex != -1)
-                        {
-                            turnAction.UpdateDirection(m_instructionIndex, TurnInstruction.Stop);
-                            m_instructionIndex = -1;
-                        }
-                        return;
-                    }
-
-                    m_instructionIndex = turnAction.InputDirection(m_dir);
-                    turnAction.PixelPerMs = Setting.PixelPerMs;
-                    turnAction.MouseFactor = Setting.MouseMoveFactor;
-                }
-
-                if (!focused)
-                {
-                    OnActive(false);
-                    focusedDisposable?.Dispose();
-                    focusedDisposable = null;
-                    return;
-                }
-
-                if (focusedDisposable is { }) return;
-
-                focusedDisposable = inputAction.SubscribeKeys(Keys).Subscribe(OnActive);
-            }
-
-            m_disposble = new CompositeDisposable()
-            {
-                Disposable.Create(() => OnFocuse(false)),
-                App.GetRequiredService<ProcessWindowAction>().Focused.Subscribe(OnFocuse)
-            };
+            m_enable = value;
         }
     }
-    public void Dispose() => Enable = false;
+
+    void OnFocused(bool focused)
+    {
+        if (!focused) Deactivate();
+
+        m_focused = focused;
+    }
+
+    void OnActive(bool active)
+    {
+        if (!(m_focused && Enable)) return;
+
+        m_log.LogInformation(
+            "{active} {keys} input for {dir} at {speed}p/ms with mouse move {factor}",
+            active ? "Activate" : "Deactivate",
+            m_keysStr,
+            m_dir,
+            Setting.PixelPerMs,
+            Setting.MouseMoveFactor
+        );
+
+        if (active) Activate();
+        else Deactivate();
+    }
+
+    void Deactivate()
+    {
+        if (m_instructionIndex == -1) return;
+
+        m_turnAction.UpdateDirection(m_instructionIndex, TurnInstruction.Stop);
+        m_instructionIndex = -1;
+    }
+
+    void Activate()
+    {
+        m_instructionIndex = m_turnAction.InputDirection(m_dir);
+        m_turnAction.PixelPerMs = Setting.PixelPerMs;
+        m_turnAction.MouseFactor = Setting.MouseMoveFactor;
+    }
+
+    public void Dispose()
+    {
+        Deactivate();
+        m_disposble.Dispose();
+    }
 }

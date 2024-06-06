@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Drawing;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
@@ -34,37 +35,16 @@ internal partial class MainWindowViewModel : ObservableValidator, IDisposable
         }
     }
 
-    public string IsWindowFocused => m_windowAction.Focused.Value ? "Yes" : "No";
+    public string IsWindowFocused => m_windowAction.Focused.Value ? "Focused" : "Lost focus";
 
     readonly List<InputKey> m_inputKeys = new(Enum.GetValues<InputKey>().Length);
 
-    public MainWindowViewModel(Settings settings, ProcessWindowAction windowAction, InputAction inputAction, TurnAction turnAction)
-    {
-        m_settings = settings;
-        m_windowAction = windowAction;
-        m_inputAction = inputAction;
-        m_turnAction = turnAction;
-
-        m_disposables = [
-            m_inputAction.KeysInput.Subscribe(OnInput),
-            m_windowAction.Focused.Subscribe(_ => OnPropertyChanged(nameof(IsWindowFocused)))
-        ];
-
-        m_windowAction.ProcessName = m_settings.ProcessName;
-        m_turnAction.Interval = TimeSpan.FromMilliseconds(m_settings.TurnInterval);
-    }
-
     public string CurrentKeyStr => string.Join(" + ", m_inputKeys);
 
-    void OnInput(InputAction.KeyState state)
-    {
-        if (state.Pressed) m_inputKeys.Add(state.Key);
-        else m_inputKeys.Remove(state.Key);
+    public int CurrentMousePosX => m_inputAction.Point.X;
 
-        OnPropertyChanged(nameof(CurrentKeyStr));
-    }
+    public int CurrentMousePosY => m_inputAction.Point.Y;
 
-    public static uint MaxTurnInterval { get; } = uint.MaxValue - 1;
 
     [Range(1.0, uint.MaxValue)]
     public string TurnInterval
@@ -80,6 +60,45 @@ internal partial class MainWindowViewModel : ObservableValidator, IDisposable
             m_turnAction.Interval = TimeSpan.FromMilliseconds(interval);
             m_settings.TurnInterval = interval;
         }
+    }
+
+    public string Instruction => m_turnAction.Direction switch
+    {
+        TurnInstruction.Stop => "Stopped",
+        TurnInstruction.Left => "Turning left",
+        TurnInstruction.Right => "Turning right",
+        _ => throw new ArgumentOutOfRangeException(nameof(Instruction))
+    };
+
+    public MainWindowViewModel(Settings settings, ProcessWindowAction windowAction, InputAction inputAction, TurnAction turnAction)
+    {
+        m_settings = settings;
+        m_windowAction = windowAction;
+        m_inputAction = inputAction;
+        m_turnAction = turnAction;
+
+        m_disposables = [
+            m_inputAction.KeyboardInput.Subscribe(OnKeyboard),
+            m_inputAction.MouseMove.Subscribe(
+                _ =>
+                {
+                    OnPropertyChanged(nameof(CurrentMousePosX));
+                    OnPropertyChanged(nameof(CurrentMousePosY));
+                }
+            ),
+            m_windowAction.Focused.Subscribe(_ => OnPropertyChanged(nameof(IsWindowFocused)))
+        ];
+
+        m_windowAction.ProcessName = m_settings.ProcessName;
+        m_turnAction.Interval = TimeSpan.FromMilliseconds(m_settings.TurnInterval);
+    }
+
+    void OnKeyboard(InputAction.KeyState state)
+    {
+        if (state.Pressed) m_inputKeys.Add(state.Key);
+        else m_inputKeys.Remove(state.Key);
+
+        OnPropertyChanged(nameof(CurrentKeyStr));
     }
 
     [RelayCommand]

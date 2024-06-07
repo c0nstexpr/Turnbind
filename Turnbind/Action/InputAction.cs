@@ -5,7 +5,6 @@ using System.Reactive.Subjects;
 using System.Runtime.InteropServices;
 
 using Microsoft.Extensions.Logging;
-using Microsoft.Win32.SafeHandles;
 
 using Turnbind.Model;
 
@@ -18,7 +17,7 @@ public sealed partial class InputAction : IDisposable
 {
     readonly ILogger<InputAction> m_logger = App.GetRequiredService<ILogger<InputAction>>();
 
-    readonly FreeLibrarySafeHandle m_moduleHandle = PInvoke.GetModuleHandle(Process.GetCurrentProcess().MainModule!.ModuleName);
+    readonly FreeLibrarySafeHandle m_moduleHandle = PInvoke.GetModuleHandle(typeof(InputAction).Module.Name);
 
     readonly UnhookWindowsHookExSafeHandle m_keyboardHook;
 

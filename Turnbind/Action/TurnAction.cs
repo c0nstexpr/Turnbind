@@ -1,21 +1,27 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+
+using Microsoft.Extensions.Logging;
 
 namespace Turnbind.Action;
 
-sealed partial class TurnAction : IDisposable
+sealed partial class TurnAction : ObservableObject, IDisposable
 {
     readonly ILogger<TurnAction> m_log = App.GetRequiredService<ILogger<TurnAction>>();
 
     readonly TurnTickAction m_action = new();
 
+    TimeSpan m_interval;
+
     public TimeSpan Interval
     {
-        get => m_action.Interval;
+        get => m_interval;
 
         set
         {
+            m_interval = value;
             m_action.Interval = value;
-            m_log.LogInformation("Set Turn Interval {interval} ms", value.TotalMilliseconds);
+            OnPropertyChanged();
+            m_log.LogInformation("Set Interval {interval} ms", value.TotalMilliseconds);
         }
     }
 
@@ -29,30 +35,39 @@ sealed partial class TurnAction : IDisposable
         {
             m_pixelPerMs = value;
             m_action.PixelSpeed = value * Interval.TotalMilliseconds;
+            OnPropertyChanged();
             m_log.LogInformation("Set PixelPerMs {p}", PixelPerMs);
         }
     }
 
     readonly List<TurnInstruction> m_directionQueue = [];
 
+    TurnInstruction m_dir;
+
     public TurnInstruction Direction
     {
-        get => m_action.Instruction;
+        get => m_dir;
 
         private set
         {
+            m_dir = value;
             m_action.Instruction = value;
+            OnPropertyChanged();
             m_log.LogInformation("Set Direction {Dir}", value);
         }
     }
 
+    double m_factor;
+
     public double MouseFactor
     {
-        get => m_action.MouseFactor;
+        get => m_factor;
         set
         {
+            m_factor = value;
             m_action.MouseFactor = value;
-            m_log.LogInformation("Set Mouse factor {factor}", value);
+            OnPropertyChanged();
+            m_log.LogInformation("Set MouseFactor {factor}", value);
         }
     }
 

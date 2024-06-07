@@ -3,6 +3,9 @@ using Windows.Win32.UI.Input.KeyboardAndMouse;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using System.Reactive.Linq;
+using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
+using System.Reactive;
 
 namespace Turnbind.Action;
 
@@ -12,7 +15,9 @@ sealed class TurnTickAction : IDisposable
 
     readonly InputAction m_inputAction = App.GetRequiredService<InputAction>();
 
-    SpinLock m_lock;
+    readonly EventLoopScheduler m_scheduler = new();
+
+    readonly SerialDisposable m_tick = new();
 
     #region Win32 Input
 
@@ -24,8 +29,8 @@ sealed class TurnTickAction : IDisposable
             type = INPUT_TYPE.INPUT_MOUSE,
             Anonymous = new()
             {
-                mi = new() 
-                { 
+                mi = new()
+                {
                     dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE
                 }
             }
@@ -47,13 +52,14 @@ sealed class TurnTickAction : IDisposable
 
             if (value == TurnInstruction.Stop)
             {
-                m_timer.Change(TimeSpan.Zero, Timeout.InfiniteTimeSpan);
+                m_tick.Disposable = null;
 
-                Lock(
+                Schedule(
                     () =>
                     {
                         m_delta = 0;
                         m_remain = 0;
+                        m_filtered.Clear();
                         m_instruction = TurnInstruction.Stop;
                     }
                 );
@@ -62,19 +68,16 @@ sealed class TurnTickAction : IDisposable
                 return;
             }
 
-            m_timer.Change(TimeSpan.Zero, Interval);
+            m_tick.Disposable ??= m_scheduler.SchedulePeriodic<Unit>(default, Interval, _ => Tick());
 
-            Lock(
+            Schedule(
                 () =>
                 {
                     m_delta = 0;
-                    GetSpeed();
+                    m_instruction = value;
+                    m_log.LogInformation("Set Instruction {i}", m_instruction);
                 }
             );
-
-            m_instruction = value;
-
-            m_log.LogInformation("Set instruction {i}", m_instruction);
         }
     }
 
@@ -91,7 +94,7 @@ sealed class TurnTickAction : IDisposable
 
             if (m_instruction != TurnInstruction.Stop)
             {
-                m_timer.Change(TimeSpan.Zero, value);
+                m_tick.Disposable = m_scheduler.SchedulePeriodic<Unit>(default, value, _ => Tick());
                 m_log.LogInformation("Set timer interval {i} ms", m_interval.TotalMicroseconds);
             }
         }
@@ -99,23 +102,9 @@ sealed class TurnTickAction : IDisposable
 
     public double MouseFactor { get; set; }
 
-    double m_speed;
-
-    double m_pixelSpeed;
-
-    public double PixelSpeed
-    {
-        get => m_pixelSpeed;
-        set
-        {
-            m_pixelSpeed = value;
-            Lock(GetSpeed);
-        }
-    }
+    public double PixelSpeed { get; set; }
 
     double m_remain;
-
-    readonly Timer m_timer;
 
     #region Listen the mouse move
 
@@ -125,83 +114,45 @@ sealed class TurnTickAction : IDisposable
 
     double m_delta;
 
-    int m_preX;
-
     #endregion
 
     public TurnTickAction()
     {
-        m_timer = new Timer(_ => Lock(() => Input(m_speed + m_delta)), null, TimeSpan.Zero, Timeout.InfiniteTimeSpan);
+        var preX = m_inputAction.Point.X;
 
-        PInvoke.SetMessageExtraInfo(m_mouseInput.dwExtraInfo);
-
-        m_preX = m_inputAction.Point.X;
         m_mouseMoveDisposable = m_inputAction.MouseMove
             .Select(
-            p =>
+                p =>
                 {
-                    var dx = p.X - m_preX;
-                    m_preX = p.X;
+                    var dx = p.X - preX;
+                    preX = p.X;
                     return dx;
                 }
             )
-            .Where(
+            .SubscribeOn(m_scheduler)
+            .Subscribe(
                 dx =>
                 {
-                    if (Instruction == TurnInstruction.Stop || dx == 0) return false;
+                    if (Instruction == TurnInstruction.Stop || dx == 0) return;
 
-                    var accepted = true;
+                    var i = m_filtered.BinarySearch(dx);
 
-                    Lock(
-                        () =>
-                        {
-                            var i = m_filtered.BinarySearch(dx);
+                    if (i < 0)
+                    {
+                        m_delta += MouseFactor * dx;
+                        return;
+                    }
 
-                            if (i < 0) return;
-
-                            m_log.LogInformation("Filter move event");
-                            m_filtered.RemoveAt(i);
-
-                            accepted = false;
-                        }
-                    );
-
-                    return accepted;
+                    m_log.LogInformation("Filter move event");
+                    m_filtered.RemoveAt(i);
                 }
-            )
-            .Subscribe(x => Lock(() => m_delta += MouseFactor * x));
+            );
     }
 
-    void Lock(System.Action action)
+    void Tick()
     {
-        if (m_lock.IsHeldByCurrentThread)
-        {
-            action();
-            return;
-        }
+        var dx = (Instruction == TurnInstruction.Left ? PixelSpeed : -PixelSpeed) + m_delta;
 
-        var token = false;
-
-        try
-        {
-            m_lock.Enter(ref token);
-            action();
-        }
-        catch (Exception e)
-        {
-            m_log.LogError("Failed to enter lock: {e}", e);
-            return;
-        }
-        finally
-        {
-            if (token) m_lock.Exit();
-        }
-    }
-
-    void GetSpeed() => m_speed = Instruction == TurnInstruction.Left ? PixelSpeed : -PixelSpeed;
-
-    void Input(double dx)
-    {
         dx += m_remain;
 
         var input_dx = (int)dx;
@@ -217,13 +168,16 @@ sealed class TurnTickAction : IDisposable
         else
         {
             var i = m_filtered.BinarySearch(input_dx);
-            m_filtered.Insert(i > 0 ? i : ~i, input_dx);
+            m_filtered.Insert(i >= 0 ? i : ~i, input_dx);
         }
     }
+
+    void Schedule(System.Action action) => m_scheduler.Schedule(action);
 
     public void Dispose()
     {
         m_mouseMoveDisposable.Dispose();
-        m_timer.Dispose();
+        m_tick.Dispose();
+        m_scheduler.Dispose();
     }
 }

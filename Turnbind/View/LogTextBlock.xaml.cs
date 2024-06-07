@@ -12,6 +12,11 @@ public partial class LogTextBlock : UserControl
     void OnTextChanged(object sender, TextChangedEventArgs e)
     {
         if (m_autoScroll) LogTextBox.ScrollToEnd();
+
+        var blocks = LogTextBox.Document.Blocks;
+
+        while (blocks.Count > 10)
+            blocks.Remove(blocks.FirstBlock);
     }
 
     void OnScroll(object sender, ScrollChangedEventArgs e)

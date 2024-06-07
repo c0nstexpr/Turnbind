@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Drawing;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
@@ -86,6 +85,7 @@ internal partial class MainWindowViewModel : ObservableValidator, IDisposable
                     OnPropertyChanged(nameof(CurrentMousePosY));
                 }
             ),
+            m_turnAction.WhenChanged(action => action.Direction).Subscribe(_ => OnPropertyChanged(nameof(Instruction))),
             m_windowAction.Focused.Subscribe(_ => OnPropertyChanged(nameof(IsWindowFocused)))
         ];
 

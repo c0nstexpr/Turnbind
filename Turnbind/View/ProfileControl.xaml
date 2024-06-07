@@ -1,9 +1,15 @@
-﻿<UserControl x:Class="Turnbind.View.ProfileControl" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:viewModel="clr-namespace:Turnbind.ViewModel"
-        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" mc:Ignorable="d" d:DesignHeight="400" d:DesignWidth="400"
-        d:DataContext="{d:DesignInstance viewModel:ProfileControlViewModel}">
+﻿<UserControl
+    x:Class="Turnbind.View.ProfileControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:viewModel="clr-namespace:Turnbind.ViewModel"
+    d:DataContext="{d:DesignInstance viewModel:ProfileControlViewModel}"
+    d:DesignHeight="400"
+    d:DesignWidth="400"
+    mc:Ignorable="d">
     <Border BorderBrush="Gray" BorderThickness="1">
         <DockPanel>
             <Grid Margin="5" DockPanel.Dock="Bottom">
@@ -12,15 +18,25 @@
                     <RowDefinition />
                 </Grid.RowDefinitions>
 
-                <ui:TextBox BorderBrush="Gray" BorderThickness="0.5" Margin="10" PlaceholderText="Profile name..."
-                        Text="{Binding TextBoxProfileName}" />
+                <ui:TextBox
+                    Margin="10"
+                    BorderBrush="Gray"
+                    BorderThickness="0.5"
+                    PlaceholderText="Profile name..."
+                    Text="{Binding TextBoxProfileName}" />
 
-                <ui:Button BorderBrush="Gray" BorderThickness="0.5" Margin="10" Content="Add" Grid.Row="1"
-                        Command="{Binding AddProfileNameCommand, Mode=OneWay}" HorizontalAlignment="Stretch"
-                        Appearance="Primary" />
+                <ui:Button
+                    Grid.Row="1"
+                    Margin="10"
+                    HorizontalAlignment="Stretch"
+                    Appearance="Primary"
+                    BorderBrush="Gray"
+                    BorderThickness="0.5"
+                    Command="{Binding AddProfileNameCommand, Mode=OneWay}"
+                    Content="Add" />
             </Grid>
 
-            <ui:ListView ItemsSource="{Binding ProfilesNames, Mode=OneWay}" Margin="5">
+            <ui:ListView Margin="5" ItemsSource="{Binding ProfilesNames, Mode=OneWay}">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <DockPanel>
@@ -30,18 +46,31 @@
                                     <ColumnDefinition />
                                 </Grid.ColumnDefinitions>
 
-                                <ui:Button Margin="5" Appearance="Info" Content="View"
-                                        Command="{Binding EditProfileCommand, Mode=OneWay}" />
+                                <ui:Button
+                                    Margin="5"
+                                    Appearance="Info"
+                                    Command="{Binding EditProfileCommand, Mode=OneWay}"
+                                    Content="View" />
 
-                                <ui:Button Grid.Column="1" Margin="5" Appearance="Danger" Content="Remove"
-                                        Foreground="White" Command="{Binding RemoveProfileCommand, Mode=OneWay}" />
+                                <ui:Button
+                                    Grid.Column="1"
+                                    Margin="5"
+                                    Appearance="Danger"
+                                    Command="{Binding RemoveProfileCommand, Mode=OneWay}"
+                                    Content="Remove"
+                                    Foreground="White" />
                             </Grid>
 
-                            <ui:ToggleSwitch DockPanel.Dock="Left" Command="{Binding EnableProfileCommand, Mode=OneWay}"
-                                    Content="{Binding ToggleContent, Mode=OneWay}"
-                                    CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}" />
+                            <ui:ToggleSwitch
+                                Command="{Binding EnableProfileCommand, Mode=OneWay}"
+                                CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"
+                                Content="{Binding ToggleContent, Mode=OneWay}"
+                                DockPanel.Dock="Left" />
 
-                            <TextBlock VerticalAlignment="Stretch" Text="{Binding Name, Mode=OneWay}" Margin="10" />
+                            <TextBlock
+                                Margin="10"
+                                VerticalAlignment="Stretch"
+                                Text="{Binding Name, Mode=OneWay}" />
                         </DockPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>
@@ -54,5 +83,5 @@
                 </d:ListView.ItemsSource>
             </ui:ListView>
         </DockPanel>
-    </Border >
+    </Border>
 </UserControl>

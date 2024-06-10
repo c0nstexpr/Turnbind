@@ -59,7 +59,6 @@ sealed class TurnTickAction : IDisposable
                     {
                         m_delta = 0;
                         m_remain = 0;
-                        m_filtered.Clear();
                         m_instruction = TurnInstruction.Stop;
                     }
                 );
@@ -74,6 +73,7 @@ sealed class TurnTickAction : IDisposable
                 () =>
                 {
                     m_delta = 0;
+                    m_dirSpeed = -m_dirSpeed;
                     m_instruction = value;
                     m_log.LogInformation("Set Instruction {i}", m_instruction);
                 }
@@ -102,7 +102,20 @@ sealed class TurnTickAction : IDisposable
 
     public double MouseFactor { get; set; }
 
-    public double PixelSpeed { get; set; }
+    double m_dirSpeed;
+
+    double m_pixelSpeed;
+
+    public double PixelSpeed
+    {
+        get => m_pixelSpeed;
+        
+        set
+        {
+            Schedule(() => m_dirSpeed = Instruction == TurnInstruction.Left ? value : -value);
+            m_pixelSpeed = value;
+        }
+    }
 
     double m_remain;
 
@@ -110,9 +123,7 @@ sealed class TurnTickAction : IDisposable
 
     readonly IDisposable m_mouseMoveDisposable;
 
-    readonly List<int> m_filtered = [];
-
-    double m_delta;
+    long m_delta;
 
     #endregion
 
@@ -130,46 +141,28 @@ sealed class TurnTickAction : IDisposable
                 }
             )
             .SubscribeOn(m_scheduler)
-            .Subscribe(
-                dx =>
-                {
-                    if (Instruction == TurnInstruction.Stop || dx == 0) return;
-
-                    var i = m_filtered.BinarySearch(dx);
-
-                    if (i < 0)
-                    {
-                        m_delta += MouseFactor * dx;
-                        return;
-                    }
-
-                    m_log.LogInformation("Filter move event");
-                    m_filtered.RemoveAt(i);
-                }
-            );
+            .Where(_ => Instruction == TurnInstruction.Stop)
+            .Subscribe(dx => m_delta += dx);
     }
 
     void Tick()
     {
-        var dx = (Instruction == TurnInstruction.Left ? PixelSpeed : -PixelSpeed) + m_delta;
+        var target_speed = m_dirSpeed + m_remain;
+        var diff = (target_speed - m_delta) * MouseFactor;
 
-        dx += m_remain;
+        target_speed += diff;
 
-        var input_dx = (int)dx;
+        var input_dx = (int)target_speed;
 
-        m_remain = dx - input_dx;
-
-        m_mouseInput.dx = input_dx;
+        m_remain = target_speed - input_dx;
+        m_delta = 0;
 
         if (input_dx == 0) return;
 
+        m_mouseInput.dx = input_dx;
+
         if (PInvoke.SendInput(m_inputs, m_inputTypeSize) == 0)
             m_log.LogWarning("Mouse move input was blocked");
-        else
-        {
-            var i = m_filtered.BinarySearch(input_dx);
-            m_filtered.Insert(i >= 0 ? i : ~i, input_dx);
-        }
     }
 
     void Schedule(System.Action action) => m_scheduler.Schedule(action);

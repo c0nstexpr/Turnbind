@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "Turnbind": {
-      "commandName": "Project",
-      "commandLineArgs": "--Console --LogLevel Debug"
-    }
-  }
-}

@@ -1,16 +1,13 @@
 ﻿using System.Diagnostics;
 using System.Reactive.Subjects;
-using System.Runtime.InteropServices;
 
 using Microsoft.Extensions.Logging;
-using Microsoft.Win32.SafeHandles;
 
 using Turnbind.Helper;
 
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.Accessibility;
-using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Turnbind;
 

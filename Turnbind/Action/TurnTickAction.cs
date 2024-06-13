@@ -2,10 +2,14 @@
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
-using System.Reactive.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive;
+using Windows.Win32.UI.Input;
+using System.Windows.Interop;
+using Windows.Win32.UI.WindowsAndMessaging;
+using System.Drawing;
+using LanguageExt.UnitsOfMeasure;
 
 namespace Turnbind.Action;
 
@@ -13,13 +17,11 @@ sealed class TurnTickAction : IDisposable
 {
     readonly ILogger<TurnTickAction> m_log = App.GetRequiredService<ILogger<TurnTickAction>>();
 
-    readonly InputAction m_inputAction = App.GetRequiredService<InputAction>();
-
     readonly EventLoopScheduler m_scheduler = new();
 
     readonly SerialDisposable m_tick = new();
 
-    #region Win32 Input
+    #region Send Input
 
     static readonly int m_inputTypeSize = Marshal.SizeOf(typeof(INPUT));
 
@@ -38,6 +40,140 @@ sealed class TurnTickAction : IDisposable
     ];
 
     ref MOUSEINPUT m_mouseInput => ref m_inputs[0].Anonymous.mi;
+
+    #endregion
+
+    #region Raw mouse input
+
+    static readonly uint m_rawInputDeviceTypeSize = (uint)Marshal.SizeOf(typeof(RAWINPUTDEVICE));
+
+    static readonly uint m_rawInputHeaderTypeSize = (uint)Marshal.SizeOf(typeof(RAWINPUTHEADER));
+
+    static readonly uint m_rawInputTypeSize = (uint)Marshal.SizeOf(typeof(RAWINPUT));
+
+    long m_delta;
+
+    int m_absX;
+
+    static RAWINPUTDEVICE[] m_rawInputDevice => [
+        new RAWINPUTDEVICE()
+        {
+            usUsagePage = PInvoke.HID_USAGE_PAGE_GENERIC,
+            usUsage = PInvoke.HID_USAGE_GENERIC_MOUSE
+        }
+    ];
+
+    HwndSource? m_winSrc;
+
+    public HwndSource? WinSrc
+    {
+        get => m_winSrc;
+
+        set
+        {
+            m_winSrc = value;
+
+            var device = m_rawInputDevice;
+
+            if (value is null)
+            {
+                device[0].dwFlags = RAWINPUTDEVICE_FLAGS.RIDEV_REMOVE;
+
+                if (!PInvoke.RegisterRawInputDevices(device, m_rawInputDeviceTypeSize))
+                {
+                    m_log.LogError("Failed to unregister raw input device");
+                    throw new InvalidOperationException();
+                }
+
+                return;
+            }
+
+            value.AddHook(WndProc);
+
+            device[0].dwFlags = RAWINPUTDEVICE_FLAGS.RIDEV_INPUTSINK;
+            device[0].hwndTarget = new(value.Handle);
+
+            if (!PInvoke.RegisterRawInputDevices(device, m_rawInputDeviceTypeSize))
+            {
+                m_log.LogError("Failed to register mouse raw input");
+                throw new InvalidOperationException();
+            }
+
+        }
+    }
+
+    IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg == PInvoke.WM_INPUT) OnInput(lParam);
+        return IntPtr.Zero;
+    }
+
+    unsafe void OnInput(nint lParam)
+    {
+        uint size = 0;
+        var buffer = stackalloc RAWINPUT[1];
+
+        PInvoke.GetRawInputData(
+            new(lParam),
+            RAW_INPUT_DATA_COMMAND_FLAGS.RID_INPUT,
+            null,
+            ref size,
+            m_rawInputHeaderTypeSize
+        );
+
+        var copiedSize = PInvoke.GetRawInputData(
+            new(lParam),
+            RAW_INPUT_DATA_COMMAND_FLAGS.RID_INPUT,
+            buffer,
+            ref size,
+            m_rawInputHeaderTypeSize
+        );
+
+        if (copiedSize == 0)
+        {
+            m_log.LogError("Failed to get mouse raw input data");
+            return;
+        }
+
+        if (buffer->header.dwType != 0) return;
+
+        var rawMouse = buffer->data.mouse;
+
+        OnMouseInput(rawMouse.usFlags, rawMouse.lLastX);
+    }
+
+    void OnMouseInput(MOUSE_STATE flag, int x)
+    {
+        if ((flag & MOUSE_STATE.MOUSE_MOVE_ABSOLUTE) != default)
+        {
+            long left = 0;
+            long right;
+            // long top = 0;
+            // long bottom;
+
+            if ((flag & MOUSE_STATE.MOUSE_VIRTUAL_DESKTOP) == default)
+            {
+                right = PInvoke.GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CXSCREEN);
+                // bottom = PInvoke.GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CYSCREEN);
+            }
+            else
+            {
+                left = PInvoke.GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_XVIRTUALSCREEN);
+                right = PInvoke.GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CXVIRTUALSCREEN);
+                // top = PInvoke.GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_YVIRTUALSCREEN);
+                // bottom = PInvoke.GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CYVIRTUALSCREEN);
+            }
+
+            var newAbsX = (int)(x * right / ushort.MaxValue + left);
+
+            x = newAbsX - m_absX;
+            m_absX = newAbsX;
+        }
+
+        if (x == 0) return;
+
+        Schedule(() => m_delta += x);
+    }
 
     #endregion
 
@@ -109,7 +245,7 @@ sealed class TurnTickAction : IDisposable
     public double PixelSpeed
     {
         get => m_pixelSpeed;
-        
+
         set
         {
             Schedule(() => m_dirSpeed = Instruction == TurnInstruction.Left ? value : -value);
@@ -119,43 +255,12 @@ sealed class TurnTickAction : IDisposable
 
     double m_remain;
 
-    #region Listen the mouse move
-
-    readonly IDisposable m_mouseMoveDisposable;
-
-    long m_delta;
-
-    #endregion
-
-    public TurnTickAction()
-    {
-        var preX = m_inputAction.Point.X;
-
-        m_mouseMoveDisposable = m_inputAction.MouseMove
-            .Select(
-                p =>
-                {
-                    var dx = p.X - preX;
-                    preX = p.X;
-                    return dx;
-                }
-            )
-            .SubscribeOn(m_scheduler)
-            .Where(_ => Instruction == TurnInstruction.Stop)
-            .Subscribe(dx => m_delta += dx);
-    }
-
     void Tick()
     {
-        var target_speed = m_dirSpeed + m_remain;
-        var diff = (target_speed - m_delta) * MouseFactor;
+        var dx = m_dirSpeed + m_remain + m_delta * MouseFactor;
+        var input_dx = (int)dx;
 
-        target_speed += diff;
-
-        var input_dx = (int)target_speed;
-
-        m_remain = target_speed - input_dx;
-        m_delta = 0;
+        m_remain = dx - input_dx;
 
         if (input_dx == 0) return;
 
@@ -169,7 +274,7 @@ sealed class TurnTickAction : IDisposable
 
     public void Dispose()
     {
-        m_mouseMoveDisposable.Dispose();
+        WinSrc = null;
         m_tick.Dispose();
         m_scheduler.Dispose();
     }

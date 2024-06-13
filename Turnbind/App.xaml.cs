@@ -70,6 +70,7 @@ public partial class App : Application
             )
                 .AddSingleton<InputAction>()
                 .AddSingleton<ProcessWindowAction>()
+                .AddSingleton<TurnTickAction>()
                 .AddSingleton<TurnAction>()
                 .AddSingleton(Settings.Load() ?? new())
                 .AddSingleton<MainWindowViewModel>();

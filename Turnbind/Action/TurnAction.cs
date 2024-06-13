@@ -8,7 +8,7 @@ sealed partial class TurnAction : ObservableObject, IDisposable
 {
     readonly ILogger<TurnAction> m_log = App.GetRequiredService<ILogger<TurnAction>>();
 
-    readonly TurnTickAction m_action = new();
+    readonly TurnTickAction m_action = App.GetRequiredService<TurnTickAction>();
 
     TimeSpan m_interval;
 

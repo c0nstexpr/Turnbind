@@ -15,7 +15,20 @@ partial class ProcessWindowAction : IDisposable
 {
     readonly ILogger<ProcessWindowAction> m_log;
 
-    public string? ProcessName { get; set; }
+    string? m_processName;
+
+    public string? ProcessName
+    {
+        get => m_processName;
+
+        set
+        {
+            m_processes.Clear();
+            FocusedWinHandle = default;
+            m_focused.OnNext(false);
+            m_processName = value;
+        }
+    }
 
     readonly Dictionary<HWND, int> m_processes = [];
 

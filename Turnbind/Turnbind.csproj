@@ -35,8 +35,4 @@
 
         <Resource Include="Assets/*" />
     </ItemGroup>
-
-    <ItemGroup>
-      <None Remove="NativeMethods.json" />
-    </ItemGroup>
 </Project>

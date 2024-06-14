@@ -14,9 +14,5 @@ SetWinEventHook
 
 EVENT_*
 
-RegisterRawInputDevices
-HID_USAGE_*
-GetRawInputData
-RAWINPUT
-GetSystemMetrics
 SendInput
+INPUT

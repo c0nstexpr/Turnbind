@@ -1,10 +1,6 @@
 ﻿using System.Windows;
-using System.Windows.Interop;
 
-using Turnbind.Action;
 using Turnbind.ViewModel;
-
-using Windows.Win32;
 
 using Wpf.Ui.Controls;
 
@@ -14,8 +10,6 @@ sealed partial class MainWindow : FluentWindow
 {
     readonly MainWindowViewModel m_viewModel;
 
-    readonly TurnTickAction m_turnTickAction;
-
     ConsoleWindow? m_consoleWindow;
 
     public MainWindow()
@@ -23,7 +17,6 @@ sealed partial class MainWindow : FluentWindow
         InitializeComponent();
 
         m_viewModel = App.GetRequiredService<MainWindowViewModel>();
-        m_turnTickAction = App.GetRequiredService<TurnTickAction>();
 
         DataContext = m_viewModel;
 
@@ -50,18 +43,11 @@ sealed partial class MainWindow : FluentWindow
         m_consoleWindow.Show();
     }
 
-    protected override void OnSourceInitialized(EventArgs e)
-    {
-        base.OnSourceInitialized(e);
-        m_turnTickAction.WinSrc = PresentationSource.FromVisual(this) as HwndSource;
-    }
-
     protected override void OnClosed(EventArgs e)
     {
         Tray.Dispose();
         KeyBindsControl.Dispose();
         m_viewModel.Dispose();
-        m_turnTickAction.WinSrc = null;
         base.OnClosed(e);
     }
 }

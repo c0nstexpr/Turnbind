@@ -30,8 +30,9 @@ public sealed partial class InputAction : IDisposable
 
     SpinLock m_mouseLock = new();
 
-    public InputAction()
+    public InputAction(ILogger<InputAction> logger)
     {
+        m_logger = logger;
         m_keyboardProc = OnKeyboard;
         m_mouseProc = OnMouse;
 
@@ -102,6 +103,8 @@ public sealed partial class InputAction : IDisposable
             if (!lockTaken || m_keysInput.IsDisposed) return;
 
             var input = (InputKey)keyPtr.vkCode;
+
+            if (input == InputKey.None) return; 
 
             UpdateModifiers(input); // Modifier key released event need to be handled manually
 

@@ -4,12 +4,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Turnbind.Action;
 
-sealed partial class TurnAction : ObservableObject, IDisposable
+sealed partial class TurnAction(ILogger<TurnAction> log, TurnTickAction action) :
+    ObservableObject, IDisposable
 {
-    readonly ILogger<TurnAction> m_log = App.GetRequiredService<ILogger<TurnAction>>();
-
-    readonly TurnTickAction m_action = App.GetRequiredService<TurnTickAction>();
-
     TimeSpan m_interval;
 
     public TimeSpan Interval
@@ -19,9 +16,9 @@ sealed partial class TurnAction : ObservableObject, IDisposable
         set
         {
             m_interval = value;
-            m_action.Interval = value;
+            action.Interval = value;
             OnPropertyChanged();
-            m_log.LogInformation("Set Interval {interval} ms", value.TotalMilliseconds);
+            log.LogInformation("Set Interval {interval} ms", value.TotalMilliseconds);
         }
     }
 
@@ -34,9 +31,8 @@ sealed partial class TurnAction : ObservableObject, IDisposable
         set
         {
             m_pixelPerMs = value;
-            m_action.PixelSpeed = value * Interval.TotalMilliseconds;
             OnPropertyChanged();
-            m_log.LogInformation("Set PixelPerMs {p}", PixelPerMs);
+            log.LogInformation("Set PixelPerMs {p}", PixelPerMs);
         }
     }
 
@@ -51,9 +47,12 @@ sealed partial class TurnAction : ObservableObject, IDisposable
         private set
         {
             m_dir = value;
-            m_action.Instruction = value;
+
+            action.Instruction = value;
+            action.PixelSpeed = PixelPerMs * Interval.TotalMilliseconds;
+
             OnPropertyChanged();
-            m_log.LogInformation("Set Direction {Dir}", value);
+            log.LogInformation("Set Direction {Dir}", value);
         }
     }
 
@@ -65,9 +64,9 @@ sealed partial class TurnAction : ObservableObject, IDisposable
         set
         {
             m_factor = value;
-            m_action.MouseFactor = value;
+            action.MouseFactor = value;
             OnPropertyChanged();
-            m_log.LogInformation("Set MouseFactor {factor}", value);
+            log.LogInformation("Set MouseFactor {factor}", value);
         }
     }
 
@@ -96,5 +95,5 @@ sealed partial class TurnAction : ObservableObject, IDisposable
         Direction = m_directionQueue.Count == 0 ? TurnInstruction.Stop : m_directionQueue[^1];
     }
 
-    public void Dispose() => m_action.Dispose();
+    public void Dispose() => action.Dispose();
 }

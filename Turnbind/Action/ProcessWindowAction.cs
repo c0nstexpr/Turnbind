@@ -13,11 +13,13 @@ namespace Turnbind;
 
 partial class ProcessWindowAction : IDisposable
 {
-    readonly ILogger<ProcessWindowAction> m_log = App.GetRequiredService<ILogger<ProcessWindowAction>>();
+    readonly ILogger<ProcessWindowAction> m_log;
 
     public string? ProcessName { get; set; }
 
-    readonly Dictionary<HWND, Dictionary<int, Process>> m_processes = [];
+    readonly Dictionary<HWND, int> m_processes = [];
+
+    public HWND FocusedWinHandle { get; private set; }
 
     readonly BehaviorSubject<bool> m_focused = new(false);
 
@@ -26,10 +28,9 @@ partial class ProcessWindowAction : IDisposable
     readonly UnhookWinEventSafeHandle m_focusedHook;
     readonly WINEVENTPROC m_focusedCallback;
 
-    SpinLock m_spinLock = new();
-
-    public ProcessWindowAction()
+    public ProcessWindowAction(ILogger<ProcessWindowAction> logger)
     {
+        m_log = logger;
         Focused = m_focused.AsObservable();
         m_focusedCallback = OnFocused;
 
@@ -46,7 +47,7 @@ partial class ProcessWindowAction : IDisposable
 
     void OnFocused(
         HWINEVENTHOOK hWinEventHook,
-        uint @event,
+        uint e,
         HWND hwnd,
         int idObject,
         int idChild,
@@ -54,29 +55,26 @@ partial class ProcessWindowAction : IDisposable
         uint dwmsEventTime
     )
     {
-        var lockTaken = false;
-
-        try
+        lock (m_focused)
         {
-            m_spinLock.TryEnter(0, ref lockTaken);
+            if (m_focused.IsDisposed) return;
 
-            if (!lockTaken || m_focused.IsDisposed) return;
+            var focused = ContainsWin(hwnd);
 
-            var focusd = m_focused.Value;
-            if (ContainsWin(hwnd) && !focusd)
+            if (m_focused.Value == focused) return;
+
+            if (focused)
             {
+                FocusedWinHandle = hwnd;
                 m_log.LogInformation("Window focused");
-                m_focused.OnNext(true);
             }
-            else if (focusd)
+            else
             {
+                FocusedWinHandle = default;
                 m_log.LogInformation("Window lost focuse");
-                m_focused.OnNext(false);
             }
-        }
-        finally
-        {
-            if (lockTaken) m_spinLock.Exit(false);
+
+            m_focused.OnNext(focused);
         }
     }
 
@@ -88,22 +86,15 @@ partial class ProcessWindowAction : IDisposable
         {
             HWND handle = new(p.MainWindowHandle);
 
-            if (!m_processes.TryGetValue(handle, out var processDic))
-            {
-                processDic = new(3);
-                m_processes.Add(handle, processDic);
-            }
+            if (handle == default || m_processes.ContainsKey(handle)) continue;
 
-            processDic.TryAdd(p.Id, p);
+            m_processes.Add(handle, p.Id);
 
             EventHandler onExit = default!;
 
             onExit = (s, e) =>
             {
-                processDic.Remove(p.Id);
-
-                if (processDic.Count == 0) m_processes.Remove(handle);
-
+                m_processes.Remove(handle);
                 p.Exited -= onExit;
             };
 
@@ -117,14 +108,6 @@ partial class ProcessWindowAction : IDisposable
     {
         m_focusedHook.Dispose();
 
-        {
-            var lockTaken = false;
-            m_spinLock.TryEnter(ref lockTaken);
-
-            if (!lockTaken) return;
-        }
-
-        m_focused.Dispose();
-        m_spinLock.Exit();
+        lock (m_focused) m_focused.Dispose();
     }
 }

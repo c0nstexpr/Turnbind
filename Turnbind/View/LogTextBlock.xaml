@@ -5,6 +5,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:view="clr-namespace:Turnbind.View"
+    d:DataContext="{d:DesignInstance Type=view:LogTextBlock}"
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">

@@ -5,9 +5,13 @@ namespace Turnbind.View;
 
 public partial class LogTextBlock : UserControl
 {
-    public LogTextBlock() => InitializeComponent();
-
     bool m_autoScroll = true;
+
+    public LogTextBlock()
+    {
+        DataContext = this;
+        InitializeComponent();
+    }
 
     void OnTextChanged(object sender, TextChangedEventArgs e)
     {
@@ -16,6 +20,12 @@ public partial class LogTextBlock : UserControl
 
     void OnScroll(object sender, ScrollChangedEventArgs e)
     {
+        if ((e.OriginalSource as ScrollViewer)?.CanContentScroll != true)
+        {
+            m_autoScroll = true;
+            return;
+        }
+
         var verticalChange = e.VerticalChange;
 
         if (verticalChange > 0 && e.ExtentHeight - e.VerticalOffset - e.ViewportHeight < 1)

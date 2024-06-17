@@ -15,4 +15,4 @@ SetWinEventHook
 EVENT_*
 
 SendInput
-INPUT
+Input

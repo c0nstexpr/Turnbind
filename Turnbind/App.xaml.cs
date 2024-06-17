@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Configuration;
+using Serilog.Events;
 
 namespace Turnbind;
 
@@ -46,7 +47,7 @@ public partial class App : Application
             LogTextBlock? logTextBlock = null;
 
             if (config["Console"] is { })
-            { 
+            {
                 logTextBlock = new LogTextBlock();
                 services.AddSingleton(logTextBlock);
             }
@@ -64,8 +65,11 @@ public partial class App : Application
                             rollOnFileSizeLimit: true
                         );
 
-                    if (logTextBlock is { })                    
-                        loggerConfiguration.WriteTo.RichTextBox(logTextBlock.LogTextBox);                    
+                    if (Enum.TryParse<LogEventLevel>(config["LogLevel"], out var level))
+                        loggerConfiguration.MinimumLevel.Is(level);
+
+                    if (logTextBlock is { })
+                        loggerConfiguration.WriteTo.RichTextBox(logTextBlock.LogTextBox);
                 }
             )
                 .AddSingleton<InputAction>()
@@ -75,9 +79,6 @@ public partial class App : Application
                 .AddSingleton(Settings.Load() ?? new())
                 .AddSingleton<MainWindowViewModel>();
         }
-
-        if (Enum.TryParse<LogLevel>(config["LogLevel"], out var level))
-            builder.Logging.SetMinimumLevel(level);
 
         m_host = builder.Build();
         m_host.Start();

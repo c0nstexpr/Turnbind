@@ -116,9 +116,9 @@ class BindControl : IDisposable
 
     void Activate()
     {
-        m_instructionIndex = m_turnAction.InputDirection(m_dir);
         m_turnAction.PixelPerMs = Setting.PixelPerMs;
         m_turnAction.MouseFactor = Setting.MouseMoveFactor;
+        m_instructionIndex = m_turnAction.InputDirection(m_dir);
     }
 
     public void Dispose()

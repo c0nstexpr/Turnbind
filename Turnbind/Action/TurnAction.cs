@@ -7,16 +7,14 @@ namespace Turnbind.Action;
 sealed partial class TurnAction(ILogger<TurnAction> log, TurnTickAction action) :
     ObservableObject, IDisposable
 {
-    TimeSpan m_interval;
-
     public TimeSpan Interval
     {
-        get => m_interval;
+        get => action.Interval;
 
         set
         {
-            m_interval = value;
             action.Interval = value;
+            action.PixelSpeed = PixelPerMs * Interval.TotalMilliseconds;
             OnPropertyChanged();
             log.LogInformation("Set Interval {interval} ms", value.TotalMilliseconds);
         }
@@ -31,6 +29,7 @@ sealed partial class TurnAction(ILogger<TurnAction> log, TurnTickAction action) 
         set
         {
             m_pixelPerMs = value;
+            action.PixelSpeed = PixelPerMs * Interval.TotalMilliseconds;
             OnPropertyChanged();
             log.LogInformation("Set PixelPerMs {p}", PixelPerMs);
         }
@@ -38,32 +37,23 @@ sealed partial class TurnAction(ILogger<TurnAction> log, TurnTickAction action) 
 
     readonly List<TurnInstruction> m_directionQueue = [];
 
-    TurnInstruction m_dir;
-
     public TurnInstruction Direction
     {
-        get => m_dir;
+        get => action.Instruction;
 
         private set
         {
-            m_dir = value;
-
             action.Instruction = value;
-            action.PixelSpeed = PixelPerMs * Interval.TotalMilliseconds;
-
             OnPropertyChanged();
             log.LogInformation("Set Direction {Dir}", value);
         }
     }
 
-    double m_factor;
-
     public double MouseFactor
     {
-        get => m_factor;
+        get => action.MouseFactor;
         set
         {
-            m_factor = value;
             action.MouseFactor = value;
             OnPropertyChanged();
             log.LogInformation("Set MouseFactor {factor}", value);

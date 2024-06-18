@@ -16,6 +16,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Configuration;
 using Serilog.Events;
+using Serilog.Sinks.RichTextBox.Themes;
 
 namespace Turnbind;
 
@@ -69,7 +70,10 @@ public partial class App : Application
                         loggerConfiguration.MinimumLevel.Is(level);
 
                     if (logTextBlock is { })
-                        loggerConfiguration.WriteTo.RichTextBox(logTextBlock.LogTextBox);
+                        loggerConfiguration.WriteTo.RichTextBox(
+                            logTextBlock.LogTextBox,
+                            theme: RichTextBoxConsoleTheme.Colored
+                        );
                 }
             )
                 .AddSingleton<InputAction>()

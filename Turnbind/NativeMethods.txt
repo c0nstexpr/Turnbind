@@ -15,4 +15,5 @@ SetWinEventHook
 EVENT_*
 
 SendInput
-Input
+LLMHF_*
+GetSystemMetrics

@@ -6,6 +6,8 @@ using System.Reactive.Linq;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
+using Windows.Win32.UI.WindowsAndMessaging;
+using Turnbind.Helper;
 
 namespace Turnbind.Action;
 
@@ -16,8 +18,6 @@ sealed class TurnTickAction : IDisposable
     readonly SerialDisposable m_tick = new();
 
     TurnInstruction m_currentInstruction;
-
-    TurnInstruction m_instruction = TurnInstruction.Stop;
 
     #region Send Input
 
@@ -31,7 +31,9 @@ sealed class TurnTickAction : IDisposable
             {
                 mi = new()
                 {
-                    dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE
+                    dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE |
+                        MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE |
+                        MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE_NOCOALESCE
                 }
             }
         }
@@ -44,6 +46,7 @@ sealed class TurnTickAction : IDisposable
     public TurnInstruction Instruction
     {
         get => m_currentInstruction;
+
         set
         {
             if (m_currentInstruction == value) return;
@@ -54,26 +57,27 @@ sealed class TurnTickAction : IDisposable
             {
                 m_tick.Disposable = null;
 
-                Schedule(
-                     () =>
-                     {
-                         m_delta = 0;
-                         m_instruction = TurnInstruction.Stop;
-                     }
-                 );
-
                 m_log.LogInformation("Stop ticking");
+
                 return;
             }
 
             Schedule(
                 () =>
                 {
-                    m_remain = 0;
-                    m_delta = 0;
                     m_speed = value == TurnInstruction.Left ? -m_pixelSpeed : m_pixelSpeed;
-                    m_instruction = value;
-                    m_log.LogInformation("Set Instruction {i}", m_instruction);
+
+                    m_screen = new(
+                        PInvoke.GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CXSCREEN),
+                        PInvoke.GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CYSCREEN)
+                    );
+
+                    m_delta = 0;
+
+                    m_remain = 0;
+
+                    m_log.LogInformation("Set Instruction {i}", value);
+
                     Tick(default);
                 }
             );
@@ -113,70 +117,77 @@ sealed class TurnTickAction : IDisposable
         }
     }
 
-    Point m_startPosition;
-
-    long m_delta;
-
-    Point m_mousePos;
-
-    double m_speed;
-
-    double m_remain;
-
     readonly IDisposable m_mouseMoveDisposable;
 
     readonly ILogger<TurnTickAction> m_log;
 
-    readonly ProcessWindowAction m_windowAction;
+    Point m_mousePos;
 
-    public TurnTickAction(ILogger<TurnTickAction> log, InputAction inputAction, ProcessWindowAction windowAction)
+    public TurnTickAction(ILogger<TurnTickAction> log, InputAction inputAction)
     {
         m_log = log;
-        m_windowAction = windowAction;
 
-        m_mouseMoveDisposable = inputAction.MouseMove.SubscribeOn(m_scheduler)
+        m_mouseMoveDisposable = inputAction.MouseMoveRaw
+            .Select(p => Tuple.Create(p, Instruction != TurnInstruction.Stop))
+            .SubscribeOn(m_scheduler)
             .Subscribe(
-                p =>
+                t =>
                 {
-                    if (Instruction != TurnInstruction.Stop && p != m_startPosition)
+                    var (mouse, isTurning) = t;
+                    var p = mouse.pt;
+
+                    if (isTurning && !IsInjected(mouse.flags))
                         m_delta += p.X - m_mousePos.X;
+
                     m_mousePos = p;
                 }
             );
     }
 
+    static bool IsInjected(uint flags)
+    {
+        const uint test = PInvoke.LLMHF_INJECTED | PInvoke.LLMHF_LOWER_IL_INJECTED;
+        return (flags & test) != 0;
+    }
+
+    #region Tick
+
+    double m_speed;
+
+    Point m_screen;
+
+    long m_delta;
+
+    double m_remain;
+
+    static int ToAbsCoord(int p, int screen) => p * 65536 / screen + (p < 0 ? -1 : 1);
+
+    // https://stackoverflow.com/questions/4540282
     Unit Tick(Unit u)
     {
-        m_startPosition = m_mousePos;
-
-        if (m_delta == 1) m_delta = 0; // ignore minor error
-
-        var x = Math.Clamp(m_mousePos.X + m_speed + m_delta * m_mouseFactor + m_remain, 0, int.MaxValue);
-        var input_x = (int)Math.Round(x);
-
         m_log.LogDebug("Current delta:{delta}", m_delta);
 
-        if (input_x == 0)
+        var x = m_mousePos.X + m_speed + m_delta * m_mouseFactor + m_remain;
+        var round_x = (int)Math.Round(x);
+
+        m_mouseInput.dx = ToAbsCoord(round_x, m_screen.X);
+        m_mouseInput.dy = ToAbsCoord(m_mousePos.Y, m_screen.Y);
+
+        if (!MoveMouse())
         {
-            m_remain = 0;
+            m_log.LogWarning("Send mouse move failed, x:{x}", round_x);
             return u;
         }
 
-        m_remain = x - input_x;
-        m_delta -= input_x;
-
-
-        // https://stackoverflow.com/questions/4540282
-        if (PInvoke.SendInput(input_x, m_mousePos.Y) > 0)
-        {
-            m_log.LogDebug("Sended mouse move, x:{x}", x);
-            return u;
-        }
-
-        m_log.LogWarning("Send mouse move failed, x:{x}", x);
+        m_log.LogDebug("Sended mouse move, x:{x}", round_x);
+        m_remain = x - round_x;
 
         return u;
     }
+
+    bool MoveMouse() => PInvoke.SendInput(m_inputs, m_inputTypeSize) != 0;
+
+    #endregion
 
     void Schedule(System.Action action) => m_scheduler.Schedule<Unit>(
         default,

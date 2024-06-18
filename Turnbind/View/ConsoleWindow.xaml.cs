@@ -10,12 +10,16 @@ public partial class ConsoleWindow : FluentWindow
     {
         InitializeComponent();
         DockPanel.Children.Add(m_logTextBlock);
+
+        m_logTextBlock.AutoScroll = true;
+        m_logTextBlock.IsEnabled = true;
     }
 
     protected override void OnClosed(EventArgs e)
     {
         DockPanel.Children.Remove(m_logTextBlock);
         m_logTextBlock.LogTextBox.Document = new();
+        m_logTextBlock.IsEnabled = false;
         base.OnClosed(e);
     }
 }

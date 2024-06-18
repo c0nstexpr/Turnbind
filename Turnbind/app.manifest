@@ -11,4 +11,10 @@
             </requestedPrivileges>
         </security>
     </trustInfo>
+
+    <application>
+        <windowsSettings xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">
+            <dpiAware>true</dpiAware>
+        </windowsSettings>
+    </application>
 </assembly>

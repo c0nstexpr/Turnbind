@@ -26,10 +26,6 @@ public sealed partial class InputAction : IDisposable
 
     readonly HOOKPROC m_mouseProc;
 
-    SpinLock m_keyboardLock = new();
-
-    SpinLock m_mouseLock = new();
-
     public InputAction(ILogger<InputAction> logger)
     {
         m_logger = logger;
@@ -94,37 +90,26 @@ public sealed partial class InputAction : IDisposable
 
     void OnKey(KBDLLHOOKSTRUCT keyPtr, bool pressed)
     {
-        var lockTaken = false;
+        if (m_keysInput.IsDisposed) return;
 
-        try
-        {
-            m_keyboardLock.Enter(ref lockTaken);
+        var input = (InputKey)keyPtr.vkCode;
 
-            if (!lockTaken || m_keysInput.IsDisposed) return;
+        if (input == InputKey.None) return;
 
-            var input = (InputKey)keyPtr.vkCode;
+        UpdateModifiers(input); // Modifier key released event need to be handled manually
 
-            if (input == InputKey.None) return; 
+        LatestKeyState = new(input, pressed);
 
-            UpdateModifiers(input); // Modifier key released event need to be handled manually
+        if (m_pressedKeys[input] == pressed) return;
 
-            LatestKeyState = new(input, pressed);
+        m_logger.LogInformation(
+            "Key {pressedStr} {input}",
+            pressed ? "pressed" : "released",
+            input
+        );
 
-            if (m_pressedKeys[input] == pressed) return;
-
-            m_logger.LogInformation(
-                "Key {pressedStr} {input}",
-                pressed ? "pressed" : "released",
-                input
-            );
-
-            m_keysInput.OnNext(LatestKeyState);
-            m_pressedKeys[input] = pressed;
-        }
-        finally
-        {
-            if (lockTaken) m_keyboardLock.Exit();
-        }
+        m_keysInput.OnNext(LatestKeyState);
+        m_pressedKeys[input] = pressed;
     }
 
     public IObservable<bool> SubscribeKeys(InputKeys keys)
@@ -167,29 +152,23 @@ public sealed partial class InputAction : IDisposable
 
     #region Mouse
 
-    readonly BehaviorSubject<MSLLHOOKSTRUCT> m_mouseMove = new(default);
+    public record struct MouseEvent(WPARAM Event, MSLLHOOKSTRUCT Data);
 
-    public Point Point => m_mouseMove.Value.pt;
+    readonly BehaviorSubject<MouseEvent> m_mouse = new(default);
 
-    public IObservable<MSLLHOOKSTRUCT> MouseMoveRaw => m_mouseMove;
+    public Point Point => m_mouse.Value.Data.pt;
 
-    public IObservable<Point> MouseMove => m_mouseMove.Select(m => m.pt);
+    public IObservable<MouseEvent> MouseRaw => m_mouse;
+
+    public IObservable<MSLLHOOKSTRUCT> MouseMoveRaw =>
+        m_mouse.Where(e => e.Event == PInvoke.WM_MOUSEMOVE).Select(e => e.Data);
+
+    public IObservable<Point> MouseMove => MouseMoveRaw.Select(m => m.pt);
 
     LRESULT OnMouse(int code, WPARAM wParam, LPARAM lParam)
     {
-        if (wParam != PInvoke.WM_MOUSEMOVE) return PInvoke.CallNextHookEx(HHOOK.Null, code, wParam, lParam);
-
-        var lockTaken = false;
-
-        try
-        {
-            m_mouseLock.Enter(ref lockTaken);
-            m_mouseMove.OnNext(Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam));
-        }
-        finally
-        {
-            if (lockTaken) m_mouseLock.Exit();
-        }
+        if (!m_mouse.IsDisposed)
+            m_mouse.OnNext(new(wParam, Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam)));
 
         return PInvoke.CallNextHookEx(HHOOK.Null, code, wParam, lParam);
     }

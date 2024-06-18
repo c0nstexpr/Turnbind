@@ -37,7 +37,7 @@
                         <ui:GridViewColumn
                             Width="Auto"
                             DisplayMemberBinding="{Binding PixelPerMs, Mode=OneWay}"
-                            Header="p/s" />
+                            Header="p/ms" />
                         <ui:GridViewColumn
                             Width="Auto"
                             DisplayMemberBinding="{Binding Dir, Mode=OneWay}"

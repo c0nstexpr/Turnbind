@@ -29,12 +29,7 @@ sealed class TurnTickAction : IDisposable
             type = INPUT_TYPE.INPUT_MOUSE,
             Anonymous = new()
             {
-                mi = new()
-                {
-                    dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE |
-                        MOUSE_EVENT_FLAGS.MOUSEEVENTF_ABSOLUTE |
-                        MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE_NOCOALESCE
-                }
+                mi = new() { dwFlags = MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE }
             }
         }
     ];
@@ -66,11 +61,6 @@ sealed class TurnTickAction : IDisposable
                 () =>
                 {
                     m_speed = value == TurnInstruction.Left ? -m_pixelSpeed : m_pixelSpeed;
-
-                    m_screen = new(
-                        PInvoke.GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CXSCREEN),
-                        PInvoke.GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CYSCREEN)
-                    );
 
                     m_delta = 0;
 
@@ -130,16 +120,44 @@ sealed class TurnTickAction : IDisposable
         m_mouseMoveDisposable = inputAction.MouseMoveRaw
             .Select(p => Tuple.Create(p, Instruction != TurnInstruction.Stop))
             .SubscribeOn(m_scheduler)
+            .Select(
+                 t =>
+                 {
+                     var (mouse, isTurning) = t;
+                     var p = mouse.pt;
+                     long delta = 0;
+
+                     if (isTurning && !IsInjected(mouse.flags))
+                         delta += p.X - m_mousePos.X;
+
+                     m_mousePos = p;
+
+                     return delta;
+                 }
+            )
+            .Buffer(3)
             .Subscribe(
-                t =>
+                d =>
                 {
-                    var (mouse, isTurning) = t;
-                    var p = mouse.pt;
+                    long plusSum = 0;
+                    long minusSum = 0;
 
-                    if (isTurning && !IsInjected(mouse.flags))
-                        m_delta += p.X - m_mousePos.X;
+                    byte plusCount = 0;
+                    byte minusCount = 0;
 
-                    m_mousePos = p;
+                    foreach (var i in d)
+                        if (i > 0)
+                        {
+                            plusSum += i;
+                            ++plusCount;
+                        }
+                        else
+                        {
+                            minusSum += i;
+                            ++minusCount;
+                        }
+
+                    m_delta += plusCount >= minusCount ? plusSum : minusSum;
                 }
             );
     }
@@ -154,24 +172,18 @@ sealed class TurnTickAction : IDisposable
 
     double m_speed;
 
-    Point m_screen;
-
     long m_delta;
 
     double m_remain;
 
-    static int ToAbsCoord(int p, int screen) => p * 65536 / screen + (p < 0 ? -1 : 1);
-
-    // https://stackoverflow.com/questions/4540282
     Unit Tick(Unit u)
     {
         m_log.LogDebug("Current delta:{delta}", m_delta);
 
-        var x = m_mousePos.X + m_speed + m_delta * m_mouseFactor + m_remain;
+        var x = m_speed + m_delta * m_mouseFactor + m_remain;
         var round_x = (int)Math.Round(x);
 
-        m_mouseInput.dx = ToAbsCoord(round_x, m_screen.X);
-        m_mouseInput.dy = ToAbsCoord(m_mousePos.Y, m_screen.Y);
+        m_mouseInput.dx = round_x;
 
         if (!MoveMouse())
         {

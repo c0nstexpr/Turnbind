@@ -13,7 +13,7 @@
 
     <ItemGroup>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
-        <PackageReference Include="LanguageExt.Rx" Version="4.4.8" />
+        <PackageReference Include="LanguageExt.Rx" Version="4.4.9" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
         <PackageReference Include="morelinq" Version="4.2.0" />
         <PackageReference Include="ObservableCollections" Version="2.1.3" />

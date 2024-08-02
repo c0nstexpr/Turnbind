@@ -99,7 +99,7 @@ class BindControl : IDisposable
             m_keysStr,
             m_dir,
             Setting.PixelPerMs,
-            Setting.MouseMoveFactor
+            Setting.WheelFactor
         );
 
         if (active) Activate();
@@ -117,7 +117,7 @@ class BindControl : IDisposable
     void Activate()
     {
         m_turnAction.PixelPerMs = Setting.PixelPerMs;
-        m_turnAction.MouseFactor = Setting.MouseMoveFactor;
+        m_turnAction.WheelFactor = Setting.WheelFactor;
         m_instructionIndex = m_turnAction.InputDirection(m_dir);
     }
 

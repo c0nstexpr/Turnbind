@@ -49,14 +49,14 @@ sealed partial class TurnAction(ILogger<TurnAction> log, TurnTickAction action) 
         }
     }
 
-    public double MouseFactor
+    public double WheelFactor
     {
-        get => action.MouseFactor;
+        get => action.WheelFactor;
         set
         {
-            action.MouseFactor = value;
+            action.WheelFactor = value;
             OnPropertyChanged();
-            log.LogInformation("Set MouseFactor {factor}", value);
+            log.LogInformation("Set WheelFactor {factor}", value);
         }
     }
 

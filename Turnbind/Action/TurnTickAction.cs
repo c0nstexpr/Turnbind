@@ -3,17 +3,15 @@ using Microsoft.Extensions.Logging;
 using System.Reactive.Disposables;
 using System.Reactive;
 using System.Reactive.Linq;
-using System.Drawing;
 using System.Runtime.InteropServices;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
-using Windows.Win32.UI.WindowsAndMessaging;
-using Turnbind.Helper;
+using System.Reactive.Concurrency;
 
 namespace Turnbind.Action;
 
 sealed class TurnTickAction : IDisposable
 {
-    readonly System.Reactive.Concurrency.EventLoopScheduler m_scheduler = new();
+    readonly EventLoopScheduler m_scheduler = new();
 
     readonly SerialDisposable m_tick = new();
 
@@ -78,17 +76,17 @@ sealed class TurnTickAction : IDisposable
 
     public TimeSpan Interval { get; set; }
 
-    double m_currentMouseFactor;
+    double m_currentWheelFactor;
 
-    double m_mouseFactor;
+    double m_wheelFactor;
 
-    public double MouseFactor
+    public double WheelFactor
     {
-        get => m_currentMouseFactor;
+        get => m_currentWheelFactor;
         set
         {
-            m_currentMouseFactor = value;
-            Schedule(() => m_mouseFactor = value);
+            m_currentWheelFactor = value;
+            Schedule(() => m_wheelFactor = value);
         }
     }
 
@@ -107,65 +105,19 @@ sealed class TurnTickAction : IDisposable
         }
     }
 
-    readonly IDisposable m_mouseMoveDisposable;
+    readonly IDisposable m_mouseWheelDisposable;
 
     readonly ILogger<TurnTickAction> m_log;
-
-    Point m_mousePos;
 
     public TurnTickAction(ILogger<TurnTickAction> log, InputAction inputAction)
     {
         m_log = log;
 
-        m_mouseMoveDisposable = inputAction.MouseMoveRaw
-            .Select(p => Tuple.Create(p, Instruction != TurnInstruction.Stop))
+        m_mouseWheelDisposable = inputAction.MouseRaw
+            .Where(e => e.Event == PInvoke.WM_MOUSEWHEEL && Instruction != TurnInstruction.Stop)
+            .Select(e => (short)(e.Data.mouseData >> 16))
             .SubscribeOn(m_scheduler)
-            .Select(
-                 t =>
-                 {
-                     var (mouse, isTurning) = t;
-                     var p = mouse.pt;
-                     long delta = 0;
-
-                     if (isTurning && !IsInjected(mouse.flags))
-                         delta += p.X - m_mousePos.X;
-
-                     m_mousePos = p;
-
-                     return delta;
-                 }
-            )
-            .Buffer(3)
-            .Subscribe(
-                d =>
-                {
-                    long plusSum = 0;
-                    long minusSum = 0;
-
-                    byte plusCount = 0;
-                    byte minusCount = 0;
-
-                    foreach (var i in d)
-                        if (i > 0)
-                        {
-                            plusSum += i;
-                            ++plusCount;
-                        }
-                        else
-                        {
-                            minusSum += i;
-                            ++minusCount;
-                        }
-
-                    m_delta += plusCount >= minusCount ? plusSum : minusSum;
-                }
-            );
-    }
-
-    static bool IsInjected(uint flags)
-    {
-        const uint test = PInvoke.LLMHF_INJECTED | PInvoke.LLMHF_LOWER_IL_INJECTED;
-        return (flags & test) != 0;
+            .Subscribe(d => m_delta += d);
     }
 
     #region Tick
@@ -178,9 +130,7 @@ sealed class TurnTickAction : IDisposable
 
     Unit Tick(Unit u)
     {
-        m_log.LogDebug("Current delta:{delta}", m_delta);
-
-        var x = m_speed + m_delta * m_mouseFactor + m_remain;
+        var x = m_speed + m_delta * m_wheelFactor + m_remain;
         var round_x = (int)Math.Round(x);
 
         m_mouseInput.dx = round_x;
@@ -191,7 +141,6 @@ sealed class TurnTickAction : IDisposable
             return u;
         }
 
-        m_log.LogDebug("Sended mouse move, x:{x}", round_x);
         m_remain = x - round_x;
 
         return u;
@@ -214,7 +163,7 @@ sealed class TurnTickAction : IDisposable
     public void Dispose()
     {
         m_tick.Dispose();
-        m_mouseMoveDisposable.Dispose();
+        m_mouseWheelDisposable.Dispose();
         m_scheduler.Dispose();
     }
 }

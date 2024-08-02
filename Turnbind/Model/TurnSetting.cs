@@ -6,5 +6,5 @@ public class TurnSetting
 
     public double PixelPerMs { get; set; }
 
-    public double MouseMoveFactor { get; set; }
+    public double WheelFactor { get; set; }
 }

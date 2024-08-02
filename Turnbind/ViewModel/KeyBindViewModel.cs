@@ -32,7 +32,7 @@ partial class KeyBindViewModel : ObservableValidator
 
     [ObservableProperty]
     [Range(double.Epsilon, double.MaxValue)]
-    double m_mouseMoveFactor;
+    double m_wheelFactor;
 
     public TurnSetting TurnSetting
     {
@@ -40,14 +40,14 @@ partial class KeyBindViewModel : ObservableValidator
         {
             Dir = value.Dir;
             PixelPerMs = value.PixelPerMs;
-            MouseMoveFactor = value.MouseMoveFactor;
+            WheelFactor = value.WheelFactor;
         }
 
         get => new()
         {
             Dir = Dir,
             PixelPerMs = PixelPerMs,
-            MouseMoveFactor = MouseMoveFactor
+            WheelFactor = WheelFactor
         };
     }
 }

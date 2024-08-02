@@ -44,7 +44,7 @@
                             Header="dir" />
                         <ui:GridViewColumn
                             Width="Auto"
-                            DisplayMemberBinding="{Binding MouseMoveFactor, Mode=OneWay}"
+                            DisplayMemberBinding="{Binding WheelFactor, Mode=OneWay}"
                             Header="factor" />
                     </ui:GridView.Columns>
                 </ui:GridView>

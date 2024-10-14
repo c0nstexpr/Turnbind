@@ -16,9 +16,10 @@ using Turnbind.Model;
 
 namespace Turnbind.ViewModel;
 
-partial class KeyBindsViewModel : ObservableObject, IDisposable
+partial class SettingViewModel
+    : ObservableObject, IDisposable
 {
-    readonly ILogger<KeyBindsViewModel> m_logger = App.GetRequiredService<ILogger<KeyBindsViewModel>>();
+    readonly ILogger<SettingViewModel> m_logger = App.GetRequiredService<ILogger<SettingViewModel>>();
 
     readonly Settings m_settings = App.GetRequiredService<Settings>();
 
@@ -26,14 +27,14 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
 
     readonly CompositeDisposable m_disposable = [];
 
-    readonly ProfileControlViewModel m_profile;
+    ProfileControlViewModel m_profile;
 
     public required ProfileControlViewModel Profile
     {
         get => m_profile;
 
         [MemberNotNull(nameof(m_profile))]
-        init
+        set
         {
             m_profile = value;
 
@@ -48,9 +49,9 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
         }
     }
 
-    readonly KeyBindListViewModel m_keyBindList;
+    readonly BindsViewModel m_keyBindList;
 
-    public required KeyBindListViewModel KeyBindList
+    public required BindsViewModel Binds
     {
         get => m_keyBindList;
 
@@ -59,11 +60,11 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
         {
             m_keyBindList = value;
 
-            var keyBinds = value.m_observableKeyBinds;
+            //var keyBinds = value.m_observableKeyBinds;
 
-            keyBinds.CollectionChanged += OnKeyBindsChanged;
+            //keyBinds.CollectionChanged += OnKeyBindsChanged;
 
-            m_disposable.Add(() => keyBinds.CollectionChanged -= OnKeyBindsChanged);
+            //m_disposable.Add(() => keyBinds.CollectionChanged -= OnKeyBindsChanged);
         }
     }
 
@@ -79,18 +80,18 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
 
             m_modifyingKeyBinds = true;
 
-            KeyBindList.Clear();
+            Binds.Clear();
 
             if (value is null)
             {
-                KeyBindListEnable = false;
+                BindsEnable = false;
                 return;
             }
 
-            KeyBindListEnable = true;
+            BindsEnable = true;
 
             foreach (var (keys, turnsetting) in m_settings.Profiles[value])
-                KeyBindList.Add(keys, turnsetting);
+                //KeyBindList.Add(keys, turnsetting);
 
             m_modifyingKeyBinds = false;
 
@@ -100,13 +101,13 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
 
     public string ProfileTitle => $"Current Profile: {CurrentEditProfileName}";
 
-    bool m_keyBindListEnable;
+    bool m_bindsEnable;
 
-    public bool KeyBindListEnable
+    public bool BindsEnable
     {
-        get => m_keyBindListEnable;
+        get => m_bindsEnable;
 
-        private set => SetProperty(ref m_keyBindListEnable, value);
+        private set => SetProperty(ref m_bindsEnable, value);
     }
 
     readonly Dictionary<string, IDisposable> m_profileDiposables = [];
@@ -187,7 +188,7 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
 
         m_profileDiposables[name] = new CompositeDisposable
         {
-            item.EditProfile.Subscribe(_ => CurrentEditProfileName = name),
+            //item.EditProfile.Subscribe(_ => CurrentEditProfileName = name),
             item.EnableProfile.Subscribe(
                 enable =>
                 {
@@ -212,7 +213,7 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
 
     bool m_modifyingKeyBinds = false;
 
-    void OnKeyBindsChanged(in NotifyCollectionChangedEventArgs<KeyValuePair<InputKeys, KeyBindViewModel>> e)
+    void OnKeyBindsChanged(in NotifyCollectionChangedEventArgs<KeyValuePair<InputKeys, TurnSettingViewModel>> e)
     {
         if (m_modifyingKeyBinds || CurrentEditProfileName is null) return;
 
@@ -255,12 +256,12 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
                 keybinds.Clear();
                 control.Clear();
 
-                foreach (var (keys, turnsetting) in KeyBindList.m_observableKeyBinds)
-                {
-                    var setting = turnsetting.TurnSetting;
-                    keybinds.Add(keys, setting);
-                    control.Add(keys, setting);
-                }
+                //foreach (var (keys, turnsetting) in KeyBindList.m_observableKeyBinds)
+                //{
+                //    var setting = turnsetting.TurnSetting;
+                //    keybinds.Add(keys, setting);
+                //    control.Add(keys, setting);
+                //}
 
                 m_logger.LogInformation("Reset keybinds in profile {ProfileName}", profileName);
 
@@ -270,7 +271,7 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
         m_settings.Save();
     }
 
-    void OnKeyBindAdd(KeyValuePair<InputKeys, KeyBindViewModel> pair)
+    void OnKeyBindAdd(KeyValuePair<InputKeys, TurnSettingViewModel> pair)
     {
         var (keys, keyBind) = pair;
         var profileName = CurrentEditProfileName!;
@@ -287,14 +288,14 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
         m_settings.Profiles[profileName].Add(keys, setting);
         control.Add(keys, setting);
 
-        m_logger.LogInformation(
-            "Add keybind {Keys} to profile {ProfileName}",
-            keyBind.KeysString,
-            profileName
-        );
+        //m_logger.LogInformation(
+        //    "Add keybind {Keys} to profile {ProfileName}",
+        //    keyBind.KeysString,
+        //    profileName
+        //);
     }
 
-    void OnKeyBindRemove(KeyValuePair<InputKeys, KeyBindViewModel> pair)
+    void OnKeyBindRemove(KeyValuePair<InputKeys, TurnSettingViewModel> pair)
     {
         var (keys, keyBind) = pair;
         var profileName = CurrentEditProfileName!;
@@ -304,14 +305,14 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
         if (m_profileControls.TryGetValue(profileName, out var control))
             control.Remove(keys);
 
-        m_logger.LogInformation(
-            "Remove keybind {KeysString} from profile {ProfileName}",
-            keyBind.KeysString,
-            profileName
-        );
+        //m_logger.LogInformation(
+        //    "Remove keybind {KeysString} from profile {ProfileName}",
+        //    keyBind.KeysString,
+        //    profileName
+        //);
     }
 
-    void OnKeyBindReplace(KeyValuePair<InputKeys, KeyBindViewModel> pair)
+    void OnKeyBindReplace(KeyValuePair<InputKeys, TurnSettingViewModel> pair)
     {
         var (keys, keyBind) = pair;
         var profileName = CurrentEditProfileName!;
@@ -322,7 +323,7 @@ partial class KeyBindsViewModel : ObservableObject, IDisposable
 
         m_settings.Profiles[profileName][keys] = turnSetting;
 
-        m_logger.LogInformation("Update keybind {KeysString} in profile {ProfileName}", keyBind.KeysString, profileName);
+        //m_logger.LogInformation("Update keybind {KeysString} in profile {ProfileName}", keyBind.KeysString, profileName);
     }
 
     public void Dispose()

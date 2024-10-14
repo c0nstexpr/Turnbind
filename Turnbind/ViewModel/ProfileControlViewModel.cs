@@ -7,8 +7,6 @@ using MoreLinq;
 
 using ObservableCollections;
 
-using Turnbind.Helper;
-
 namespace Turnbind.ViewModel;
 
 partial class ProfileControlViewModel : ObservableObject, IDisposable
@@ -19,9 +17,9 @@ partial class ProfileControlViewModel : ObservableObject, IDisposable
 
     readonly Dictionary<string, IDisposable> m_profileDisposable = [];
 
-    readonly ObservableDicListView<string, ProfileNameItemViewModel> m_profilesNamesView;
+    //readonly ObservableDicListView<string, ProfileNameItemViewModel> m_profilesNamesView;
 
-    public ObservableDicValueListView<string, ProfileNameItemViewModel> ProfilesNames { get; }
+    //public ObservableDicValueListView<string, ProfileNameItemViewModel> ProfilesNames { get; }
 
     string? m_textBoxProfileName;
 
@@ -38,8 +36,8 @@ partial class ProfileControlViewModel : ObservableObject, IDisposable
 
     public ProfileControlViewModel()
     {
-        m_profilesNamesView = new(m_profilesNames);
-        ProfilesNames = m_profilesNamesView.CreateValueView();
+        //m_profilesNamesView = new(m_profilesNames);
+        //ProfilesNames = m_profilesNamesView.CreateValueView();
     }
 
     bool CanAddProfileName() => TextBoxProfileName is { };
@@ -55,7 +53,7 @@ partial class ProfileControlViewModel : ObservableObject, IDisposable
             return null;
         }
 
-        m_profileDisposable[name] = item.RemoveProfile.Subscribe(index => Remove(name));
+        //m_profileDisposable[name] = item.RemoveProfile.Subscribe(index => Remove(name));
 
         return item;
     }

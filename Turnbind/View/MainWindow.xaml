@@ -201,7 +201,7 @@
                 DockPanel.Dock="Bottom"
                 Foreground="White" />
 
-            <view:KeyBindsControl x:Name="KeyBindsControl" Margin="5" />
+            <view:SettingsControl x:Name="KeyBindsControl" Margin="5" />
         </DockPanel>
     </DockPanel>
 </ui:FluentWindow>

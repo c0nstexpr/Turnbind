@@ -82,4 +82,6 @@ public class InputKeys :
         m_dic.GetEnumerator();
 
     public override bool Equals(object? obj) => Equals(obj as InputKeys);
+
+    public bool Empty => Count == 0;
 }

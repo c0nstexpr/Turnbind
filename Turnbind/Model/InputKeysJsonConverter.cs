@@ -3,9 +3,9 @@ using System.Text.Json.Serialization;
 
 using Turnbind.Helper;
 
-namespace Turnbind.Model;
+using InputKeyList = System.Collections.Generic.IReadOnlyList<Turnbind.Model.InputKey>;
 
-using InputKeyList = IReadOnlyList<InputKey>;
+namespace Turnbind.Model;
 
 public class InputKeysJsonConverter : JsonConverter<InputKeys>
 {

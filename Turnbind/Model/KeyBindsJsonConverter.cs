@@ -8,6 +8,7 @@ using Turnbind.Helper;
 using KeyBindList = System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<Turnbind.Model.InputKeys, Turnbind.Model.TurnSetting>>;
 
 namespace Turnbind.Model;
+
 public class KeyBindsJsonConverter : JsonConverter<KeyBinds>
 {
     public override KeyBinds? Read(

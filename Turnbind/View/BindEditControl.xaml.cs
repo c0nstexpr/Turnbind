@@ -10,11 +10,13 @@ using Turnbind.ViewModel;
 
 namespace Turnbind.View;
 
-sealed partial class KeyBindEditControl : UserControl, IDisposable
+sealed partial class BindEditControl : UserControl, IDisposable
 {
-    internal readonly KeyBindEditViewModel m_viewModel = new();
+    internal readonly BindEditViewModel m_viewModel = new();
 
-    public KeyBindEditControl()
+    readonly InputAction m_inputAction = App.GetRequiredService<InputAction>();
+
+    public BindEditControl()
     {
         DataContext = m_viewModel;
         InitializeComponent();
@@ -37,20 +39,19 @@ sealed partial class KeyBindEditControl : UserControl, IDisposable
                 break;
 
             case InputKey.Back:
-                m_viewModel.KeyBind.Keys = [];
+                m_viewModel.InputKeys = new();
                 break;
 
             default:
-                m_viewModel.OnInputKey(key);
+                m_viewModel.InputKeys.OnInputKey(key);
                 break;
         }
     }
 
     readonly SerialDisposable m_keyboardDisposable = new();
 
-    void InputKeysTextBoxFocus(object sender, RoutedEventArgs e) => 
-        m_keyboardDisposable.Disposable = App.GetRequiredService<InputAction>()
-            .KeyboardInput
+    void InputKeysTextBoxFocus(object sender, RoutedEventArgs e) =>
+        m_keyboardDisposable.Disposable = m_inputAction.KeyboardInput
             .Where(state => state.Pressed)
             .Select(state => state.Key)
             .Subscribe(InputKeysTextBoxKeyDown);

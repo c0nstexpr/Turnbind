@@ -64,7 +64,6 @@
                             <ui:ToggleSwitch
                                 Command="{Binding EnableProfileCommand, Mode=OneWay}"
                                 CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"
-                                Content="{Binding ToggleContent, Mode=OneWay}"
                                 DockPanel.Dock="Left" />
 
                             <TextBlock

@@ -4,18 +4,18 @@ using Turnbind.ViewModel;
 
 namespace Turnbind.View;
 
-sealed partial class KeyBindsControl : UserControl, IDisposable
+sealed partial class SettingsControl : UserControl, IDisposable
 {
-    internal readonly KeyBindsViewModel m_viewModel;
+    internal readonly SettingViewModel m_viewModel;
 
-    public KeyBindsControl()
+    public SettingsControl()
     {
         InitializeComponent();
 
         m_viewModel = new()
         {
             Profile = Profile.m_viewModel,
-            KeyBindList = KeyBindList.m_viewModel
+            Binds = Binds.m_viewModel
         };
 
         DataContext = m_viewModel;
@@ -25,6 +25,6 @@ sealed partial class KeyBindsControl : UserControl, IDisposable
     {
         m_viewModel.Dispose();
         Profile.Dispose();
-        KeyBindList.Dispose();
+        Binds.Dispose();
     }
 }

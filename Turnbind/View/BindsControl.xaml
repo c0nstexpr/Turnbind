@@ -1,13 +1,15 @@
 ﻿<UserControl
-    x:Class="Turnbind.View.KeyBindListControl"
+    x:Class="Turnbind.View.BindsControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:generic="clr-namespace:System.Collections.Generic;assembly=netstandard"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:model="clr-namespace:Turnbind.Model"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:view="clr-namespace:Turnbind.View"
     xmlns:viewModel="clr-namespace:Turnbind.ViewModel"
-    d:DataContext="{d:DesignInstance viewModel:KeyBindListViewModel}"
+    d:DataContext="{d:DesignInstance viewModel:BindsViewModel}"
     d:DesignHeight="600"
     d:DesignWidth="400"
     mc:Ignorable="d">
@@ -17,7 +19,7 @@
             BorderBrush="Gray"
             BorderThickness="1"
             DockPanel.Dock="Bottom">
-            <view:KeyBindEditControl x:Name="KeyBindEdit" />
+            <view:BindEditControl x:Name="BindEdit" />
         </Border>
 
         <ui:ListView
@@ -32,30 +34,26 @@
                     <ui:GridView.Columns>
                         <ui:GridViewColumn
                             Width="Auto"
-                            DisplayMemberBinding="{Binding KeysString, Mode=OneWay}"
+                            DisplayMemberBinding="{Binding Path=Key.KeysString, Mode=OneWay}"
                             Header="keys" />
+
                         <ui:GridViewColumn
                             Width="Auto"
-                            DisplayMemberBinding="{Binding PixelPerMs, Mode=OneWay}"
+                            DisplayMemberBinding="{Binding Path=Value.PixelPerMs, Mode=OneWay}"
                             Header="p/ms" />
+
                         <ui:GridViewColumn
                             Width="Auto"
-                            DisplayMemberBinding="{Binding Dir, Mode=OneWay}"
+                            DisplayMemberBinding="{Binding Path=Value.Dir, Mode=OneWay}"
                             Header="dir" />
+
                         <ui:GridViewColumn
                             Width="Auto"
-                            DisplayMemberBinding="{Binding WheelFactor, Mode=OneWay}"
+                            DisplayMemberBinding="{Binding Path=Value.WheelFactor, Mode=OneWay}"
                             Header="factor" />
                     </ui:GridView.Columns>
                 </ui:GridView>
             </ui:ListView.View>
-
-            <d:ListView.ItemsSource>
-                <x:Array Type="{x:Type viewModel:KeyBindViewModel}">
-                    <viewModel:KeyBindViewModel Dir="Left" PixelPerMs="5" />
-                    <viewModel:KeyBindViewModel Dir="Right" PixelPerMs="10" />
-                </x:Array>
-            </d:ListView.ItemsSource>
         </ui:ListView>
     </DockPanel>
 </UserControl>

@@ -1,5 +1,5 @@
 ﻿<UserControl
-    x:Class="Turnbind.View.KeyBindsControl"
+    x:Class="Turnbind.View.SettingsControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -7,7 +7,7 @@
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:view="clr-namespace:Turnbind.View"
     xmlns:viewModel="clr-namespace:Turnbind.ViewModel"
-    d:DataContext="{d:DesignInstance Type=viewModel:KeyBindsViewModel}"
+    d:DataContext="{d:DesignInstance Type=viewModel:SettingViewModel}"
     d:DesignHeight="500"
     d:DesignWidth="800"
     mc:Ignorable="d">
@@ -35,7 +35,7 @@
                 DockPanel.Dock="Top"
                 Text="{Binding ProfileTitle, Mode=OneWay}" />
 
-            <view:KeyBindListControl x:Name="KeyBindList" Margin="5" />
+            <view:BindsControl x:Name="Binds" Margin="5" />
         </DockPanel>
 
     </Grid>

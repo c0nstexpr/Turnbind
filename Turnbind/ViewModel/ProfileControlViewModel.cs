@@ -49,7 +49,7 @@ partial class ProfileControlViewModel : ObservableObject, IDisposable
 
         if (!m_profilesNames.TryAdd(name, item))
         {
-            item.Dispose();
+            //item.Dispose();
             return null;
         }
 
@@ -62,7 +62,7 @@ partial class ProfileControlViewModel : ObservableObject, IDisposable
     {
         m_profileDisposable[name].Dispose();
         m_profileDisposable.Remove(name);
-        m_profilesNames[name].Dispose();
+        //m_profilesNames[name].Dispose();
         m_profilesNames.Remove(name);
     }
 
@@ -70,8 +70,8 @@ partial class ProfileControlViewModel : ObservableObject, IDisposable
     {
         m_profileDisposable.Values.ForEach(item => item.Dispose());
         m_profileDisposable.Clear();
-        (m_profilesNames as IDictionary<string, ProfileNameItemViewModel>).Values
-            .ForEach(item => item.Dispose());
+        //(m_profilesNames as IDictionary<string, ProfileNameItemViewModel>).Values
+        //    .ForEach(item => item.Dispose());
         m_profilesNames.Clear();
     }
 
@@ -85,7 +85,7 @@ partial class ProfileControlViewModel : ObservableObject, IDisposable
     public void Dispose()
     {
         m_profileDisposable.Values.ForEach(item => item.Dispose());
-        (m_profilesNames as IDictionary<string, ProfileNameItemViewModel>).Values
-            .ForEach(item => item.Dispose());
+        //(m_profilesNames as IDictionary<string, ProfileNameItemViewModel>).Values
+        //    .ForEach(item => item.Dispose());
     }
 }

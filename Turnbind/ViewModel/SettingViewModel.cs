@@ -189,19 +189,19 @@ partial class SettingViewModel
         m_profileDiposables[name] = new CompositeDisposable
         {
             //item.EditProfile.Subscribe(_ => CurrentEditProfileName = name),
-            item.EnableProfile.Subscribe(
-                enable =>
-                {
-                    if(!m_profileControls.TryGetValue(name, out var control))
-                    {
-                        control = new(name);
-                        m_profileControls[name] = control;
-                        Initialize(control);
-                    }
+            //item.EnableProfile.Subscribe(
+            //    enable =>
+            //    {
+            //        if(!m_profileControls.TryGetValue(name, out var control))
+            //        {
+            //            control = new(name);
+            //            m_profileControls[name] = control;
+            //            Initialize(control);
+            //        }
 
-                    control.Enable = enable;
-                }
-            )
+            //        control.Enable = enable;
+            //    }
+            //)
         };
     }
 

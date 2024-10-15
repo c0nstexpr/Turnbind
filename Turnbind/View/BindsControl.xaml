@@ -27,7 +27,7 @@
             BorderBrush="Gray"
             BorderThickness="1"
             DockPanel.Dock="Top"
-            ItemsSource="{Binding KeyBinds, Mode=OneWay}"
+            ItemsSource="{Binding Items, Mode=OneWay}"
             SelectedItem="{Binding Selected}">
             <ui:ListView.View>
                 <ui:GridView AllowsColumnReorder="True">
@@ -54,6 +54,24 @@
                     </ui:GridView.Columns>
                 </ui:GridView>
             </ui:ListView.View>
+
+            <d:ListView.ItemsSource>
+                <x:Array Type="{x:Type viewModel:BindsItemViewModel}">
+                    <viewModel:BindsItemViewModel>
+                        <viewModel:BindsItemViewModel.InputKeys>
+                            <viewModel:InputKeysViewModel>
+                                <model:InputKey>A</model:InputKey>
+
+                                <model:InputKey>B</model:InputKey>
+                            </viewModel:InputKeysViewModel>
+                        </viewModel:BindsItemViewModel.InputKeys>
+
+                        <viewModel:BindsItemViewModel.TurnSetting 
+                            Dir="Left"
+                            />
+                    </viewModel:BindsItemViewModel>
+                </x:Array>
+            </d:ListView.ItemsSource>
         </ui:ListView>
     </DockPanel>
 </UserControl>

@@ -51,7 +51,7 @@ partial class SettingViewModel
 
     readonly BindsViewModel m_keyBindList;
 
-    public required BindsViewModel Binds
+    public required BindsViewModel TurnBinds
     {
         get => m_keyBindList;
 
@@ -80,7 +80,7 @@ partial class SettingViewModel
 
             m_modifyingKeyBinds = true;
 
-            Binds.Clear();
+            TurnBinds.TurnBindsDic.Clear();
 
             if (value is null)
             {

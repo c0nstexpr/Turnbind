@@ -29,27 +29,40 @@
             DockPanel.Dock="Top"
             ItemsSource="{Binding Items, Mode=OneWay}"
             SelectedItem="{Binding Selected}">
+
             <ui:ListView.View>
                 <ui:GridView AllowsColumnReorder="True">
+                    <GridView.ColumnHeaderContainerStyle>
+                        <Style TargetType="{x:Type GridViewColumnHeader}">
+                            <Setter Property="HorizontalContentAlignment" Value="Center" />
+
+                            <Setter Property="Background" Value="Transparent" />
+                        </Style>
+                    </GridView.ColumnHeaderContainerStyle>
+
                     <ui:GridView.Columns>
                         <ui:GridViewColumn
                             Width="Auto"
-                            DisplayMemberBinding="{Binding Path=Key.KeysString, Mode=OneWay}"
-                            Header="keys" />
+                            MinWidth="100"
+                            DisplayMemberBinding="{Binding Path=InputKeys.KeysString, Mode=OneWay}"
+                            Header="Keys" />
 
                         <ui:GridViewColumn
                             Width="Auto"
-                            DisplayMemberBinding="{Binding Path=Value.PixelPerMs, Mode=OneWay}"
+                            MinWidth="50"
+                            DisplayMemberBinding="{Binding Path=TurnSetting.PixelPerMs, Mode=OneWay}"
                             Header="p/ms" />
 
                         <ui:GridViewColumn
                             Width="Auto"
-                            DisplayMemberBinding="{Binding Path=Value.Dir, Mode=OneWay}"
+                            MinWidth="50"
+                            DisplayMemberBinding="{Binding Path=TurnSetting.Dir, Mode=OneWay}"
                             Header="dir" />
 
                         <ui:GridViewColumn
                             Width="Auto"
-                            DisplayMemberBinding="{Binding Path=Value.WheelFactor, Mode=OneWay}"
+                            MinWidth="50"
+                            DisplayMemberBinding="{Binding Path=TurnSetting.WheelFactor, Mode=OneWay}"
                             Header="factor" />
                     </ui:GridView.Columns>
                 </ui:GridView>
@@ -66,9 +79,29 @@
                             </viewModel:InputKeysViewModel>
                         </viewModel:BindsItemViewModel.InputKeys>
 
-                        <viewModel:BindsItemViewModel.TurnSetting 
-                            Dir="Left"
-                            />
+                        <viewModel:BindsItemViewModel.TurnSetting>
+                            <viewModel:TurnSettingViewModel
+                                Dir="Left"
+                                PixelPerMs="100"
+                                WheelFactor="1" />
+                        </viewModel:BindsItemViewModel.TurnSetting>
+                    </viewModel:BindsItemViewModel>
+
+                    <viewModel:BindsItemViewModel>
+                        <viewModel:BindsItemViewModel.InputKeys>
+                            <viewModel:InputKeysViewModel>
+                                <model:InputKey>D</model:InputKey>
+
+                                <model:InputKey>B</model:InputKey>
+                            </viewModel:InputKeysViewModel>
+                        </viewModel:BindsItemViewModel.InputKeys>
+
+                        <viewModel:BindsItemViewModel.TurnSetting>
+                            <viewModel:TurnSettingViewModel
+                                Dir="Right"
+                                PixelPerMs="500"
+                                WheelFactor="0.5" />
+                        </viewModel:BindsItemViewModel.TurnSetting>
                     </viewModel:BindsItemViewModel>
                 </x:Array>
             </d:ListView.ItemsSource>

@@ -12,6 +12,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="AndanteSoft.SpanLinq" Version="1.0.1" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
         <PackageReference Include="LanguageExt.Rx" Version="4.4.9" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
@@ -34,5 +35,9 @@
         <Page Include="App.xaml" />
 
         <Resource Include="Assets/*" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="..\.editorconfig" Link=".editorconfig" />
     </ItemGroup>
 </Project>

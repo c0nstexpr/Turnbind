@@ -24,7 +24,9 @@ public partial class App : Application
 {
     IHost m_host = Host.CreateDefaultBuilder().Build();
 
-    public static new App Current => (App)Application.Current;
+    static Lazy<App> m_currentLazy = new();
+
+    public static new App Current => m_currentLazy.Value;
 
     public static T? GetService<T>() where T : class => Current.m_host.Services.GetService<T>();
 
@@ -35,6 +37,8 @@ public partial class App : Application
     [LibraryImport("kernel32", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool SetPriorityClass(nint hProcess, uint dwPriorityClass);
+
+    public App() => m_currentLazy = new(this);
 
     void OnStartup(object sender, StartupEventArgs e)
     {

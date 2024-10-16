@@ -14,7 +14,7 @@ sealed partial class BindEditControl : UserControl, IDisposable
 {
     internal readonly BindEditViewModel m_viewModel = new();
 
-    readonly InputAction m_inputAction = App.GetRequiredService<InputAction>();
+    readonly Lazy<InputAction> m_inputAction = new(App.GetRequiredService<InputAction>);
 
     public BindEditControl()
     {
@@ -51,7 +51,7 @@ sealed partial class BindEditControl : UserControl, IDisposable
     readonly SerialDisposable m_keyboardDisposable = new();
 
     void InputKeysTextBoxFocus(object sender, RoutedEventArgs e) =>
-        m_keyboardDisposable.Disposable = m_inputAction.KeyboardInput
+        m_keyboardDisposable.Disposable = m_inputAction.Value.KeyboardInput
             .Where(state => state.Pressed)
             .Select(state => state.Key)
             .Subscribe(InputKeysTextBoxKeyDown);

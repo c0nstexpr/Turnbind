@@ -1,19 +1,17 @@
-﻿using System.Collections.ObjectModel;
-using System.Collections.Specialized;
+﻿using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 
-using LanguageExt.ClassInstances.Pred;
-
 using ObservableCollections;
 
+using Turnbind.Helper;
 using Turnbind.Model;
 
 namespace Turnbind.ViewModel;
 
-partial class BindsViewModel : ObservableObject
+sealed partial class BindsViewModel : ObservableObject, IDisposable
 {
     BindEditViewModel m_bindEdit;
 
@@ -29,9 +27,15 @@ partial class BindsViewModel : ObservableObject
         }
     }
 
-    public ObservableDictionary<InputKeys, BindsItemViewModel> BindsDic { get; } = [];
+    public ObservableDictionary<InputKeys, TurnSetting> TurnBindsDic { get; } = [];
 
-    public INotifyCollectionChangedSynchronizedViewList<BindsItemViewModel> Items { get; }
+    readonly IDisposable m_disposable;
+
+    readonly ISynchronizedView<KeyValuePair<InputKeys, TurnSetting>, BindsItemViewModel> m_itemsView;
+
+    readonly INotifyCollectionChangedSynchronizedViewList<BindsItemViewModel> m_itemSource;
+
+    public INotifyCollectionChanged ItemSource => m_itemSource;
 
     BindsItemViewModel m_selected = new();
 
@@ -48,8 +52,18 @@ partial class BindsViewModel : ObservableObject
 
     public BindsViewModel()
     {
-        BindsDic.CollectionChanged += OnBindsChanged;
-        Items = BindsDic.ToNotifyCollectionChanged(p => p.Value);
+        TurnBindsDic.CollectionChanged += OnBindsChanged;
+
+        m_itemsView = TurnBindsDic.CreateCollectionView(
+            p => new BindsItemViewModel
+            {
+                InputKeys = new() { Keys = p.Key },
+                TurnSetting = new() { TurnSetting = p.Value }
+            }
+        );
+        m_itemSource = m_itemsView.ToNotifyCollectionChanged();
+
+        m_disposable = new CompositeDisposable(m_itemSource, m_itemsView);
     }
 
     void UpdateEdit()
@@ -70,15 +84,11 @@ partial class BindsViewModel : ObservableObject
 
                 InputKeys newKeys = new(keys.Keys);
 
-                BindsDic[newKeys] = new()
+                TurnBindsDic[newKeys] = new()
                 {
-                    InputKeys = new() { Keys = newKeys },
-                    TurnSetting = new()
-                    {
-                        Dir = turnSetting.Dir,
-                        PixelPerMs = turnSetting.PixelPerMs,
-                        WheelFactor = turnSetting.WheelFactor
-                    }
+                    Dir = turnSetting.Dir,
+                    PixelPerMs = turnSetting.PixelPerMs,
+                    WheelFactor = turnSetting.WheelFactor
                 };
 
                 BindEdit.RemoveCommand.NotifyCanExecuteChanged();
@@ -87,12 +97,12 @@ partial class BindsViewModel : ObservableObject
         );
 
         BindEdit.RemoveCommand = new(
-            () => BindsDic.Remove(BindEdit.InputKeys.Keys),
-            () => BindsDic.ContainsKey(BindEdit.InputKeys.Keys)
+            () => TurnBindsDic.Remove(BindEdit.InputKeys.Keys),
+            () => TurnBindsDic.ContainsKey(BindEdit.InputKeys.Keys)
         );
     }
 
-    void OnBindsChanged(in NotifyCollectionChangedEventArgs<KeyValuePair<InputKeys, BindsItemViewModel>> e)
+    void OnBindsChanged(in NotifyCollectionChangedEventArgs<KeyValuePair<InputKeys, TurnSetting>> e)
     {
         var action = e.Action;
         var cmd = BindEdit.RemoveCommand;
@@ -134,5 +144,9 @@ partial class BindsViewModel : ObservableObject
         }
     }
 
-    public void Clear() => BindsDic.Clear();
+    public void Dispose()
+    {
+        TurnBindsDic.CollectionChanged -= OnBindsChanged;
+        m_disposable.Dispose();
+    }
 }

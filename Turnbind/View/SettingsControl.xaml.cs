@@ -15,7 +15,7 @@ sealed partial class SettingsControl : UserControl, IDisposable
         m_viewModel = new()
         {
             Profile = Profile.m_viewModel,
-            Binds = Binds.m_viewModel
+            TurnBinds = Binds.m_viewModel
         };
 
         DataContext = m_viewModel;

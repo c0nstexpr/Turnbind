@@ -19,7 +19,121 @@
             BorderBrush="Gray"
             BorderThickness="1"
             DockPanel.Dock="Bottom">
-            <view:BindEditControl x:Name="BindEdit" />
+            <DockPanel Margin="5">
+                <Grid DockPanel.Dock="Bottom">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+
+                    <ui:Button
+                        Margin="10"
+                        HorizontalAlignment="Stretch"
+                        Appearance="Primary"
+                        BorderBrush="Gray"
+                        BorderThickness="0.5"
+                        Command="{Binding ModifyCommand, Mode=OneWay}"
+                        Content="Modify" />
+
+                    <ui:Button
+                        Grid.Row="2"
+                        Margin="10"
+                        HorizontalAlignment="Stretch"
+                        Appearance="Dark"
+                        BorderBrush="Gray"
+                        BorderThickness="0.5"
+                        Command="{Binding RemoveCommand, Mode=OneWay}"
+                        Content="Remove" />
+                </Grid>
+
+                <Grid Margin="10" VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+
+                    <ui:TextBlock
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Margin="5"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Text="Direction:" />
+
+                    <ComboBox
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Margin="5"
+                        VerticalAlignment="Center"
+                        BorderBrush="Gray"
+                        BorderThickness="0.5"
+                        ItemsSource="{Binding Source={StaticResource directionValues}}"
+                        SelectedValue="{Binding Path=Selected.TurnSetting.Dir}" />
+
+                    <ui:TextBlock
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Margin="5"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Text="Binding keys:" />
+
+                    <ui:TextBox
+                        x:Name="InputKeysTextBox"
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Margin="5"
+                        VerticalContentAlignment="Center"
+                        BorderBrush=" Gray"
+                        BorderThickness="0.5"
+                        GotFocus="InputKeysTextBoxFocus"
+                        IsReadOnly="True"
+                        LostFocus="InputKeysTextBoxLostFocus"
+                        Text="{Binding Path=Selected.InputKeys.KeysString, Mode=OneWay}" />
+
+                    <ui:TextBlock
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        Margin="5"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Text="Pixel/Milisecond:" />
+
+                    <ui:TextBox
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        Margin="5"
+                        VerticalContentAlignment="Center"
+                        BorderBrush="Gray"
+                        BorderThickness="0.5"
+                        Text="{Binding Path=Selected.TurnSetting.PixelPerMs}" />
+
+                    <ui:TextBlock
+                        Grid.Row="3"
+                        Grid.Column="0"
+                        Margin="5"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Text="Wheel Factor:" />
+
+                    <ui:TextBox
+                        Grid.Row="3"
+                        Grid.Column="1"
+                        Margin="5"
+                        VerticalContentAlignment="Center"
+                        BorderBrush="Gray"
+                        BorderThickness="0.5"
+                        Text="{Binding Path=Selected.TurnSetting.WheelFactor}" />
+                </Grid>
+            </DockPanel>
         </Border>
 
         <ui:ListView

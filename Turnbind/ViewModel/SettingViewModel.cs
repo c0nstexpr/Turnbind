@@ -38,14 +38,14 @@ partial class SettingViewModel
         {
             m_profile = value;
 
-            var profilesNames = value.m_observableProfilesNames;
+            //var profilesNames = value.m_observableProfilesNames;
 
-            foreach (var name in m_settings.Profiles.Keys)
-                SubscribeProfile(Profile.Add(name)!);
+            //foreach (var name in m_settings.Profiles.Keys)
+            //    SubscribeProfile(Profile.Add(name)!);
 
-            profilesNames.CollectionChanged += OnProfilesNamesChanged;
+            //profilesNames.CollectionChanged += OnProfilesNamesChanged;
 
-            m_disposable.Add(() => profilesNames.CollectionChanged -= OnProfilesNamesChanged);
+            //m_disposable.Add(() => profilesNames.CollectionChanged -= OnProfilesNamesChanged);
         }
     }
 
@@ -112,7 +112,7 @@ partial class SettingViewModel
 
     readonly Dictionary<string, IDisposable> m_profileDiposables = [];
 
-    void OnProfilesNamesChanged(in NotifyCollectionChangedEventArgs<KeyValuePair<string, ProfileNameItemViewModel>> e)
+    void OnProfilesNamesChanged(in NotifyCollectionChangedEventArgs<KeyValuePair<string, ProfileItemViewModel>> e)
     {
         var profiles = m_settings.Profiles;
 
@@ -139,8 +139,8 @@ partial class SettingViewModel
                 m_profileControls.Values.ForEach(x => x.Dispose());
                 m_profileControls.Clear();
 
-                foreach (var (name, _) in Profile.m_observableProfilesNames)
-                    profiles.Add(name, []);
+                //foreach (var (name, _) in Profile.m_observableProfilesNames)
+                //    profiles.Add(name, []);
 
                 m_logger.LogInformation("Reset profiles");
 
@@ -150,7 +150,7 @@ partial class SettingViewModel
         m_settings.Save();
     }
 
-    void OnProfileRemove(ProfileNameItemViewModel item)
+    void OnProfileRemove(ProfileItemViewModel item)
     {
         var profiles = m_settings.Profiles;
         var name = item.Name;
@@ -171,7 +171,7 @@ partial class SettingViewModel
         m_logger.LogInformation("Remove profile {ProfileName}", name);
     }
 
-    void OnProfileAdd(ProfileNameItemViewModel item)
+    void OnProfileAdd(ProfileItemViewModel item)
     {
         var profiles = m_settings.Profiles;
         var name = item.Name;
@@ -182,7 +182,7 @@ partial class SettingViewModel
         m_logger.LogInformation("Add profile {ProfileName}", name);
     }
 
-    void SubscribeProfile(ProfileNameItemViewModel item)
+    void SubscribeProfile(ProfileItemViewModel item)
     {
         var name = item.Name;
 

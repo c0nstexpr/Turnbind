@@ -23,7 +23,7 @@
                     BorderBrush="Gray"
                     BorderThickness="0.5"
                     PlaceholderText="Profile name..."
-                    Text="{Binding TextBoxProfileName}" />
+                    Text="{Binding InputProfile}" />
 
                 <ui:Button
                     Grid.Row="1"
@@ -32,14 +32,14 @@
                     Appearance="Primary"
                     BorderBrush="Gray"
                     BorderThickness="0.5"
-                    Command="{Binding AddProfileNameCommand, Mode=OneWay}"
+                    Command="{Binding AddProfileCommand, Mode=OneWay}"
                     Content="Add" />
             </Grid>
 
-            <ui:ListView Margin="5" ItemsSource="{Binding ProfilesNames, Mode=OneWay}">
+            <ui:ListView Margin="5" ItemsSource="{Binding Profiles, Mode=OneWay}">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <DockPanel>
+                        <DockPanel d:DataContext="{d:DesignInstance viewModel:ProfileItemViewModel}">
                             <Grid DockPanel.Dock="Right">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition />
@@ -49,22 +49,21 @@
                                 <ui:Button
                                     Margin="5"
                                     Appearance="Info"
-                                    Command="{Binding EditProfileCommand, Mode=OneWay}"
+                                    Command="{Binding ViewCmd, Mode=OneWay}"
+                                    CommandParameter="{Binding}"
                                     Content="View" />
 
                                 <ui:Button
                                     Grid.Column="1"
                                     Margin="5"
                                     Appearance="Danger"
-                                    Command="{Binding RemoveProfileCommand, Mode=OneWay}"
+                                    Command="{Binding RemoveCmd, Mode=OneWay}"
+                                    CommandParameter="{Binding}"
                                     Content="Remove"
                                     Foreground="White" />
                             </Grid>
 
-                            <ui:ToggleSwitch
-                                Command="{Binding EnableProfileCommand, Mode=OneWay}"
-                                CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"
-                                DockPanel.Dock="Left" />
+                            <ui:ToggleSwitch DockPanel.Dock="Left" IsChecked="{Binding Enabled}" />
 
                             <TextBlock
                                 Margin="10"
@@ -75,9 +74,9 @@
                 </ListView.ItemTemplate>
 
                 <d:ListView.ItemsSource>
-                    <x:Array Type="{x:Type viewModel:ProfileNameItemViewModel}">
-                        <viewModel:ProfileNameItemViewModel Name="default" />
-                        <viewModel:ProfileNameItemViewModel Name="custom" />
+                    <x:Array Type="{x:Type viewModel:ProfileItemViewModel}">
+                        <viewModel:ProfileItemViewModel Name="default" />
+                        <viewModel:ProfileItemViewModel Name="custom" />
                     </x:Array>
                 </d:ListView.ItemsSource>
             </ui:ListView>

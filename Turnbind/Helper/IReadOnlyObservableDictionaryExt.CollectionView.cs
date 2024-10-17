@@ -1,15 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Specialized;
-using System.Diagnostics;
-using System.Reactive.Disposables;
 
 using LanguageExt.Pretty;
 
-using MoreLinq;
-
 using ObservableCollections;
-
-using SpanLinq;
 
 namespace Turnbind.Helper;
 
@@ -17,17 +11,13 @@ public static partial class ObservableDictionaryExt
 {
     sealed class CollectionView<TKey, TValue, U> : ISynchronizedView<KeyValuePair<TKey, TValue>, U> where TKey : notnull
     {
-        public Func<KeyValuePair<TKey, TValue>, U> Selector { get; }
-
         readonly Key2IndexCollection<TKey> m_key2Index;
-
-        readonly ObservableList<KeyValuePair<TKey, TValue>> m_collection;
 
         readonly ISynchronizedView<KeyValuePair<TKey, TValue>, U> m_view;
 
-        public object SyncRoot => m_collection.SyncRoot;
+        public object SyncRoot => m_view.SyncRoot;
 
-        public int Count => m_collection.Count;
+        public int Count => m_view.Count;
 
         public event NotifyViewChangedEventHandler<KeyValuePair<TKey, TValue>, U>? ViewChanged
         {
@@ -43,7 +33,12 @@ public static partial class ObservableDictionaryExt
             remove => m_view.CollectionStateChanged -= value;
         }
 
-        public IReadOnlyObservableDictionary<TKey, TValue> Dic { get; }
+        public event Action<RejectedViewChangedAction, int, int>? RejectedViewChanged
+        {
+            add => m_view.RejectedViewChanged += value;
+
+            remove => m_view.RejectedViewChanged -= value;
+        }
 
         public ISynchronizedViewFilter<KeyValuePair<TKey, TValue>> Filter => m_view.Filter;
 
@@ -55,102 +50,74 @@ public static partial class ObservableDictionaryExt
 
         public CollectionView(IReadOnlyObservableDictionary<TKey, TValue> dic, Func<KeyValuePair<TKey, TValue>, U> selector)
         {
-            Selector = selector;
-            Dic = dic;
             m_key2Index = new(dic.Keys);
-            m_collection = new(dic);
-            m_view = m_collection.CreateView(selector);
-            dic.CollectionChanged += OnDicChanged;
+            m_view = dic.CreateView(selector);
+
+            m_view.ViewChanged += OnChanged;
         }
 
-        bool OnRemove(TKey key)
+        void OnChanged(in SynchronizedViewChangedEventArgs<KeyValuePair<TKey, TValue>, U> e)
         {
-            if (m_key2Index.TryGetValue(key, out var i)) return false;
+            if (!e.IsSingleItem) throw new InvalidOperationException($"Expected single item, got {e.Action}");
 
-            m_key2Index.Remove(key);
-            m_collection.RemoveAt(i);
-
-            return true;
-        }
-
-        bool OnAdd(KeyValuePair<TKey, TValue> pair)
-        {
-            var key = pair.Key;
-
-            if (!m_key2Index.Add(key)) return false;
-
-            m_collection[m_key2Index[key]] = pair;
-            return true;
-        }
-
-        void OnReplace(TKey oldKey, KeyValuePair<TKey, TValue> pair)
-        {
-            Debug.Assert(oldKey.Equals(pair.Key));
-
-            if (!m_key2Index.TryGetValue(oldKey, out var i)) return;
-
-            m_collection[m_key2Index[oldKey]] = pair;
-        }
-
-        void OnReset()
-        {
-            m_key2Index.Clear();
-            m_collection.Clear();
-
-            foreach (var pair in Dic)
+            switch (e.Action)
             {
-                m_key2Index.Add(pair.Key);
-                m_collection.Add(pair);
-            }
-        }
+                case NotifyCollectionChangedAction.Reset:
+                    m_key2Index.Clear();
 
-        void OnDicChanged(in NotifyCollectionChangedEventArgs<KeyValuePair<TKey, TValue>> e)
-        {
-            var action = e.Action;
+                    foreach (var (pair, _) in m_view.Unfiltered)
+                        m_key2Index.Add(pair.Key);
 
-            if (action == NotifyCollectionChangedAction.Reset)
-            {
-                OnReset();
-                return;
-            }
+                    // TODO
+                    break;
 
-            if (e.IsSingleItem)
-            {
-                switch (action)
-                {
-                    case NotifyCollectionChangedAction.Add:
-                        OnAdd(e.NewItem);
-                        break;
-
-                    case NotifyCollectionChangedAction.Remove:
-                        OnRemove(e.OldItem.Key);
-                        break;
-
-                    case NotifyCollectionChangedAction.Replace:
-                        OnReplace(e.OldItem.Key, e.NewItem);
-                        break;
-                }
-
-                return;
-            }
-
-            switch (action)
-            {
                 case NotifyCollectionChangedAction.Add:
-                    e.NewItems.ForEach(p => OnAdd(p));
+                    var item = e.NewItem;
+                    var value = item.Value;
+                    var key = value.Key;
+
+                    if (!m_key2Index.Add(key)) break;
+
+                    var i = m_key2Index[key];
+
+                    // TODO
                     break;
 
                 case NotifyCollectionChangedAction.Remove:
-                    e.OldItems.ForEach(p => OnRemove(p.Key));
+                    item = e.OldItem;
+                    value = item.Value;
+                    key = value.Key;
+
+                    if (!m_key2Index.TryGetValue(key, out i)) break;
+
+                    m_key2Index.Remove(key);
+
+                    // TODO
                     break;
 
                 case NotifyCollectionChangedAction.Replace:
-                    for (var i = 0; i < e.OldItems.Length; ++i) OnReplace(e.OldItems[i].Key, e.NewItems[i]);
+                    var oldItem = e.OldItem;
+                    var oldKey = oldItem.Value.Key;
+
+                    item = e.NewItem;
+                    value = item.Value;
+                    key = value.Key;
+
+                    if (!oldKey.Equals(key)) throw new InvalidOperationException($"Key mismatch: {oldKey} != {key}");
+
+                    if (!m_key2Index.TryGetValue(oldKey, out i)) break;
+
+                    // TODO
                     break;
             }
+
         }
 
-        public void Dispose() => Dic.CollectionChanged -= OnDicChanged;
+        public void Dispose()
+        {
+            m_view.ViewChanged -= OnChanged;
+            m_view.Dispose();
+        }
 
         public void AttachFilter(ISynchronizedViewFilter<KeyValuePair<TKey, TValue>> filter) => m_view.AttachFilter(filter);
 
@@ -158,12 +125,23 @@ public static partial class ObservableDictionaryExt
 
         public ISynchronizedViewList<U> ToViewList() => m_view.ToViewList();
 
-        public INotifyCollectionChangedSynchronizedViewList<U> ToNotifyCollectionChanged() => m_view.ToNotifyCollectionChanged();
+        class NCCSVL : NotifyCollectionChangedSynchronizedViewList<U>
+        {
+            CollectionView<TKey, TValue, U> m_source;
+        }
 
-        public INotifyCollectionChangedSynchronizedViewList<U> ToNotifyCollectionChanged(ICollectionEventDispatcher? collectionEventDispatcher) => m_view.ToNotifyCollectionChanged(collectionEventDispatcher);
+        public NotifyCollectionChangedSynchronizedViewList<U> ToNotifyCollectionChanged(ICollectionEventDispatcher? collectionEventDispatcher)
+        {
+            var view = m_view.ToNotifyCollectionChanged(collectionEventDispatcher);
+        }
+
+        public NotifyCollectionChangedSynchronizedViewList<U> ToNotifyCollectionChanged()
+        {
+        }
+
 
         public IEnumerator<U> GetEnumerator() => m_view.GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)m_view).GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => m_view.GetEnumerator();
     }
 }

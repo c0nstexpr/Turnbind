@@ -5,7 +5,7 @@ namespace Turnbind.Helper;
 
 public class Key2IndexCollection<TKey> : IReadOnlyDictionary<TKey, int> where TKey : notnull
 {
-    class Node
+    private class Node
     {
         public Node? Prev { get; private set; } = null;
 
@@ -17,12 +17,21 @@ public class Key2IndexCollection<TKey> : IReadOnlyDictionary<TKey, int> where TK
 
         public Node(Node prev)
         {
-            Prev = prev;
+            var n = prev.Next;
+
             prev.Next = this;
+            Prev = prev;
+
+            if (n != null)
+            {
+                Next = n;
+                n.Prev = this;
+            }
+
             Index = prev.Index + 1;
         }
 
-        public void Erase()
+        public void Remove()
         {
             if (Prev != null) Prev.Next = Next;
 
@@ -76,7 +85,7 @@ public class Key2IndexCollection<TKey> : IReadOnlyDictionary<TKey, int> where TK
 
         if (m_tail == node) m_tail = m_tail.Prev;
 
-        node.Erase();
+        node.Remove();
         m_dic.Remove(item);
 
         return true;

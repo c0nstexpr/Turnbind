@@ -3,8 +3,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
 
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 using ObservableCollections;
+
+using SpanLinq;
 
 using Turnbind.Helper;
 using Turnbind.Model;
@@ -13,20 +16,6 @@ namespace Turnbind.ViewModel;
 
 sealed partial class BindsViewModel : ObservableObject, IDisposable
 {
-    BindEditViewModel m_bindEdit;
-
-    public required BindEditViewModel BindEdit
-    {
-        get => m_bindEdit;
-
-        [MemberNotNull(nameof(m_bindEdit))]
-        set
-        {
-            m_bindEdit = value;
-            UpdateEdit();
-        }
-    }
-
     public ObservableDictionary<InputKeys, TurnSetting> TurnBindsDic { get; } = [];
 
     readonly IDisposable m_disposable;
@@ -46,7 +35,9 @@ sealed partial class BindsViewModel : ObservableObject, IDisposable
         set
         {
             SetProperty(ref m_selected, value);
-            UpdateEdit();
+            value.WhenChanged(x => x.InputKeys).Subscribe(
+                _ => RemoveCommand.NotifyCanExecuteChanged()
+            );
         }
     }
 
@@ -66,46 +57,33 @@ sealed partial class BindsViewModel : ObservableObject, IDisposable
         m_disposable = new CompositeDisposable(m_itemSource, m_itemsView);
     }
 
-    void UpdateEdit()
+    bool CanModify() => !Selected.InputKeys.Keys.Empty;
+
+    [RelayCommand(CanExecute = nameof(CanModify))]
+    void Modify()
     {
-        BindEdit.InputKeys = new() { Keys = Selected.InputKeys.Keys };
-        BindEdit.TurnSetting = new()
+        var keys = Selected.InputKeys;
+        var turnSetting = Selected.TurnSetting;
+
+        TurnBindsDic[new(keys.Keys)] = new()
         {
-            Dir = Selected.TurnSetting.Dir,
-            PixelPerMs = Selected.TurnSetting.PixelPerMs,
-            WheelFactor = Selected.TurnSetting.WheelFactor
+            Dir = turnSetting.Dir,
+            PixelPerMs = turnSetting.PixelPerMs,
+            WheelFactor = turnSetting.WheelFactor
         };
 
-        BindEdit.ModifyCommand = new(
-            () =>
-            {
-                var keys = BindEdit.InputKeys;
-                var turnSetting = BindEdit.TurnSetting;
-
-                InputKeys newKeys = new(keys.Keys);
-
-                TurnBindsDic[newKeys] = new()
-                {
-                    Dir = turnSetting.Dir,
-                    PixelPerMs = turnSetting.PixelPerMs,
-                    WheelFactor = turnSetting.WheelFactor
-                };
-
-                BindEdit.RemoveCommand.NotifyCanExecuteChanged();
-            },
-            () => !BindEdit.InputKeys.Keys.Empty
-        );
-
-        BindEdit.RemoveCommand = new(
-            () => TurnBindsDic.Remove(BindEdit.InputKeys.Keys),
-            () => TurnBindsDic.ContainsKey(BindEdit.InputKeys.Keys)
-        );
+        RemoveCommand.NotifyCanExecuteChanged();
     }
+
+    bool CanRemove() => TurnBindsDic.ContainsKey(Selected.InputKeys.Keys);
+
+    [RelayCommand(CanExecute = nameof(CanRemove))]
+    void Remove() => TurnBindsDic.Remove(Selected.InputKeys.Keys);
 
     void OnBindsChanged(in NotifyCollectionChangedEventArgs<KeyValuePair<InputKeys, TurnSetting>> e)
     {
         var action = e.Action;
-        var cmd = BindEdit.RemoveCommand;
+        var cmd = RemoveCommand;
 
         if (action == NotifyCollectionChangedAction.Reset)
         {
@@ -113,35 +91,31 @@ sealed partial class BindsViewModel : ObservableObject, IDisposable
             return;
         }
 
-        var keys = BindEdit.InputKeys.Keys;
+        var keys = Selected.InputKeys.Keys;
 
         if (e.IsSingleItem)
         {
             var newKeys = action switch
             {
-                NotifyCollectionChangedAction.Add => e.NewItem.Key,
-                NotifyCollectionChangedAction.Remove => e.OldItem.Key,
-                _ => null,
+                NotifyCollectionChangedAction.Add => e.NewItem,
+                NotifyCollectionChangedAction.Remove => e.OldItem,
+                _ => new(),
             };
 
-            if (keys.Equals(newKeys)) cmd.NotifyCanExecuteChanged();
+            if (keys.Equals(newKeys.Key)) cmd.NotifyCanExecuteChanged();
+
+            return;
         }
-        else
+
+        var newKeysSpan = action switch
         {
-            var newKeysSpan = action switch
-            {
-                NotifyCollectionChangedAction.Add => e.NewItems,
-                NotifyCollectionChangedAction.Remove => e.OldItems,
-                _ => null,
-            };
+            NotifyCollectionChangedAction.Add => e.NewItems,
+            NotifyCollectionChangedAction.Remove => e.OldItems,
+            _ => null,
+        };
 
-            foreach (var (newKeys, _) in newKeysSpan)
-                if (keys.Equals(newKeys))
-                {
-                    cmd.NotifyCanExecuteChanged();
-                    break;
-                }
-        }
+        if(newKeysSpan.Any(newKeys => keys.Equals(newKeys.Key)))
+            cmd.NotifyCanExecuteChanged();
     }
 
     public void Dispose()

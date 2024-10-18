@@ -8,33 +8,37 @@ using Turnbind.Model;
 
 namespace Turnbind.Action;
 
-class BindControl : IDisposable
+class BindControl(
+    ILogger<BindControl> log, 
+    TurnAction turnAction,
+    InputAction inputAction,
+    ProcessWindowAction windowAction
+): IDisposable
 {
-    readonly ILogger<BindControl> m_log = App.GetRequiredService<ILogger<BindControl>>();
+    readonly ILogger<BindControl> m_log = log;
 
-    readonly TurnAction m_turnAction = App.GetRequiredService<TurnAction>();
+    readonly TurnAction m_turnAction = turnAction;
 
-    readonly InputAction m_inputAction = App.GetRequiredService<InputAction>();
+    readonly InputAction m_inputAction = inputAction;
+
+    readonly ProcessWindowAction m_windowAction = windowAction;
 
     readonly CompositeDisposable m_disposble;
 
     readonly InputKeys m_keys;
 
-    readonly string m_keysStr;
-
     public required InputKeys Keys
     {
         get => m_keys;
 
-        [MemberNotNull(nameof(m_keys), nameof(m_disposble), nameof(m_keysStr))]
+        [MemberNotNull(nameof(m_keys), nameof(m_disposble))]
         init
         {
             m_keys = value;
             m_disposble = [
-                App.GetRequiredService<ProcessWindowAction>().Focused.Subscribe(OnFocused),
+                m_windowAction.Focused.Subscribe(OnFocused),
                 m_inputAction.SubscribeKeys(m_keys).Subscribe(OnActive)
             ];
-            m_keysStr = string.Join(" + ", ((IEnumerable<InputKey>)Keys).Select(k => $"{k}"));
         }
     }
 

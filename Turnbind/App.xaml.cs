@@ -17,22 +17,80 @@ using System.Runtime.InteropServices;
 using Microsoft.Extensions.Configuration;
 using Serilog.Events;
 using Serilog.Sinks.RichTextBox.Themes;
+using System.Windows.Controls;
 
 namespace Turnbind;
 
 public partial class App : Application
 {
-    IHost m_host = Host.CreateDefaultBuilder().Build();
+    static readonly IHost m_host;
+
+    public static T? GetService<T>() where T : class => m_host.Services.GetService<T>();
+
+    public static T GetRequiredService<T>() where T : class => m_host.Services.GetRequiredService<T>();
+
+    public static IConfiguration Configuration => GetRequiredService<IConfiguration>();
+
+    static IServiceCollection AddSerilog(IServiceCollection services, RichTextBox? logTextBox, LogEventLevel logLvl) =>
+        services.AddSerilog(
+            config =>
+            {
+                {
+                    var enrich = config.Enrich;
+                    enrich.FromLogContext();
+                    enrich.WithExceptionDetails();
+                }
+
+                config.MinimumLevel.Is(logLvl)
+                    .WriteTo.Console()
+                    .WriteTo.File(
+                        new RenderedCompactJsonFormatter(),
+                        $"logs.json",
+                        fileSizeLimitBytes: 1_000_000,
+                        rollOnFileSizeLimit: true
+                    );
+
+                if (logTextBox is { })
+                    config.WriteTo.RichTextBox(
+                        logTextBox,
+                        theme: RichTextBoxConsoleTheme.Colored
+                    );
+            }
+        );
+
+    static App()
+    {
+        Settings settings = new();
+        LogTextBlock? logTextBlock = null;
+        var builder = Host.CreateApplicationBuilder();
+
+        var config = builder.Configuration;
+        var services = builder.Services
+            .AddSingleton<InputAction>()
+            .AddSingleton<ProcessWindowAction>()
+            .AddSingleton<TurnTickAction>()
+            .AddSingleton<TurnAction>()
+            .AddScoped<Settings>()
+            .AddTransient<MainWindowViewModel>()
+            .AddTransient<BindControl>();
+
+        config.Bind(settings);
+
+        if (settings.Console)
+        {
+            logTextBlock = new();
+            services.AddSingleton(logTextBlock);
+        }
+
+        AddSerilog(services, logTextBlock?.LogTextBox, settings.LogLevel);
+
+        m_host = builder.Build();
+        m_host.Start();
+    }
 
     static Lazy<App> m_currentLazy = new();
 
     public static new App Current => m_currentLazy.Value;
-
-    public static T? GetService<T>() where T : class => Current.m_host.Services.GetService<T>();
-
-    public static T GetRequiredService<T>() where T : class => Current.m_host.Services.GetRequiredService<T>();
-
-    public static IConfiguration Configuration => GetRequiredService<IConfiguration>();
 
     [LibraryImport("kernel32", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -40,60 +98,7 @@ public partial class App : Application
 
     public App() => m_currentLazy = new(this);
 
-    void OnStartup(object sender, StartupEventArgs e)
-    {
-        SetPriorityClass(Process.GetCurrentProcess().Handle, 0x00000080);
-
-        var builder = Host.CreateApplicationBuilder(e.Args);
-        var config = builder.Configuration;
-
-        {
-            var services = builder.Services;
-            LogTextBlock? logTextBlock = null;
-
-            if (config["Console"] is { })
-            {
-                logTextBlock = new LogTextBlock();
-                services.AddSingleton(logTextBlock);
-            }
-
-            services.AddSerilog(
-                loggerConfiguration =>
-                {
-                    loggerConfiguration.Enrich.FromLogContext()
-                        .Enrich.WithExceptionDetails()
-                        .WriteTo.Console()
-                        .WriteTo.File(
-                            new RenderedCompactJsonFormatter(),
-                            $"logs.json",
-                            fileSizeLimitBytes: 1_000_000,
-                            rollOnFileSizeLimit: true
-                        );
-
-                    if (Enum.TryParse<LogEventLevel>(config["LogLevel"], out var level))
-                        loggerConfiguration.MinimumLevel.Is(level);
-
-                    if (logTextBlock is { })
-                        loggerConfiguration.WriteTo.RichTextBox(
-                            logTextBlock.LogTextBox,
-                            theme: RichTextBoxConsoleTheme.Colored
-                        );
-                }
-            )
-                .AddSingleton<InputAction>()
-                .AddSingleton<ProcessWindowAction>()
-                .AddSingleton<TurnTickAction>()
-                .AddSingleton<TurnAction>()
-                .AddSingleton(Settings.Load() ?? new())
-                .AddSingleton<MainWindowViewModel>();
-        }
-
-        m_host = builder.Build();
-        m_host.Start();
-
-        var c = Configuration;
-        Console.WriteLine(c.ToString());
-    }
+    void OnStartup(object sender, StartupEventArgs e) => SetPriorityClass(Process.GetCurrentProcess().Handle, 0x00000080);
 
     void OnExit(object sender, ExitEventArgs e) => m_host.StopAsync()
         .ContinueWith(_ => m_host.Dispose())

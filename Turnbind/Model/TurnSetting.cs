@@ -1,6 +1,6 @@
 ﻿namespace Turnbind.Model;
 
-public class TurnSetting
+public struct TurnSetting
 {
     public TurnDirection Dir { get; set; }
 

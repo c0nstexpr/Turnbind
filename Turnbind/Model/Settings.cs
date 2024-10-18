@@ -1,39 +1,16 @@
-﻿using System.IO;
-using System.Text.Json;
-
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Serilog.Events;
 
 namespace Turnbind.Model;
 
-public partial class Settings : ObservableObject
+public class Settings
 {
-    public Dictionary<string, KeyBinds> Profiles { get; set; } = [];
+    public Dictionary<string, Dictionary<InputKeys, TurnSetting>> Profiles { get; set; } = [];
 
-    [ObservableProperty]
-    string m_processName = "";
+    public string ProcessName { get; set; } = "";
 
-    [ObservableProperty]
-    double m_turnInterval = 10;
+    public double TurnInterval { get; set; }
 
-    public const string JsonPath = "turn_settings.json";
+    public bool Console { get; set; }
 
-    public const string DefaultProfileName = "default";
-
-    public Settings()
-    {
-    }
-
-    public static Settings? Load(string jsonPath = JsonPath)
-    {
-        if (!File.Exists(jsonPath)) return null;
-
-        using var json = File.OpenRead(jsonPath);
-        return JsonSerializer.Deserialize<Settings>(json);
-    }
-
-    public void Save(string jsonPath = JsonPath)
-    {
-        var json = JsonSerializer.Serialize(this, options: new() { WriteIndented = true });
-        File.WriteAllText(jsonPath, json);
-    }
+    public LogEventLevel LogLevel { get; set; }
 }

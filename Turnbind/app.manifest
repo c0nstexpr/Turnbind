@@ -6,8 +6,7 @@
     <trustInfo>
         <security>
             <requestedPrivileges>
-                <requestedExecutionLevel level="requireAdministrator"
-                                         uiAccess="false" />
+                <requestedExecutionLevel level="requireAdministrator" uiAccess="false" />
             </requestedPrivileges>
         </security>
     </trustInfo>

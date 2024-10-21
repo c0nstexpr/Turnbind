@@ -1,11 +1,9 @@
-﻿using System.Collections.Specialized;
-using System.Reactive.Disposables;
+﻿using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Reactive.Subjects;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-
-using ObservableCollections;
 
 using Turnbind.Helper;
 
@@ -13,13 +11,11 @@ namespace Turnbind.ViewModel;
 
 partial class ProfileControlViewModel : ObservableObject, IDisposable
 {
-    readonly IDisposable m_disposable;
+    readonly Dictionary<string, ProfileItemViewModel> m_profiles = [];
 
-    public ObservableHashSet<string> Profiles { get; } = [];
+    readonly Key2IndexCollection<string> m_profileIndices = [];
 
-    readonly ISynchronizedView<string, ProfileItemViewModel> m_profilesView;
-
-    readonly INotifyCollectionChangedSynchronizedViewList<ProfileItemViewModel> m_itemSource;
+    readonly ObservableCollection<ProfileItemViewModel> m_itemSource = [];
 
     public INotifyCollectionChanged ItemSource => m_itemSource;
 
@@ -36,53 +32,75 @@ partial class ProfileControlViewModel : ObservableObject, IDisposable
         }
     }
 
-    readonly BehaviorSubject<string?> m_viewedItem = new(null);
+    readonly BehaviorSubject<string?> m_viewItem = new(null);
 
-    public IObservable<string?> ViewedItem => m_viewedItem;
+    public IObservable<string?> ViewItem => m_viewItem;
 
-    public ProfileControlViewModel()
-    {
-        Profiles.CollectionChanged += OnProfilesChanged;
-        m_profilesView = Profiles.CreateCollectionView(
-            (string n) => new ProfileItemViewModel()
-            {
-                Name = n,
-                ViewCmd = new(() => m_viewedItem.OnNext(n)),
-                RemoveCmd = new(() => Profiles.Remove(n))
-            }
-        );
-        m_itemSource = m_profilesView.ToNotifyCollectionChanged();
-        m_disposable = new CompositeDisposable(m_itemSource, m_profilesView, m_viewedItem);
-    }
+    readonly Subject<string> m_addItem = new();
 
-    void OnProfilesChanged(in NotifyCollectionChangedEventArgs<string> e)
-    {
-        switch (e.Action)
-        {
-            case NotifyCollectionChangedAction.Reset:
-                m_viewedItem.OnNext(null);
-                break;
+    public IObservable<string> AddItem => m_addItem;
 
-            case NotifyCollectionChangedAction.Remove && e.IsSingleItem:
-                if (e.IsSingleItem)
-                {
+    readonly Subject<string> m_removeItem = new();
 
-                }
+    public IObservable<string> RemoveItem => m_removeItem;
 
-                break;
-
-
-        }
-    }
-
-    bool CanAddProfile() => InputProfile is { } n && !Profiles.Contains(n);
+    bool CanAddProfile() => InputProfile is { } n && !m_profiles.ContainsKey(n);
 
     [RelayCommand(CanExecute = nameof(CanAddProfile))]
     void AddProfile()
     {
-        Profiles.Add(InputProfile!);
+        AddCore(InputProfile!);
         InputProfile = null;
     }
 
-    public void Dispose() => m_disposable.Dispose();
+    public bool Add(string name)
+    {
+        if (m_profiles.ContainsKey(name)) return false;
+
+        AddCore(name);
+        return true;
+    }
+
+    public bool Remove(string name)
+    {
+        if (!m_profiles.ContainsKey(name)) return false;
+
+        RemoveCore(name);
+        return true;
+    }
+
+    void AddCore(string name)
+    {
+        ProfileItemViewModel vm = new()
+        {
+            Name = name,
+            ViewCmd = new(() => m_viewItem.OnNext(name)),
+            RemoveCmd = new(() => RemoveCore(name))
+        };
+        m_profiles[name] = vm;
+        m_itemSource.Add(vm);
+        m_profileIndices.Add(name);
+
+        m_addItem.OnNext(name);
+    }
+
+    void RemoveCore(string name)
+    {
+        var i = m_profileIndices[name];
+
+        m_profiles.Remove(name);
+        m_itemSource.RemoveAt(i);
+        m_profileIndices.Remove(name);
+
+        m_removeItem.OnNext(name);
+
+        if(m_viewItem.Value == name) m_viewItem.OnNext(null);
+    }
+
+    public void Dispose()
+    {
+        m_viewItem.Dispose();
+        m_addItem.Dispose();
+        m_removeItem.Dispose();
+    }
 }

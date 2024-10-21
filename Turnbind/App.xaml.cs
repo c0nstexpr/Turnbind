@@ -8,22 +8,23 @@ using Serilog;
 using Serilog.Formatting.Compact;
 using Serilog.Exceptions;
 using Turnbind.Action;
-using Turnbind.Model;
 using Turnbind.ViewModel;
 using Turnbind.View;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using Microsoft.Extensions.Configuration;
 using Serilog.Events;
 using Serilog.Sinks.RichTextBox.Themes;
 using System.Windows.Controls;
+using Turnbind.Repository;
 
 namespace Turnbind;
 
 public partial class App : Application
 {
     static readonly IHost m_host;
+
+    public static bool IsInDebug { get; }
 
     public static T? GetService<T>() where T : class => m_host.Services.GetService<T>();
 
@@ -58,51 +59,46 @@ public partial class App : Application
             }
         );
 
+    static Lazy<App> m_currentLazy = new();
+
+    public static new App Current => m_currentLazy.Value;
+
     static App()
     {
-        Settings settings = new();
-        LogTextBlock? logTextBlock = null;
         var builder = Host.CreateApplicationBuilder();
 
-        var config = builder.Configuration;
+        SettingsRepository repo = new();
+        var settings = repo.Settings;
+        LogTextBlock? logTextBlock = null;
         var services = builder.Services
             .AddSingleton<InputAction>()
             .AddSingleton<ProcessWindowAction>()
             .AddSingleton<TurnTickAction>()
             .AddSingleton<TurnAction>()
-            .AddScoped<Settings>()
+            .AddSingleton(repo)
             .AddTransient<MainWindowViewModel>()
             .AddTransient<BindControl>();
 
-        config.Bind(settings);
+        if (builder.Environment.IsDevelopment()) IsInDebug = true;
 
-        if (settings.Console)
+        if (settings.EnableConsole)
         {
             logTextBlock = new();
             services.AddSingleton(logTextBlock);
         }
 
-        AddSerilog(services, logTextBlock?.LogTextBox, settings.LogLevel);
+        AddSerilog(services, logTextBlock?.LogTextBox, settings.LogEventLevel);
 
         m_host = builder.Build();
         m_host.Start();
     }
 
-    static Lazy<App> m_currentLazy = new();
-
-    public static new App Current => m_currentLazy.Value;
-
-    [LibraryImport("kernel32", SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool SetPriorityClass(nint hProcess, uint dwPriorityClass);
-
     public App() => m_currentLazy = new(this);
 
-    void OnStartup(object sender, StartupEventArgs e) => SetPriorityClass(Process.GetCurrentProcess().Handle, 0x00000080);
+    void OnStartup(object sender, StartupEventArgs e) => 
+        Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.High;
 
-    void OnExit(object sender, ExitEventArgs e) => m_host.StopAsync()
-        .ContinueWith(_ => m_host.Dispose())
-        .Wait();
+    void OnExit(object sender, ExitEventArgs e) => m_host.StopAsync().ContinueWith(_ => m_host.Dispose()).Wait();
 
     void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {

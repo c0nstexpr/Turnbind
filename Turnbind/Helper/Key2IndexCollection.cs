@@ -61,11 +61,12 @@ public class Key2IndexCollection<TKey> : IReadOnlyDictionary<TKey, int> where TK
 
     public int this[TKey key] => m_dic[key].Index;
 
-    public Key2IndexCollection(IEnumerable<TKey> keys)
+    public Key2IndexCollection() => 
+        m_pairsView = m_dic.Select(kv => new KeyValuePair<TKey, int>(kv.Key, kv.Value.Index));
+
+    public Key2IndexCollection(IEnumerable<TKey> keys) : this()
     {
         foreach (var key in keys) Add(key);
-
-        m_pairsView = m_dic.Select(kv => new KeyValuePair<TKey, int>(kv.Key, kv.Value.Index));
     }
 
     public bool Add(TKey item)
